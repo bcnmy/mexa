@@ -4,7 +4,7 @@ This repository contains smart contracts for mexa and allow dapp users to perfor
 
 <h3>Pre-Requisite</h3>
 
-In Order to deploy the contracts to networks other than local blockchain, you need to add file with name .secret and add the 12 word mnemonic phrase corresponding to your account which will be used to deploy the contracts to selected network.
+In Order to deploy the contracts to networks other than local blockchain, you need to add file with name <code>.secret</code> to the root folder and add the 12 word mnemonic phrase corresponding to your account which will be used to deploy the contracts to selected network.
 
 <h3>To compile contracts</h3>
   <code>truffle compile</code>
