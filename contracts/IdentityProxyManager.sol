@@ -39,11 +39,12 @@ contract IdentityProxyManager is Ownable {
 		return relayers;
 	}
 
-	function createIdentityProxy(address owner) public onlyRelayer {
+	function createIdentityProxy(address owner) public onlyRelayer returns(address) {
 		IdentityProxy identityProxy = new IdentityProxy();
 		proxyOwners[owner][address(identityProxy)] = true;
 		proxyOwnerMap[owner] = address(identityProxy);
 		emit ProxyCreated(address(identityProxy), owner, msg.sender);
+		return address(identityProxy);
 	}
 
 	function getProxyAddress(address owner) public view returns(address) {
