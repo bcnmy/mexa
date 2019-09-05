@@ -68,6 +68,16 @@ contract IdentityProxyManager is Ownable {
 		identityProxy.withdraw(receiver, amount);	
 	}
 
+	function transferERC20(address payable proxy,address owner, address erc20ContractAddress,uint256 amount, address destination) public onlyProxyOwner(owner, proxy) onlyRelayer {
+		IdentityProxy identityProxy = IdentityProxy(proxy);
+		identityProxy.transferERC20(erc20ContractAddress,amount, destination);	
+	}
+
+	function transferERC721(address payable proxy,address owner, address erc721ContractAddress, address destination, uint256 tokenId) public onlyProxyOwner(owner, proxy) onlyRelayer {
+		IdentityProxy identityProxy = IdentityProxy(proxy);
+		identityProxy.transferERC721(erc721ContractAddress, destination, tokenId);	
+	}
+
 	function addRelayer(address relayer) public onlyOwner {
 		require(!relayerStatus[relayer]);
 		relayers.push(relayer);

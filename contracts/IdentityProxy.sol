@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 import "./libs/Ownable.sol";
+import "./token/erc20/IERC20.sol";
+import "./token/erc721/IERC721.sol";
 
 contract IdentityProxy is Ownable {
     event Forwarded (address indexed destination, uint amount, bytes data);
@@ -25,5 +27,18 @@ contract IdentityProxy is Ownable {
         receiver.transfer(amount);
         emit Withdraw(receiver, amount);
         return true;
+    }
+
+
+    function transferERC20(address erc20ContractAddress,uint256 amount, address destination) public onlyOwner {
+        require(amount >= 1, "Please enter a valid value");
+        IERC20 erc20Token = IERC20(erc20ContractAddress);
+        erc20Token.transfer(destination,amount);
+    }
+
+    function transferERC721(address erc721ContractAddress, address destination, uint256 tokenId) public onlyOwner {
+        
+        IERC721 erc721Token = IERC721(erc721ContractAddress);
+        erc721Token.transferFrom(address(this), destination, tokenId);
     }
 }
