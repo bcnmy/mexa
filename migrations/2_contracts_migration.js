@@ -1,8 +1,7 @@
 const IdentityProxyManager = artifacts.require("IdentityProxyManager");
 const MarvelAssets = artifacts.require("MarvelAssets");
-
 module.exports = function(deployer) {
-	var relayer = "0x66323386A237EFAf78993F6F95fAf73578901D29";
+	var relayer = "0xbfB6A7Bc0B41f54089919584ed692ac908d8cF4d";
 	deployer.deploy(IdentityProxyManager, relayer);
 	deployer.deploy(MarvelAssets);
 };

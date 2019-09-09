@@ -14,6 +14,7 @@ contract IdentityProxyManager is Ownable {
 	event Forwarded (address indexed destination, uint amount, bytes data);
 	event RelayerAdded(address relayer, address owner);
 	event ProxyOwnerAdded(address indexed proxy, address currentOwner, address newOwner);
+	event ProxyOwnerRemoved(address indexed proxy, address currentOwner);
 
 	// MODIFIERS
 	modifier onlyRelayer() {
@@ -26,7 +27,7 @@ contract IdentityProxyManager is Ownable {
 		_;
 	}
 
-	constructor(address relayer) public {
+	constructor(address relayer) Ownable(msg.sender) public {
 		relayers.push(relayer);
 		relayerStatus[relayer] = true;
 	}
@@ -40,7 +41,7 @@ contract IdentityProxyManager is Ownable {
 	}
 
 	function createIdentityProxy(address owner) public onlyRelayer returns(address) {
-		IdentityProxy identityProxy = new IdentityProxy();
+		IdentityProxy identityProxy = new IdentityProxy(owner);
 		proxyOwners[owner][address(identityProxy)] = true;
 		proxyOwnerMap[owner] = address(identityProxy);
 		emit ProxyCreated(address(identityProxy), owner, msg.sender);
@@ -63,32 +64,36 @@ contract IdentityProxyManager is Ownable {
 		emit Forwarded(destination, amount, data);
 	}
 
-	function withdraw(address payable proxy, address owner, address payable receiver, uint256 amount) public onlyProxyOwner(owner, proxy) onlyRelayer {
-		IdentityProxy identityProxy = IdentityProxy(proxy);
-		identityProxy.withdraw(receiver, amount);	
+	function withdraw(bytes memory _signature, string memory message, address owner, address payable receiver, uint256 amount) public onlyRelayer {
+		require(proxyOwners[owner][proxyOwnerMap[owner]], "Not a Proxy owner");
+		address payable proxyAddress=address(uint160(proxyOwnerMap[owner]));
+		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
+		identityProxy.withdraw(_signature, message, receiver, amount);	
 	}
 
-	function transferERC20(address payable proxy,address owner, address erc20ContractAddress,uint256 amount, address destination) public onlyProxyOwner(owner, proxy) onlyRelayer {
-		IdentityProxy identityProxy = IdentityProxy(proxy);
-		identityProxy.transferERC20(erc20ContractAddress,amount, destination);	
+	//transfer erc20 token
+	function transferERC20(bytes memory _signature, string memory message, address owner, address erc20ContractAddress, address destination, uint256 amount) public onlyRelayer {
+		require(proxyOwners[owner][proxyOwnerMap[owner]], "Not a Proxy owner");
+
+		address payable proxyAddress=address(uint160(proxyOwnerMap[owner]));
+		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
+		identityProxy.transferERC20(_signature, message, erc20ContractAddress, destination, amount);	
 	}
 
-	function transferERC721(address payable proxy,address owner, address erc721ContractAddress, address destination, uint256 tokenId) public onlyProxyOwner(owner, proxy) onlyRelayer {
-		IdentityProxy identityProxy = IdentityProxy(proxy);
-		identityProxy.transferERC721(erc721ContractAddress, destination, tokenId);	
+	//transfer erc721 token
+	function transferERC721(bytes memory _signature, string memory message, address owner, address erc721ContractAddress, address destination, uint256 tokenId) public onlyRelayer {
+		require(proxyOwners[owner][proxyOwnerMap[owner]], "Not a Proxy owner");
+		address payable proxyAddress=address(uint160(proxyOwnerMap[owner]));
+		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
+		identityProxy.transferERC721(_signature, message, erc721ContractAddress, destination, tokenId);	
 	}
 
+	//Register new Relayer
 	function addRelayer(address relayer) public onlyOwner {
 		require(!relayerStatus[relayer]);
 		relayers.push(relayer);
 		relayerStatus[relayer] = true;
 		emit RelayerAdded(relayer, msg.sender);
-	}
-
-	function addProxyOwner(address payable proxy, address currentOwner, address newOwner) public onlyProxyOwner(currentOwner, proxy) onlyRelayer {
-		proxyOwners[newOwner][proxy] = true;
-		proxyOwnerMap[newOwner] = proxy;
-		emit ProxyOwnerAdded(proxy, currentOwner, newOwner);
 	}
 
 }
