@@ -14,7 +14,6 @@ contract IdentityProxyManager is Ownable {
 	event Forwarded (address indexed destination, uint amount, bytes data);
 	event RelayerAdded(address relayer, address owner);
 	event ProxyOwnerAdded(address indexed proxy, address currentOwner, address newOwner);
-	event ProxyOwnerRemoved(address indexed proxy, address currentOwner);
 
 	// MODIFIERS
 	modifier onlyRelayer() {

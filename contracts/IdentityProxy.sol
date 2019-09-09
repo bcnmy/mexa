@@ -104,37 +104,5 @@ contract IdentityProxy is Ownable {
             // solium-disable-next-line arg-overflow
             return (owner == ecrecover(hash, v, r, s));
         }
-    }
-
-    function getSignatureLength(bytes memory _signature) public view returns (uint256){
-            return _signature.length;
-    }
-
-    function getSignature(bytes32 hash, bytes memory _signature) public view returns(bool result, bytes32 r, bytes32 s, uint8 v, address signer) {
-        bytes32 _hash = toEthSignedMessageHash(hash);
-        if (_signature.length != 65) {
-            result = false;
-        } else {
-            // Divide the signature in r, s and v variables
-            // ecrecover takes the signature parameters, and the only way to get them
-            // currently is to use assembly.
-            // solium-disable-next-line security/no-inline-assembly
-            assembly {
-                r := mload(add(_signature, 32))
-                s := mload(add(_signature, 64))
-                v := byte(0, mload(add(_signature, 96)))
-            }
-            // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-            if (v < 27) {
-                v += 27;
-            }
-            // If the version is correct return the signer address
-            if (v != 27 && v != 28) {
-                result = false;
-            } else {
-                // solium-disable-next-line arg-overflow
-                signer = ecrecover(_hash, v, r, s);
-            }
-        }
     }  
 }
