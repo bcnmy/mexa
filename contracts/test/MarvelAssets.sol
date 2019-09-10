@@ -11,13 +11,13 @@ contract MarvelAssets is Ownable {
 	event AssetAdded(address indexed creator, uint256 id, string name);
 	event AssetBought(address indexed buyer, uint256 id);
 
-	mapping(uint => address) assetOwner;
-	uint256[] assetIdList;
-	mapping(uint => Asset) assets;
+	mapping(uint => address) public assetOwner;
+	uint256[] public assetIdList;
+	mapping(uint => Asset) public assets;
 
 	constructor() Ownable(msg.sender) public {
 		Asset memory ironManHelmet = Asset({id: 1, name: "Iron Man Helmet", valid: true});
-		Asset memory captainAmericaShield = Asset({id: 2, name: "Iron Man Helmet", valid: true});
+		Asset memory captainAmericaShield = Asset({id: 2, name: "Captain America Shield", valid: true});
 		Asset memory thorHammer = Asset({id: 3, name: "Mjolnir", valid: true});
 		assets[ironManHelmet.id] = ironManHelmet;
 		assets[captainAmericaShield.id] = captainAmericaShield;
