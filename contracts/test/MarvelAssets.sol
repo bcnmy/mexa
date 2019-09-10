@@ -15,7 +15,7 @@ contract MarvelAssets is Ownable {
 	uint256[] assetIdList;
 	mapping(uint => Asset) assets;
 
-	constructor() public {
+	constructor() Ownable(msg.sender) public {
 		Asset memory ironManHelmet = Asset({id: 1, name: "Iron Man Helmet", valid: true});
 		Asset memory captainAmericaShield = Asset({id: 2, name: "Iron Man Helmet", valid: true});
 		Asset memory thorHammer = Asset({id: 3, name: "Mjolnir", valid: true});
