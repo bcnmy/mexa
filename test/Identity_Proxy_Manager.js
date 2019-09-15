@@ -15,13 +15,13 @@ contract("IdentityProxyManager", function([_, owner,relayerAddress,anotherAddres
 	
 	let amount=1;
 
-	var _signature = "0x0037d81b25d4620a7c6472e5be95a26c5c9bca8772ebc8f3e371e881835c5aff7c14385550075adafb363b110317002dcc78e928d504d6427696aa7477f7b5511c";
+	// var _signature = "0x0037d81b25d4620a7c6472e5be95a26c5c9bca8772ebc8f3e371e881835c5aff7c14385550075adafb363b110317002dcc78e928d504d6427696aa7477f7b5511c";
 	var messageToSign="itsMeDivya";
 	beforeEach('setup IdentityProxyManager for each test', async function () {
-       	identityProxyManager = await IdentityProxyManager.new({from: owner});
-        await identityProxyManager.addRelayers(relayers, {from: owner});
-        x = await identityProxyManager.getRelayerStatus(relayerAddress);
-    });
+		identityProxyManager = await IdentityProxyManager.new({from: owner});
+		await identityProxyManager.addRelayers(relayers, {from: owner});
+		x = await identityProxyManager.getRelayerStatus(relayerAddress);
+    	});
 
 	// describe("Withdraw", function(){
 	// 	it("Test when Withdraw method is not called by Relayer", async()=>{
@@ -107,6 +107,4 @@ contract("IdentityProxyManager", function([_, owner,relayerAddress,anotherAddres
 				"Address cannot be 0"));
 		});
 	});
-
-	
 });
