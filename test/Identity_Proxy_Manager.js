@@ -20,7 +20,6 @@ contract("IdentityProxyManager", function([_, owner,relayerAddress,anotherAddres
 	beforeEach('setup IdentityProxyManager for each test', async function () {
 		identityProxyManager = await IdentityProxyManager.new({from: owner});
 		await identityProxyManager.addRelayers(relayers, {from: owner});
-		x = await identityProxyManager.getRelayerStatus(relayerAddress);
     	});
 
 	// describe("Withdraw", function(){
@@ -39,19 +38,19 @@ contract("IdentityProxyManager", function([_, owner,relayerAddress,anotherAddres
 	// });
 	describe("forward",function(){
 		it("Test if Withdraw method called by Relayer", async()=>{
-
+			//Owner Signature code needs to be implemented
 		});
 
 	});
 	describe("transfer Erc Token",function(){
 		it("Test if Withdraw method called by Relayer", async()=>{
-
+			//Owner Signature code needs to be implemented
 		});
 
 	});
 
 	describe("Relayer", function(){
-		it("check Relayer added in constructor", async()=>{
+		it("check Relayer", async()=>{
 			assert.isTrue(await identityProxyManager.getRelayerStatus(relayerAddress), "Relayer not initialised in constructor");
 		});
 
