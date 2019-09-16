@@ -21,8 +21,13 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		_;
 	}
 
+	modifier addressNotZero(address _address) {
+		require(_address!=address(0),"Address cannot be 0");
+		_;
+	}
+
 	modifier onlyProxyOwner(address proxyOwner, address proxy) {
-		require(proxyOwners[proxyOwner][proxy], "You are not the owner of proxy contract");
+		require(proxyOwners[proxyOwner][proxy], "You are not the Proxy Owner");
 		_;
 	}
 
@@ -34,7 +39,7 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		return relayers;
 	}
 
-	function createIdentityProxy(address proxyOwner) public onlyRelayer returns(address) {
+	function createIdentityProxy(address proxyOwner) public onlyRelayer addressNotZero(proxyOwner) returns(address) {
 		IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
 		proxyOwners[proxyOwner][address(identityProxy)] = true;
 		proxyOwnerMap[proxyOwner] = address(identityProxy);
@@ -58,7 +63,8 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		emit Forwarded(destination, amount, data);
 	}
 
-	function withdraw(bytes memory _signature, string memory message, address proxyOwner, address payable receiver, uint256 amount) public onlyRelayer {
+	function withdraw(bytes memory _signature, string memory message, address proxyOwner, address payable receiver, uint256 amount)
+	public onlyRelayer {
 		require(proxyOwners[proxyOwner][proxyOwnerMap[proxyOwner]], "Not a Proxy owner");
 		address payable proxyAddress = address(uint160(proxyOwnerMap[proxyOwner]));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
