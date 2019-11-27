@@ -1,23 +1,25 @@
 pragma solidity ^0.5.0;
 import "./IdentityProxy.sol";
 import "./libs/Ownable.sol";
+import "./RelayerManager.sol";
 
 contract IdentityProxyManager is Ownable(msg.sender) {
 
-	address[] public relayers;
-	mapping(address => bool) public relayerStatus;
+	// address[] public relayers;
+	// mapping(address => bool) public relayerStatus;
 	mapping(address => mapping(address => bool)) public proxyOwners;
 	mapping(address => address) public proxyOwnerMap;
+	RelayerManager relayerManager;
 
 	// EVENTS
 	event ProxyCreated(address indexed identityProxy, address indexed proxyOwner, address creator);
 	event Forwarded (address indexed destination, uint amount, bytes data);
-	event RelayerAdded(address relayer, address owner);
+	// event RelayerAdded(address relayer, address owner);
 	event ProxyOwnerAdded(address indexed proxy, address currentOwner, address newOwner);
 
 	// MODIFIERS
 	modifier onlyRelayer() {
-		require(relayerStatus[msg.sender], "You are not allowed to perform this operation");
+		require(relayerManager.getRelayerStatus(msg.sender), "You are not allowed to perform this operation");
 		_;
 	}
 
@@ -26,13 +28,26 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		_;
 	}
 
-	function getRelayerStatus(address relayer) public view returns(bool status) {
-		status = relayerStatus[relayer];
+	// function getRelayerStatus(address relayer) public view returns(bool status) {
+	// 	status = relayerStatus[relayer];
+	// }
+
+	// function getAllRelayers() public view returns(address[] memory) {
+	// 	return relayers;
+	// }
+
+	constructor(address relayerManagerAddress) public {
+		require(relayerManagerAddress != address(0), "Manager address can not be 0");
+		relayerManager = RelayerManager(relayerManagerAddress);
 	}
 
-	function getAllRelayers() public view returns(address[] memory) {
-		return relayers;
-	}
+	function addRelayerManager(address relayerManagerAddress) public onlyOwner {
+    	require(relayerManagerAddress != address(0), "Manager address can not be 0");
+    	relayerManager = RelayerManager(relayerManagerAddress);
+    }
+	function getRelayerManager() public view returns (address relayerManagerAddress){
+    	relayerManagerAddress = address(relayerManager);
+    }
 
 	function createIdentityProxy(address proxyOwner) public onlyRelayer returns(address) {
 		IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
@@ -50,15 +65,17 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		return address(0);
 	}
 
-	function forward(address payable proxy, address proxyOwner, address destination, uint amount, bytes memory data)
-		public onlyProxyOwner(proxyOwner, proxy) onlyRelayer
+	function forward(bytes memory _signature, string memory message,
+	address payable proxy, address proxyOwner, address destination, uint amount, bytes memory data)
+	public onlyProxyOwner(proxyOwner, proxy) onlyRelayer
 	{
 		IdentityProxy identityProxy = IdentityProxy(proxy);
-		identityProxy.forward(destination, amount, data);
+		identityProxy.forward(_signature, message,destination, amount, data);
 		emit Forwarded(destination, amount, data);
 	}
 
-	function withdraw(bytes memory _signature, string memory message, address proxyOwner, address payable receiver, uint256 amount) public onlyRelayer {
+	function withdraw(bytes memory _signature, string memory message, address proxyOwner,
+	address payable receiver, uint256 amount) public onlyRelayer {
 		require(proxyOwners[proxyOwner][proxyOwnerMap[proxyOwner]], "Not a Proxy owner");
 		address payable proxyAddress = address(uint160(proxyOwnerMap[proxyOwner]));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
@@ -84,15 +101,7 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		identityProxy.transferERC721(_signature, message, erc721ContractAddress, destination, tokenId);
 	}
 
-	//Register new Relayer
-	function addRelayers(address[] memory relayerArray) public onlyOwner {
-		for(uint i = 0; i<relayerArray.length; i++) {
-			require(relayerArray[i] != address(0), 'Relayer address cannot be zero');
-			relayers.push(relayerArray[i]);
-			relayerStatus[relayerArray[i]] = true;
-			emit RelayerAdded(relayerArray[i], msg.sender);
-		}
-	}
+	
 
 }
 
