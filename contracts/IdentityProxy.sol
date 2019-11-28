@@ -15,7 +15,6 @@ contract IdentityProxy is Ownable {
 
     constructor(address owner) Ownable(owner) public {
         creator = msg.sender;
-        nonce = 1;
     }
 
     modifier onlyOwnerOrManager() {
@@ -24,6 +23,10 @@ contract IdentityProxy is Ownable {
     }
 
     function () external payable  { emit Received(msg.sender, msg.value); }
+
+    function getNonce() public view returns(uint256){
+        return nonce;
+    }
 
     function forward(bytes memory _signature, string memory message, address destination, uint amount,
     bytes memory data) public onlyOwnerOrManager {
@@ -84,7 +87,7 @@ contract IdentityProxy is Ownable {
         bytes32 s;
         uint8 v;
 
-        //Signed it for Ethereum
+        //Signed it for Ethereum 
         bytes32 hash = toEthSignedMessageHash(_hash);
 
         // Check the signature length

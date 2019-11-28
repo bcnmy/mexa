@@ -5,8 +5,6 @@ import "./RelayerManager.sol";
 
 contract IdentityProxyManager is Ownable(msg.sender) {
 
-	// address[] public relayers;
-	// mapping(address => bool) public relayerStatus;
 	mapping(address => mapping(address => bool)) public proxyOwners;
 	mapping(address => address) public proxyOwnerMap;
 	RelayerManager relayerManager;
@@ -14,7 +12,6 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 	// EVENTS
 	event ProxyCreated(address indexed identityProxy, address indexed proxyOwner, address creator);
 	event Forwarded (address indexed destination, uint amount, bytes data);
-	// event RelayerAdded(address relayer, address owner);
 	event ProxyOwnerAdded(address indexed proxy, address currentOwner, address newOwner);
 
 	// MODIFIERS
@@ -27,14 +24,6 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		require(proxyOwners[proxyOwner][proxy], "You are not the owner of proxy contract");
 		_;
 	}
-
-	// function getRelayerStatus(address relayer) public view returns(bool status) {
-	// 	status = relayerStatus[relayer];
-	// }
-
-	// function getAllRelayers() public view returns(address[] memory) {
-	// 	return relayers;
-	// }
 
 	constructor(address relayerManagerAddress) public {
 		require(relayerManagerAddress != address(0), "Manager address can not be 0");
@@ -55,6 +44,12 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 		proxyOwnerMap[proxyOwner] = address(identityProxy);
 		emit ProxyCreated(address(identityProxy), proxyOwner, msg.sender);
 		return address(identityProxy);
+	}
+	function addIdentityProxy(address proxyOwner,address proxyContractAddress) public onlyRelayer returns(address) {
+		proxyOwners[proxyOwner][proxyContractAddress] = true;
+		proxyOwnerMap[proxyOwner] = proxyContractAddress;
+		emit ProxyCreated(proxyContractAddress, proxyOwner, msg.sender);
+		return proxyContractAddress;
 	}
 
 	function getProxyAddress(address proxyOwner) public view returns(address) {
