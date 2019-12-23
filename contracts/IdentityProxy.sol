@@ -20,6 +20,10 @@ contract IdentityProxy is Ownable {
         creator = msg.sender;
     }
 
+    function getCreator() public view returns(address) {
+        return creator;
+    }
+
     modifier onlyOwnerOrManager() {
         require(msg.sender == creator || msg.sender == owner(),"Not the Owner or Manager");
         _;
@@ -31,20 +35,20 @@ contract IdentityProxy is Ownable {
         return nonce;
     }
 
-    function forward(address destination, uint amount, bytes memory data) public onlyOwnerOrManager {
+    function forward(address payable destination, uint256 amount, bytes memory data) public payable onlyOwnerOrManager {
         require(executeCall(destination,amount,data), "ExecuteCall() failed");
         nonce = nonce.add(1);
         emit Forwarded(destination, amount, data);
     }
 
     // Ref => https://github.com/gnosis/gnosis-safe-contracts/blob/master/contracts/GnosisSafe.sol
-    function executeCall(address to, uint256 value, bytes memory data) internal returns (bool success) {
+    function executeCall(address to, uint256 amount, bytes memory data) public returns (bool success) {
         assembly {
-            success := call(gas, to, value, add(data, 0x20), mload(data), 0, 0)
+            success := call(gas, to, amount, add(data, 0x20), mload(data), 0, 0)
         }
     }
 
-    function withdraw(address payable receiver, uint256 amount) public onlyOwner {
+    function withdraw(address payable receiver, uint256 amount) public onlyOwnerOrManager {
         require(address(this).balance >= amount, "You dont have enough balance to withdraw");
         receiver.transfer(amount);
         nonce = nonce.add(1);
@@ -52,7 +56,7 @@ contract IdentityProxy is Ownable {
     }
 
 
-    function transferERC20(address erc20ContractAddress, address destination, uint256 amount) public onlyOwner {
+    function transferERC20(address erc20ContractAddress, address destination, uint256 amount) public onlyOwnerOrManager {
         require(amount > 0, "Please enter a valid value");
         IERC20 erc20Token = IERC20(erc20ContractAddress);
         erc20Token.transfer(destination,amount);
@@ -60,7 +64,7 @@ contract IdentityProxy is Ownable {
         emit TransferERC20(erc20ContractAddress, destination, amount);
     }
 
-    function transferERC721(address erc721ContractAddress, address destination, uint256 tokenId) public onlyOwner {
+    function transferERC721(address erc721ContractAddress, address destination, uint256 tokenId) public onlyOwnerOrManager {
         IERC721 erc721Token = IERC721(erc721ContractAddress);
         erc721Token.transferFrom(address(this), destination, tokenId);
         nonce = nonce.add(1);

@@ -2,14 +2,13 @@ pragma solidity ^0.5.0;
 import "./IdentityProxy.sol";
 import "./libs/Ownable.sol";
 import "./RelayerManager.sol";
+import "./ProxyManager.sol";
+import "./libs/SafeMath.sol";
 
-contract IdentityProxyManager is Ownable(msg.sender) {
-
-	// address[] public relayers;
-	// mapping(address => bool) public relayerStatus;
-	mapping(address => mapping(address => bool)) public proxyOwners;
-	mapping(address => address) public proxyOwnerMap;
+contract RelayHub is Ownable(msg.sender) {
+	using SafeMath for uint256;
 	RelayerManager relayerManager;
+	ProxyManager proxyManager;
 
 	// EVENTS
 	event ProxyCreated(address indexed identityProxy, address indexed proxyOwner, address creator);
@@ -25,47 +24,46 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 	}
 
 	modifier onlyProxyOwner(address proxyOwner, address proxy) {
-		require(proxyOwners[proxyOwner][proxy], "You are not the owner of proxy contract");
+		require(proxyManager.getProxyStatus(proxyOwner,proxy), "You are not the owner of proxy contract");
 		_;
 	}
 
-	constructor(address relayerManagerAddress) public {
+	constructor(address relayerManagerAddress, address proxyManagerAddress) public {
 		require(relayerManagerAddress != address(0), "Manager address can not be 0");
 		relayerManager = RelayerManager(relayerManagerAddress);
+		proxyManager = ProxyManager(proxyManagerAddress);
 	}
 
 	function addRelayerManager(address relayerManagerAddress) public onlyOwner {
     	require(relayerManagerAddress != address(0), "Manager address can not be 0");
     	relayerManager = RelayerManager(relayerManagerAddress);
     }
+
+	function addProxyManager(address proxyManagerAddress) public onlyOwner {
+		require(proxyManagerAddress != address(0), "Proxy manager address can not be 0");
+		proxyManager = ProxyManager(proxyManagerAddress);
+	}
+
 	function getRelayerManager() public view returns (address relayerManagerAddress){
     	relayerManagerAddress = address(relayerManager);
     }
 
-	function createIdentityProxy(address proxyOwner) public onlyRelayer returns(address) {
-		IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
-		proxyOwners[proxyOwner][address(identityProxy)] = true;
-		proxyOwnerMap[proxyOwner] = address(identityProxy);
-		emit ProxyCreated(address(identityProxy), proxyOwner, msg.sender);
-		return address(identityProxy);
+	function getProxyManager() public view returns (address proxyManagerAddress) {
+		proxyManagerAddress = address(proxyManager);
 	}
-	function addIdentityProxy(address proxyOwner,address proxyContractAddress) public onlyRelayer returns(address) {
-		proxyOwners[proxyOwner][proxyContractAddress] = true;
-		proxyOwnerMap[proxyOwner] = proxyContractAddress;
-		emit ProxyAdded(proxyContractAddress, proxyOwner, msg.sender);
-		return proxyContractAddress;
+
+	function createIdentityProxy(address proxyOwner) public onlyRelayer {
+		IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
+		proxyManager.addProxy(proxyOwner, address(identityProxy));
+		emit ProxyCreated(address(identityProxy), proxyOwner, msg.sender);
 	}
 
 	function getProxyAddress(address proxyOwner) public view returns(address) {
-		address proxyAddress = proxyOwnerMap[proxyOwner];
-		if(proxyOwners[proxyOwner][proxyAddress]) {
-			return proxyAddress;
-		}
-		return address(0);
+		return proxyManager.getProxyAddress(proxyOwner);
 	}
 
 	function forward(bytes32 r, bytes32 s, uint8 v, string memory message, string memory length,
-	address payable proxy, address proxyOwner, address destination, uint amount, bytes memory data)
+	address payable proxy, address proxyOwner, address payable destination, uint256 amount, bytes memory data)
 	public onlyProxyOwner(proxyOwner, proxy) onlyRelayer {
 		IdentityProxy identityProxy = IdentityProxy(proxy);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
@@ -74,9 +72,9 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 	}
 
 	function withdraw(bytes32 r, bytes32 s, uint8 v, string memory message, string memory length, address proxyOwner,
-	address payable receiver, uint256 amount) public onlyRelayer {
-		require(proxyOwners[proxyOwner][proxyOwnerMap[proxyOwner]], "Not a Proxy owner");
-		address payable proxyAddress = address(uint160(proxyOwnerMap[proxyOwner]));
+	address payable receiver, uint256 amount) public {
+		require(proxyManager.getProxyStatus(proxyOwner, proxyManager.getProxyAddress(proxyOwner)), "Not a Proxy owner");
+		address payable proxyAddress = address(uint160(proxyManager.getProxyAddress(proxyOwner)));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
 		identityProxy.withdraw(receiver, amount);
@@ -84,9 +82,9 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 
 	//transfer erc20 token
 	function transferERC20(bytes32 r, bytes32 s, uint8 v, string memory message, string memory length, address proxyOwner,
-	address erc20ContractAddress, address destination, uint256 amount) public onlyRelayer {
-		require(proxyOwners[proxyOwner][proxyOwnerMap[proxyOwner]], "Not a Proxy owner");
-		address payable proxyAddress = address(uint160(proxyOwnerMap[proxyOwner]));
+	address erc20ContractAddress, address destination, uint256 amount) public {
+		require(proxyManager.getProxyStatus(proxyOwner, proxyManager.getProxyAddress(proxyOwner)), "Not a Proxy owner");
+		address payable proxyAddress = address(uint160(proxyManager.getProxyAddress(proxyOwner)));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
 		identityProxy.transferERC20(erc20ContractAddress, destination, amount);
@@ -94,14 +92,13 @@ contract IdentityProxyManager is Ownable(msg.sender) {
 
 	//transfer erc721 token
 	function transferERC721(bytes32 r, bytes32 s, uint8 v, string memory message, string memory length,
-	address proxyOwner, address erc721ContractAddress, address destination, uint256 tokenId) public onlyRelayer {
-		require(proxyOwners[proxyOwner][proxyOwnerMap[proxyOwner]], "Not a Proxy owner");
-		address payable proxyAddress = address(uint160(proxyOwnerMap[proxyOwner]));
+	address proxyOwner, address erc721ContractAddress, address destination, uint256 tokenId) public {
+		require(proxyManager.getProxyStatus(proxyOwner, proxyManager.getProxyAddress(proxyOwner)), "Not a Proxy owner");
+		address payable proxyAddress = address(uint160(proxyManager.getProxyAddress(proxyOwner)));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
 		identityProxy.transferERC721(erc721ContractAddress, destination, tokenId);
 	}
-
 
 	function uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
         if (_i == 0) {
@@ -124,11 +121,10 @@ contract IdentityProxyManager is Ownable(msg.sender) {
     }
 
     function verifySignature(bytes32 r, bytes32 s, uint8 v, string memory message,
-	string memory length, address owner, uint256 nonce) public view returns (bool){
-        string memory nonceStr = uint2str(nonce);
+	string memory length, address owner, uint256 userNonce) public view returns (bool){
+        string memory nonceStr = uint2str(userNonce);
         bytes32 hash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n",length,message,nonceStr));
 		return (owner == ecrecover(hash, v, r, s));
     }
-
 }
 
