@@ -72,7 +72,23 @@ module.exports = {
        confirmations: 1,    // # of confs to wait between deployments. (default: 0)
        timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
        skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
-     }
+     },
+     maticBetaMainnet: {
+      provider: new HDWalletProvider(mnemonic, `https://betav2.matic.network`),
+      network_id: 16110,       // Matic's test network id
+      gas: 7000000,
+      confirmations: 1,    // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
+    },
+    maticTestV3: {
+     provider: new HDWalletProvider(mnemonic, `https://testnetv3.matic.network`),
+     network_id: 15001,       // Matic's test network id
+     gasPrice: '0x0',
+     confirmations: 1,    // # of confs to wait between deployments. (default: 0)
+     timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
+     skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
+   }
 
     // Another network with more advanced options...
     // advanced: {
