@@ -4,9 +4,11 @@ import "./libs/Ownable.sol";
 import "./RelayerManager.sol";
 import "./ProxyManager.sol";
 import "./libs/SafeMath.sol";
+import "./libs/EIP712MetaTx.sol";
 
-contract RelayHub is Ownable(msg.sender) {
+contract RelayHub is Ownable(msg.sender), EIP712MetaTx {
 	using SafeMath for uint256;
+
 	RelayerManager relayerManager;
 	ProxyManager proxyManager;
 
@@ -62,11 +64,21 @@ contract RelayHub is Ownable(msg.sender) {
 		return proxyManager.getProxyAddress(proxyOwner);
 	}
 
-	function forward(bytes32 r, bytes32 s, uint8 v, string memory message, string memory length,
+	function forward(bytes32 r, bytes32 s, uint8 v, string memory methodName, string memory methodParams,
 	address payable proxy, address proxyOwner, address payable destination, uint256 amount, bytes memory data)
 	public onlyProxyOwner(proxyOwner, proxy) onlyRelayer {
 		IdentityProxy identityProxy = IdentityProxy(proxy);
-		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
+		EIP712MetaTx.MetaTransaction memory metaTx = EIP712MetaTx.MetaTransaction({
+			contractWallet: proxy,
+			nonce: identityProxy.getNonce(),
+			from: proxyOwner,
+			value: amount,
+			dappContract: destination,
+			methodName: methodName,
+			methodParams: methodParams,
+			data: data
+		});
+		require(verify(proxyOwner, metaTx, r, s, v), "Signature does not match with signer");
 		identityProxy.forward(destination, amount, data);
 		emit Forwarded(destination, amount, data);
 	}
@@ -126,5 +138,8 @@ contract RelayHub is Ownable(msg.sender) {
         bytes32 hash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n",length,message,nonceStr));
 		return (owner == ecrecover(hash, v, r, s));
     }
-}
 
+	function verify(address signer, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) private view returns (bool) {
+		return signer == ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
+	}
+}
