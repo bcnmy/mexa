@@ -11,7 +11,6 @@ contract RelayHub is Ownable(msg.sender) {
 	ProxyManager proxyManager;
 
 	// EVENTS
-	event ProxyCreated(address indexed identityProxy, address indexed proxyOwner, address creator);
 	event ProxyAdded(address indexed identityProxy, address indexed proxyOwner, address creator);
 	event Forwarded (address indexed destination, uint amount, bytes data);
 	// event RelayerAdded(address relayer, address owner);
@@ -53,9 +52,7 @@ contract RelayHub is Ownable(msg.sender) {
 	}
 
 	function createIdentityProxy(address proxyOwner) public onlyRelayer {
-		IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
-		proxyManager.addProxy(proxyOwner, address(identityProxy));
-		emit ProxyCreated(address(identityProxy), proxyOwner, msg.sender);
+		proxyManager.createIdentityProxy(proxyOwner);
 	}
 
 	function getProxyAddress(address proxyOwner) public view returns(address) {
@@ -67,7 +64,7 @@ contract RelayHub is Ownable(msg.sender) {
 	public onlyProxyOwner(proxyOwner, proxy) onlyRelayer {
 		IdentityProxy identityProxy = IdentityProxy(proxy);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
-		identityProxy.forward(destination, amount, data);
+		proxyManager.forward(proxy, destination, amount, data);
 		emit Forwarded(destination, amount, data);
 	}
 
@@ -77,7 +74,7 @@ contract RelayHub is Ownable(msg.sender) {
 		address payable proxyAddress = address(uint160(proxyManager.getProxyAddress(proxyOwner)));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
-		identityProxy.withdraw(receiver, amount);
+		proxyManager.withdraw(proxyAddress, receiver, amount);
 	}
 
 	//transfer erc20 token
@@ -87,7 +84,7 @@ contract RelayHub is Ownable(msg.sender) {
 		address payable proxyAddress = address(uint160(proxyManager.getProxyAddress(proxyOwner)));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
-		identityProxy.transferERC20(erc20ContractAddress, destination, amount);
+		proxyManager.transferERC20(proxyAddress, erc20ContractAddress, destination, amount);
 	}
 
 	//transfer erc721 token
@@ -97,7 +94,7 @@ contract RelayHub is Ownable(msg.sender) {
 		address payable proxyAddress = address(uint160(proxyManager.getProxyAddress(proxyOwner)));
 		IdentityProxy identityProxy = IdentityProxy(proxyAddress);
 		require(verifySignature(r,s,v, message, length, proxyOwner, identityProxy.getNonce()), "Signature does not match with signer");
-		identityProxy.transferERC721(erc721ContractAddress, destination, tokenId);
+		proxyManager.transferERC721(proxyAddress, erc721ContractAddress, destination, tokenId);
 	}
 
 	function uint2str(uint256 _i) internal pure returns (string memory _uintAsString) {
