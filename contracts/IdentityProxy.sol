@@ -1,73 +1,110 @@
 pragma solidity ^0.5.0;
 import "./libs/Ownable.sol";
-import "./libs/SafeMath.sol";
-import "./token/erc20/IERC20.sol";
-import "./token/erc721/IERC721.sol";
+import "./EternalStorage.sol";
 
-contract IdentityProxy is Ownable {
-    using SafeMath for uint256;
-
-    uint256 public nonce;
-    event Forwarded (address indexed destination, uint amount, bytes data);
-    event Received (address indexed sender, uint amount);
-    event Withdraw (address indexed receiver, uint amount);
-    event TransferERC20(address indexed tokenAddress, address indexed receiver, uint256 amount);
-    event TransferERC721(address indexed tokenAddress, address indexed receiver, uint256 tokenId);
-
-    address private creator;
-
-    constructor(address owner) Ownable(owner) public {
+contract IdentityProxy is EternalStorage, Ownable {
+    address public Implementation;
+    constructor(address owner) public Ownable(owner) {
         creator = msg.sender;
     }
 
-    function getCreator() public view returns(address) {
+    function updateImplementation(address _newImplementation)
+        external
+        onlyOwnerOrManager
+    {
+        Implementation = _newImplementation;
+    }
+
+    function getCreator() public view returns (address) {
         return creator;
     }
 
     modifier onlyOwnerOrManager() {
-        require(msg.sender == creator || msg.sender == owner(),"Not the Owner or Manager");
+        require(
+            msg.sender == creator || msg.sender == owner(),
+            "Not the Owner or Manager"
+        );
         _;
     }
 
-    function () external payable  { emit Received(msg.sender, msg.value); }
+    function() external payable {
+        emit Received(msg.sender, msg.value);
+    }
 
-    function getNonce() public view returns(uint256){
+    function getNonce() public view returns (uint256) {
         return nonce;
     }
 
-    function forward(address payable destination, uint256 amount, bytes memory data) public payable onlyOwnerOrManager {
-        require(executeCall(destination,amount,data), "ExecuteCall() failed");
-        nonce = nonce.add(1);
-        emit Forwarded(destination, amount, data);
+    function forward(
+        address payable destination,
+        uint256 amount,
+        bytes memory data
+    ) public payable onlyOwnerOrManager {
+        (bool status, ) = Implementation.delegatecall(
+            abi.encodeWithSelector(
+                bytes4(keccak256("forward(address,uint256,bytes)")),
+                destination,
+                amount,
+                data
+            )
+        );
+        require(status, "DelegateCall Failed");
     }
 
     // Ref => https://github.com/gnosis/gnosis-safe-contracts/blob/master/contracts/GnosisSafe.sol
-    function executeCall(address to, uint256 amount, bytes memory data) public returns (bool success) {
-        assembly {
-            success := call(gas, to, amount, add(data, 0x20), mload(data), 0, 0)
-        }
+    // function executeCall(address to, uint256 amount, bytes memory data)
+    //     public
+    //     returns (bool success)
+    // {
+    //     assembly {
+    //         success := call(gas, to, amount, add(data, 0x20), mload(data), 0, 0)
+    //     }
+    // }
+
+    function withdraw(address payable receiver, uint256 amount)
+        public
+        onlyOwnerOrManager
+    {
+        (bool status, ) = Implementation.delegatecall(
+            abi.encodeWithSelector(
+                bytes4(keccak256("withdraw(address,uint256)")),
+                receiver,
+                amount
+            )
+        );
+        require(status, "DelegateCall Failed");
     }
 
-    function withdraw(address payable receiver, uint256 amount) public onlyOwnerOrManager {
-        require(address(this).balance >= amount, "You dont have enough balance to withdraw");
-        receiver.transfer(amount);
-        nonce = nonce.add(1);
-        emit Withdraw(receiver, amount);
+    function transferERC20(
+        address erc20ContractAddress,
+        address destination,
+        uint256 amount
+    ) public onlyOwnerOrManager {
+        (bool status, ) = Implementation.delegatecall(
+            abi.encodeWithSelector(
+                bytes4(keccak256("transferERC20(address,address,uint256)")),
+                erc20ContractAddress,
+                destination,
+                amount
+            )
+        );
+        require(status, "DelegateCall Failed");
     }
 
-
-    function transferERC20(address erc20ContractAddress, address destination, uint256 amount) public onlyOwnerOrManager {
-        require(amount > 0, "Please enter a valid value");
-        IERC20 erc20Token = IERC20(erc20ContractAddress);
-        erc20Token.transfer(destination,amount);
-        nonce = nonce.add(1);
-        emit TransferERC20(erc20ContractAddress, destination, amount);
+    function transferERC721(
+        address erc721ContractAddress,
+        address destination,
+        uint256 tokenId
+    ) public onlyOwnerOrManager {
+        (bool status, ) = Implementation.delegatecall(
+            abi.encodeWithSelector(
+                bytes4(keccak256("transferERC721(address,address,uint256)")),
+                erc721ContractAddress,
+                destination,
+                tokenId
+            )
+        );
+        require(status, "DelegateCall Failed");
     }
 
-    function transferERC721(address erc721ContractAddress, address destination, uint256 tokenId) public onlyOwnerOrManager {
-        IERC721 erc721Token = IERC721(erc721ContractAddress);
-        erc721Token.transferFrom(address(this), destination, tokenId);
-        nonce = nonce.add(1);
-        emit TransferERC721(erc721ContractAddress, destination, tokenId);
-    }
 }
