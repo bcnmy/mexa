@@ -27,84 +27,32 @@ contract IdentityProxy is EternalStorage, Ownable {
         _;
     }
 
-    function() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
     function getNonce() public view returns (uint256) {
         return nonce;
     }
+    function() external payable {
+        if (msg.data.length == 0) {
+            emit Received(msg.sender, msg.value);
+        } else {
+            address impl = latestLogic;
+            require(impl != address(0));
+            assembly {
+                let ptr := mload(0x40)
+                calldatacopy(ptr, 0, calldatasize)
+                let result := delegatecall(gas, impl, ptr, calldatasize, 0, 0)
+                let size := returndatasize
+                returndatacopy(ptr, 0, size)
 
-    function forward(
-        address payable destination,
-        uint256 amount,
-        bytes memory data
-    ) public payable onlyOwnerOrManager {
-        (bool status, ) = Implementation.delegatecall(
-            abi.encodeWithSelector(
-                bytes4(keccak256("forward(address,uint256,bytes)")),
-                destination,
-                amount,
-                data
-            )
-        );
-        require(status, "DelegateCall Failed");
-    }
+                switch result
+                    case 0 {
+                        revert(ptr, size)
+                    }
+                    default {
+                        return(ptr, size)
+                    }
+            }
+        }
 
-    // Ref => https://github.com/gnosis/gnosis-safe-contracts/blob/master/contracts/GnosisSafe.sol
-    // function executeCall(address to, uint256 amount, bytes memory data)
-    //     public
-    //     returns (bool success)
-    // {
-    //     assembly {
-    //         success := call(gas, to, amount, add(data, 0x20), mload(data), 0, 0)
-    //     }
-    // }
-
-    function withdraw(address payable receiver, uint256 amount)
-        public
-        onlyOwnerOrManager
-    {
-        (bool status, ) = Implementation.delegatecall(
-            abi.encodeWithSelector(
-                bytes4(keccak256("withdraw(address,uint256)")),
-                receiver,
-                amount
-            )
-        );
-        require(status, "DelegateCall Failed");
-    }
-
-    function transferERC20(
-        address erc20ContractAddress,
-        address destination,
-        uint256 amount
-    ) public onlyOwnerOrManager {
-        (bool status, ) = Implementation.delegatecall(
-            abi.encodeWithSelector(
-                bytes4(keccak256("transferERC20(address,address,uint256)")),
-                erc20ContractAddress,
-                destination,
-                amount
-            )
-        );
-        require(status, "DelegateCall Failed");
-    }
-
-    function transferERC721(
-        address erc721ContractAddress,
-        address destination,
-        uint256 tokenId
-    ) public onlyOwnerOrManager {
-        (bool status, ) = Implementation.delegatecall(
-            abi.encodeWithSelector(
-                bytes4(keccak256("transferERC721(address,address,uint256)")),
-                erc721ContractAddress,
-                destination,
-                tokenId
-            )
-        );
-        require(status, "DelegateCall Failed");
     }
 
 }
