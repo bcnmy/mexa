@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./IdentityProxy.sol";
 
@@ -16,6 +16,7 @@ contract ProxyManager is Ownable(msg.sender) {
 
     mapping(address => mapping(address => bool)) internal proxyOwners;
 	mapping(address => address) internal proxyOwnerMap;
+    address[] internal users;
 
     address public relayHub;
 
@@ -23,7 +24,15 @@ contract ProxyManager is Ownable(msg.sender) {
         relayHub = newRelahHub;
     }
 
-    function addProxy(address proxyOwner, address proxyAddress) internal {
+    function getUsers() public view returns(address[] memory) {
+        return users;
+    }
+
+    function addProxy(address proxyOwner, address proxyAddress) public onlyOwner {
+        _addProxy(proxyOwner, proxyAddress);
+    }
+
+    function _addProxy(address proxyOwner, address proxyAddress) internal {
         proxyOwners[proxyOwner][proxyAddress] = true;
 		proxyOwnerMap[proxyOwner] = proxyAddress;
     }
@@ -42,30 +51,21 @@ contract ProxyManager is Ownable(msg.sender) {
 
     function createIdentityProxy(address proxyOwner) public onlyRelayHub {
         IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
-		addProxy(proxyOwner, address(identityProxy));
+		_addProxy(proxyOwner, address(identityProxy));
+        users.push(proxyOwner);
         emit ProxyCreated(address(identityProxy), proxyOwner, address(this));
     }
 
     function forward(address payable proxyAddress, address payable destination, uint256 amount,
-        bytes memory data) public onlyRelayHub {
+        bytes memory data, uint256 gasLimit, uint256 batchId) public onlyRelayHub {
         IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.forward(destination, amount, data);
+        identityProxy.forward(destination, amount, data, gasLimit, batchId);
     }
 
-    function withdraw(address payable proxyAddress, address payable receiver, uint256 amount) public onlyRelayHub {
+    function withdraw(address payable proxyAddress, address payable receiver, uint256 amount,
+        uint256 batchId) public onlyRelayHub {
         IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.withdraw(receiver, amount);
+        identityProxy.withdraw(receiver, amount, batchId);
     }
 
-    function transferERC20(address payable proxyAddress, address erc20ContractAddress,
-        address destination, uint256 amount) public onlyRelayHub {
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.transferERC20(erc20ContractAddress, destination, amount);
-    }
-
-    function transferERC721(address payable proxyAddress, address erc721ContractAddress,
-        address destination, uint256 tokenId) public onlyRelayHub {
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.transferERC721(erc721ContractAddress, destination, tokenId);
-    }
 }

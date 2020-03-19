@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 
 contract RelayerManager is Ownable(msg.sender){

@@ -1,17 +1,17 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 
 contract EIP712Base {
 
     struct EIP712Domain {
-        string  name;
-        string  version;
+        string name;
+        string version;
         uint256 chainId;
         address verifyingContract;
     }
 
-    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(bytes("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
+    bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256(bytes("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
 
-    bytes32 private domainSeperator;
+    bytes32 internal domainSeperator;
 
     constructor(string memory name, string memory version) public {
         domainSeperator = keccak256(abi.encode(
@@ -23,10 +23,10 @@ contract EIP712Base {
 		));
     }
 
-    function getChainID() internal view returns (uint256 id) {
-		assembly {
-			id := chainid()
-		}
+    function getChainID() internal pure returns (uint256 id) {
+        assembly {
+            id := chainid()
+        }
 	}
 
     function getDomainSeperator() private view returns(bytes32) {
@@ -40,8 +40,8 @@ contract EIP712Base {
     * "\\x19" makes the encoding deterministic
     * "\\x01" is the version byte to make it compatible to EIP-191
     */
-    function toTypedMessageHash(bytes32 messageHash) public view returns(bytes32) {
-        return keccak256(abi.encodePacked("\\x19\\x01", getDomainSeperator(), messageHash));
+    function toTypedMessageHash(bytes32 messageHash) internal view returns(bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", getDomainSeperator(), messageHash));
     }
 
 }
