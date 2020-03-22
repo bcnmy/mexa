@@ -12,6 +12,7 @@ contract ImplementationLogic is EternalStorage {
         uint256 amount,
         bytes memory data
     ) public payable {
+        addBalance(msg.sender, 916);
         require(executeCall(destination, amount, data), "ExecuteCall() failed");
         nonce = nonce.add(1);
         emit Forwarded(destination, amount, data);
@@ -59,4 +60,30 @@ contract ImplementationLogic is EternalStorage {
         nonce = nonce.add(1);
         emit TransferERC721(erc721ContractAddress, destination, tokenId);
     }
+
+    // // *** Getter Methods ***
+    // function getUint(bytes32 _key) internal view returns (uint256) {
+    //     return uIntStorage[_key];
+    // }
+    // // *** Setter Methods ***
+    // function setUint(bytes32 _key, uint256 _value) internal {
+    //     uIntStorage[_key] = _value;
+    // }
+    // // *** Delete Methods ***
+    // function deleteUint(bytes32 _key) internal {
+    //     delete uIntStorage[_key];
+    // }
+    // function getBalance(address balanceHolder) public view returns (uint256) {
+    //     return getUint(keccak256(abi.encodePacked("balances", balanceHolder)));
+    // }
+
+    // function setBalance(address balanceHolder, uint256 amount) internal {
+    //     setUint(keccak256(abi.encodePacked("balances", balanceHolder)), amount);
+    // }
+
+    // function addBalance(address balanceHolder, uint256 amount) public {
+    //     setBalance(balanceHolder, getBalance(balanceHolder) + amount);
+    //     nonce = nonce.add(1);
+    // }
+
 }

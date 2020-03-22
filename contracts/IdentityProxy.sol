@@ -34,7 +34,7 @@ contract IdentityProxy is EternalStorage, Ownable {
         if (msg.data.length == 0) {
             emit Received(msg.sender, msg.value);
         } else {
-            address impl = latestLogic;
+            address impl = Implementation;
             require(impl != address(0));
             assembly {
                 let ptr := mload(0x40)
