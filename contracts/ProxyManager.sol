@@ -26,11 +26,14 @@ contract ProxyManager is Ownable(msg.sender) {
 
     mapping(address => mapping(address => bool)) internal proxyOwners;
     mapping(address => address) internal proxyOwnerMap;
-
     address public relayHub;
+    address public Implementation;
 
-    function upgradeRelayHub(address newRelahHub) public onlyOwner {
-        relayHub = newRelahHub;
+    constructor(address _implementation) public {
+        Implementation = _implementation;
+    }
+    function upgradeRelayHub(address newRelayHub) public onlyOwner {
+        relayHub = newRelayHub;
     }
 
     function addProxy(address proxyOwner, address proxyAddress) internal {
@@ -55,7 +58,10 @@ contract ProxyManager is Ownable(msg.sender) {
     }
 
     function createIdentityProxy(address proxyOwner) public onlyRelayHub {
-        IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
+        IdentityProxy identityProxy = new IdentityProxy(
+            proxyOwner,
+            Implementation
+        );
         addProxy(proxyOwner, address(identityProxy));
         emit ProxyCreated(address(identityProxy), proxyOwner, address(this));
     }

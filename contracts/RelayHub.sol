@@ -131,20 +131,6 @@ contract RelayHub is Ownable(msg.sender) {
 
     }
 
-    // function addStorage(address x, uint256 amount, address proxy) external {
-    //     bytes memory functionSignature = abi.encodeWithSignature(
-    //         "addBalance(address,uint256)",
-    //         x,
-    //         amount
-    //     );
-    //     (bool success, bytes memory returnData) = address(proxyManager).call(
-    //         abi.encodePacked(functionSignature, proxy)
-    //     );
-
-    //     require(success, "Call to Proxy Manager Failed at Relay Hub");
-
-    // }
-
     function withdraw(
         bytes32 r,
         bytes32 s,
@@ -182,101 +168,6 @@ contract RelayHub is Ownable(msg.sender) {
             "withdraw(address,uint256)",
             receiver,
             amount
-        );
-        (bool success, bytes memory returnData) = address(proxyManager).call(
-            abi.encodePacked(functionSignature, proxyAddress)
-        );
-        require(success, "Call to Proxy Manager Failed at Relay Hub");
-    }
-
-    // //transfer erc20 token
-    function transferERC20(
-        bytes32 r,
-        bytes32 s,
-        uint8 v,
-        string memory message,
-        string memory length,
-        address proxyOwner,
-        address erc20ContractAddress,
-        address destination,
-        uint256 amount
-    ) public {
-        require(
-            proxyManager.getProxyStatus(
-                proxyOwner,
-                proxyManager.getProxyAddress(proxyOwner)
-            ),
-            "Not a Proxy owner"
-        );
-        address payable proxyAddress = address(
-            uint160(proxyManager.getProxyAddress(proxyOwner))
-        );
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        require(
-            verifySignature(
-                r,
-                s,
-                v,
-                message,
-                length,
-                proxyOwner,
-                identityProxy.getNonce()
-            ),
-            "Signature does not match with signer"
-        );
-
-        bytes memory functionSignature = abi.encodeWithSignature(
-            "transferERC20(address,address,uint256)",
-            erc20ContractAddress,
-            destination,
-            amount
-        );
-        (bool success, bytes memory returnData) = address(proxyManager).call(
-            abi.encodePacked(functionSignature, proxyAddress)
-        );
-        require(success, "Call to Proxy Manager Failed at Relay Hub");
-    }
-
-    // //transfer erc721 token
-    function transferERC721(
-        bytes32 r,
-        bytes32 s,
-        uint8 v,
-        string memory message,
-        string memory length,
-        address proxyOwner,
-        address erc721ContractAddress,
-        address destination,
-        uint256 tokenId
-    ) public {
-        require(
-            proxyManager.getProxyStatus(
-                proxyOwner,
-                proxyManager.getProxyAddress(proxyOwner)
-            ),
-            "Not a Proxy owner"
-        );
-        address payable proxyAddress = address(
-            uint160(proxyManager.getProxyAddress(proxyOwner))
-        );
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        require(
-            verifySignature(
-                r,
-                s,
-                v,
-                message,
-                length,
-                proxyOwner,
-                identityProxy.getNonce()
-            ),
-            "Signature does not match with signer"
-        );
-        bytes memory functionSignature = abi.encodeWithSignature(
-            "transferERC721(address,address,uint256)",
-            erc721ContractAddress,
-            destination,
-            tokenId
         );
         (bool success, bytes memory returnData) = address(proxyManager).call(
             abi.encodePacked(functionSignature, proxyAddress)

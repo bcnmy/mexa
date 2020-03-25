@@ -4,8 +4,9 @@ import "./EternalStorage.sol";
 
 contract IdentityProxy is EternalStorage, Ownable {
     address public Implementation;
-    constructor(address owner) public Ownable(owner) {
+    constructor(address owner, address _implementation) public Ownable(owner) {
         creator = msg.sender;
+        Implementation = _implementation;
     }
 
     function updateImplementation(address _newImplementation)
