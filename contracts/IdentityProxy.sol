@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./libs/SafeMath.sol";
 import "./token/erc20/IERC20.sol";
