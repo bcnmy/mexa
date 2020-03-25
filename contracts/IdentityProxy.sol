@@ -1,11 +1,25 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./EternalStorage.sol";
 
 contract IdentityProxy is EternalStorage, Ownable {
-    address public Implementation;
-    constructor(address owner, address _implementation) public Ownable(owner) {
+    using SafeMath for uint256;
+
+    event Forwarded (address indexed destination, uint amount, bytes data);
+    event Received (address indexed sender, uint amount);
+    event Withdraw (address indexed receiver, uint amount);
+    event TransferERC20(address indexed tokenAddress, address indexed receiver, uint256 amount);
+    event TransferERC721(address indexed tokenAddress, address indexed receiver, uint256 tokenId);
+    event ManagerChanged(address oldManager, address newManager);
+
+    modifier onlyOwnerOrManager() {
+        require(msg.sender == manager || msg.sender == owner(),"Not the Owner or Manager");
+        _;
+    }
+
+    constructor(address owner, address _implementation) Ownable(owner) public {
         creator = msg.sender;
+        manager = msg.sender;
         Implementation = _implementation;
     }
 
@@ -20,18 +34,22 @@ contract IdentityProxy is EternalStorage, Ownable {
         return creator;
     }
 
-    modifier onlyOwnerOrManager() {
-        require(
-            msg.sender == creator || msg.sender == owner(),
-            "Not the Owner or Manager"
-        );
-        _;
+    function getManager() public view returns(address) {
+        return manager;
     }
 
-    function getNonce() public view returns (uint256) {
-        return nonce;
+    function changeManager(address newManager) public onlyOwner {
+        require(newManager != address(0), "New Manager address can not be zero");
+        address oldManager = manager;
+        manager = newManager;
+        emit ManagerChanged(oldManager, newManager);
     }
-    function() external payable {
+
+    function getNonce(uint256 batchId) public view returns(uint256){
+        return batchNonce[batchId];
+    }
+
+   function() external payable {
         if (msg.data.length == 0) {
             emit Received(msg.sender, msg.value);
         } else {
@@ -52,8 +70,4 @@ contract IdentityProxy is EternalStorage, Ownable {
                         return(ptr, size)
                     }
             }
-        }
-
-    }
-
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./IdentityProxy.sol";
 
@@ -26,17 +26,35 @@ contract ProxyManager is Ownable(msg.sender) {
 
     mapping(address => mapping(address => bool)) internal proxyOwners;
     mapping(address => address) internal proxyOwnerMap;
+    address[] internal users;
+
     address public relayHub;
     address public Implementation;
 
     constructor(address _implementation) public {
         Implementation = _implementation;
     }
+
+    // add appropriate modifier here
+    function updateImplementation(address _newImplementation) external {
+        Implementation = _newImplementation;
+    }
     function upgradeRelayHub(address newRelayHub) public onlyOwner {
         relayHub = newRelayHub;
     }
 
-    function addProxy(address proxyOwner, address proxyAddress) internal {
+    function getUsers() public view returns (address[] memory) {
+        return users;
+    }
+
+    function addProxy(address proxyOwner, address proxyAddress)
+        public
+        onlyOwner
+    {
+        _addProxy(proxyOwner, proxyAddress);
+    }
+
+    function _addProxy(address proxyOwner, address proxyAddress) internal {
         proxyOwners[proxyOwner][proxyAddress] = true;
         proxyOwnerMap[proxyOwner] = proxyAddress;
     }
@@ -62,7 +80,8 @@ contract ProxyManager is Ownable(msg.sender) {
             proxyOwner,
             Implementation
         );
-        addProxy(proxyOwner, address(identityProxy));
+        _addProxy(proxyOwner, address(identityProxy));
+        users.push(proxyOwner);
         emit ProxyCreated(address(identityProxy), proxyOwner, address(this));
     }
 

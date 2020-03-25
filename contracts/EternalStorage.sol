@@ -14,8 +14,10 @@ contract EternalStorage {
         address indexed receiver,
         uint256 tokenId
     );
-    uint256 public nonce;
+    mapping(uint256 => uint256) public batchNonce;
     address public creator;
+    address public manager;
+    address public Implementation;
 
     /* Upgradable Storage */
     mapping(bytes32 => uint256) uIntStorage;
