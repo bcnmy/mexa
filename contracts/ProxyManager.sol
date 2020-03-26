@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./IdentityProxy.sol";
 
@@ -29,15 +29,18 @@ contract ProxyManager is Ownable(msg.sender) {
     address[] internal users;
 
     address public relayHub;
-    address public Implementation;
+    address public implementation;
 
     constructor(address _implementation) public {
-        Implementation = _implementation;
+        implementation = _implementation;
     }
 
     // add appropriate modifier here
-    function updateImplementation(address _newImplementation) external {
-        Implementation = _newImplementation;
+    function updateImplementation(address _newImplementation)
+        external
+        onlyOwner
+    {
+        implementation = _newImplementation;
     }
     function upgradeRelayHub(address newRelayHub) public onlyOwner {
         relayHub = newRelayHub;
@@ -78,7 +81,7 @@ contract ProxyManager is Ownable(msg.sender) {
     function createIdentityProxy(address proxyOwner) public onlyRelayHub {
         IdentityProxy identityProxy = new IdentityProxy(
             proxyOwner,
-            Implementation
+            implementation
         );
         _addProxy(proxyOwner, address(identityProxy));
         users.push(proxyOwner);
@@ -86,18 +89,18 @@ contract ProxyManager is Ownable(msg.sender) {
     }
 
     function() external {
-        bytes20 relayerAddress;
-        address impl;
+        bytes20 userWalletAddress;
+        address usr;
 
         assembly {
             calldatacopy(0x40, sub(calldatasize, 20), calldatasize)
-            relayerAddress := mload(0x40)
+            userWalletAddress := mload(0x40)
         }
-        impl = address(uint160(relayerAddress));
+        usr = address(uint160(userWalletAddress));
         assembly {
             let ptr := add(0x40, 20)
             calldatacopy(ptr, 0, sub(calldatasize, 20))
-            let result := call(gas, impl, 0, ptr, calldatasize, 0, 0)
+            let result := call(gas, usr, 0, ptr, calldatasize, 0, 0)
             let size := returndatasize
             returndatacopy(ptr, 0, size)
 

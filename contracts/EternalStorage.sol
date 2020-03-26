@@ -1,23 +1,14 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 
 contract EternalStorage {
     event Forwarded(address indexed destination, uint256 amount, bytes data);
     event Received(address indexed sender, uint256 amount);
     event Withdraw(address indexed receiver, uint256 amount);
-    event TransferERC20(
-        address indexed tokenAddress,
-        address indexed receiver,
-        uint256 amount
-    );
-    event TransferERC721(
-        address indexed tokenAddress,
-        address indexed receiver,
-        uint256 tokenId
-    );
+
     mapping(uint256 => uint256) public batchNonce;
     address public creator;
     address public manager;
-    address public Implementation;
+    address public implementation;
 
     /* Upgradable Storage */
     mapping(bytes32 => uint256) uIntStorage;

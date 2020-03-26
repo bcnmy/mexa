@@ -1,59 +1,58 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./EternalStorage.sol";
 
 contract IdentityProxy is EternalStorage, Ownable {
-    using SafeMath for uint256;
-
-    event Forwarded (address indexed destination, uint amount, bytes data);
-    event Received (address indexed sender, uint amount);
-    event Withdraw (address indexed receiver, uint amount);
-    event TransferERC20(address indexed tokenAddress, address indexed receiver, uint256 amount);
-    event TransferERC721(address indexed tokenAddress, address indexed receiver, uint256 tokenId);
     event ManagerChanged(address oldManager, address newManager);
 
     modifier onlyOwnerOrManager() {
-        require(msg.sender == manager || msg.sender == owner(),"Not the Owner or Manager");
+        require(
+            msg.sender == manager || msg.sender == owner(),
+            "Not the Owner or Manager"
+        );
         _;
     }
 
-    constructor(address owner, address _implementation) Ownable(owner) public {
+    constructor(address owner, address _implementation) public Ownable(owner) {
         creator = msg.sender;
         manager = msg.sender;
-        Implementation = _implementation;
+        implementation = _implementation;
     }
 
     function updateImplementation(address _newImplementation)
         external
         onlyOwnerOrManager
     {
-        Implementation = _newImplementation;
+        implementation = _newImplementation;
     }
 
     function getCreator() public view returns (address) {
         return creator;
     }
 
-    function getManager() public view returns(address) {
+    function getManager() public view returns (address) {
         return manager;
     }
 
     function changeManager(address newManager) public onlyOwner {
-        require(newManager != address(0), "New Manager address can not be zero");
+        require(
+            newManager != address(0),
+            "New Manager address can not be zero"
+        );
         address oldManager = manager;
         manager = newManager;
         emit ManagerChanged(oldManager, newManager);
     }
 
-    function getNonce(uint256 batchId) public view returns(uint256){
+    function getNonce(uint256 batchId) public view returns (uint256) {
         return batchNonce[batchId];
     }
 
-   function() external payable {
+    function() external payable {
         if (msg.data.length == 0) {
             emit Received(msg.sender, msg.value);
         } else {
-            address impl = Implementation;
+            address impl = implementation;
             require(impl != address(0));
             assembly {
                 let ptr := mload(0x40)
@@ -70,4 +69,6 @@ contract IdentityProxy is EternalStorage, Ownable {
                         return(ptr, size)
                     }
             }
+        }
+    }
 }

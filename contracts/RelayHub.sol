@@ -1,9 +1,11 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./IdentityProxy.sol";
 import "./libs/Ownable.sol";
 import "./RelayerManager.sol";
 import "./ProxyManager.sol";
 import "./libs/SafeMath.sol";
+import "./libs/EIP712MetaTx.sol";
+import "./token/erc20/IERC20.sol";
 
 contract RelayHub is
     Ownable(msg.sender),
@@ -93,7 +95,6 @@ contract RelayHub is
         return proxyManager.getProxyAddress(proxyOwner);
     }
 
-<<<<<<< HEAD
     /**
 	 * @dev Forward the transaction to user contract wallet/proxy contract.
 	 * addressArray[0] user address
@@ -190,84 +191,6 @@ contract RelayHub is
             receiverAddress,
             uintArray[3],
             uintArray[4]
-=======
-    function forward(
-        bytes32 r,
-        bytes32 s,
-        uint8 v,
-        string memory message,
-        string memory length,
-        address payable proxy,
-        address proxyOwner,
-        address payable destination,
-        uint256 amount,
-        bytes memory data
-    ) public onlyProxyOwner(proxyOwner, proxy) onlyRelayer {
-        IdentityProxy identityProxy = IdentityProxy(proxy);
-        require(
-            verifySignature(
-                r,
-                s,
-                v,
-                message,
-                length,
-                proxyOwner,
-                identityProxy.getNonce()
-            ),
-            "Signature does not match with signer"
-        );
-        bytes memory functionSignature = abi.encodeWithSignature(
-            "forward(address,uint256,bytes)",
-            destination,
-            amount,
-            data
-        );
-        (bool success, bytes memory returnData) = address(proxyManager).call(
-            abi.encodePacked(functionSignature, proxy)
-        );
-        require(success, "Call to Proxy Manager Failed at Relay Hub");
-        emit Forwarded(destination, amount, data);
-
-    }
-
-    function withdraw(
-        bytes32 r,
-        bytes32 s,
-        uint8 v,
-        string memory message,
-        string memory length,
-        address proxyOwner,
-        address payable receiver,
-        uint256 amount
-    ) public {
-        require(
-            proxyManager.getProxyStatus(
-                proxyOwner,
-                proxyManager.getProxyAddress(proxyOwner)
-            ),
-            "Not a Proxy owner"
-        );
-        address payable proxyAddress = address(
-            uint160(proxyManager.getProxyAddress(proxyOwner))
-        );
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        require(
-            verifySignature(
-                r,
-                s,
-                v,
-                message,
-                length,
-                proxyOwner,
-                identityProxy.getNonce()
-            ),
-            "Signature does not match with signer"
-        );
-        bytes memory functionSignature = abi.encodeWithSignature(
-            "withdraw(address,uint256)",
-            receiver,
-            amount
->>>>>>> 2f9237558fb3f6f633487d401f74e75aea47ffa0
         );
         (bool success, bytes memory returnData) = address(proxyManager).call(
             abi.encodePacked(functionSignature, proxyAddress)
@@ -275,7 +198,6 @@ contract RelayHub is
         require(success, "Call to Proxy Manager Failed at Relay Hub");
     }
 
-<<<<<<< HEAD
     /**
 	 * @dev Verify EIP712 signature.
 	 *
@@ -347,50 +269,5 @@ contract RelayHub is
                 sigR,
                 sigS
             );
-=======
-    function uint2str(uint256 _i)
-        internal
-        pure
-        returns (string memory _uintAsString)
-    {
-        if (_i == 0) {
-            return "0";
-        }
-        uint256 j = _i;
-        uint256 len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        uint256 k = len - 1;
-        uint256 temp = _i;
-        while (temp != 0) {
-            bstr[k--] = bytes1(uint8(48 + (temp % 10)));
-            temp /= 10;
-        }
-        return string(bstr);
-    }
-
-    function verifySignature(
-        bytes32 r,
-        bytes32 s,
-        uint8 v,
-        string memory message,
-        string memory length,
-        address owner,
-        uint256 userNonce
-    ) public view returns (bool) {
-        string memory nonceStr = uint2str(userNonce);
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                "\x19Ethereum Signed Message:\n",
-                length,
-                message,
-                nonceStr
-            )
-        );
-        return (owner == ecrecover(hash, v, r, s));
->>>>>>> 2f9237558fb3f6f633487d401f74e75aea47ffa0
     }
 }
