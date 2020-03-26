@@ -176,7 +176,7 @@ contract RelayHub is
         bytes32 r,
         bytes32 s,
         uint8 v
-    ) public onlyProxyOwner(addressArray[0], addressArray[2]) {
+    ) public onlyProxyOwner(addressArray[0], addressArray[2]) onlyRelayer {
         if (uintArray[0] > 0 && block.number > uintArray[0]) {
             revert("Transaction could not be executed before expiry time");
         }

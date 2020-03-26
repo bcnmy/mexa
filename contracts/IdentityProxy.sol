@@ -23,6 +23,10 @@ contract IdentityProxy is EternalStorage, Ownable {
         external
         onlyOwnerOrManager
     {
+        require(
+            _newImplementation != address(0),
+            "Implementation address can not be zero"
+        );
         implementation = _newImplementation;
     }
 
@@ -49,6 +53,10 @@ contract IdentityProxy is EternalStorage, Ownable {
     }
 
     function() external payable {
+        require(
+            msg.sender == manager || msg.sender == owner(),
+            "Not the Owner or Manager"
+        );
         if (msg.data.length == 0) {
             emit Received(msg.sender, msg.value);
         } else {

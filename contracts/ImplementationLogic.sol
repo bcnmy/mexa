@@ -1,11 +1,9 @@
 pragma solidity ^0.5.13;
 import "./libs/SafeMath.sol";
-import "./token/erc20/IERC20.sol";
-import "./token/erc721/IERC721.sol";
 import "./EternalStorage.sol";
 import "./libs/Ownable.sol";
 
-contract ImplementationLogic is EternalStorage, Ownable {
+contract ImplementationLogic is EternalStorage, Ownable(msg.sender) {
     using SafeMath for uint256;
 
     modifier onlyOwnerOrManager() {

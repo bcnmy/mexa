@@ -17,4 +17,6 @@ module.exports = function (deployer) {
 				});
 			});
 		});
-	};
+	}
+	)
+};

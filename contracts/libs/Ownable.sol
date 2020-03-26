@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 
 /**
  * @title Ownable
@@ -8,7 +8,10 @@ pragma solidity ^0.5.0;
 contract Ownable {
     address private _owner;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
 
     /**
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
@@ -29,7 +32,10 @@ contract Ownable {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(isOwner(), "Only contract owner is allowed to perform this operation");
+        require(
+            isOwner(),
+            "Only contract owner is allowed to perform this operation"
+        );
         _;
     }
 

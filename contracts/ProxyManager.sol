@@ -40,9 +40,14 @@ contract ProxyManager is Ownable(msg.sender) {
         external
         onlyOwner
     {
+        require(
+            _newImplementation != address(0),
+            "Implementation address can not be zero"
+        );
         implementation = _newImplementation;
     }
     function upgradeRelayHub(address newRelayHub) public onlyOwner {
+        require(newRelayHub != address(0), "RelayHub address can not be zero");
         relayHub = newRelayHub;
     }
 
@@ -54,6 +59,11 @@ contract ProxyManager is Ownable(msg.sender) {
         public
         onlyOwner
     {
+        require(
+            proxyOwner != address(0),
+            "Proxy Owner address can not be zero"
+        );
+        require(proxyAddress != address(0), "Proxy address can not be zero");
         _addProxy(proxyOwner, proxyAddress);
     }
 
@@ -79,6 +89,10 @@ contract ProxyManager is Ownable(msg.sender) {
     }
 
     function createIdentityProxy(address proxyOwner) public onlyRelayHub {
+        require(
+            proxyOwner != address(0),
+            "Proxy Owner Address can not be zero"
+        );
         IdentityProxy identityProxy = new IdentityProxy(
             proxyOwner,
             implementation
@@ -91,7 +105,10 @@ contract ProxyManager is Ownable(msg.sender) {
     function() external {
         bytes20 userWalletAddress;
         address usr;
-
+        require(
+            relayHub == msg.sender,
+            "You are not allowed to perform this operation"
+        );
         assembly {
             calldatacopy(0x40, sub(calldatasize, 20), calldatasize)
             userWalletAddress := mload(0x40)
