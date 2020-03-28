@@ -1,71 +1,135 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./IdentityProxy.sol";
 
 contract ProxyManager is Ownable(msg.sender) {
-
     // EVENTS
-    event RelayHubChanged(address currentRelayHub, address newRelayHub, address owner);
-    event ProxyCreated(address indexed identityProxy, address indexed proxyOwner, address creator);
+    event RelayHubChanged(
+        address currentRelayHub,
+        address newRelayHub,
+        address owner
+    );
+    event ProxyCreated(
+        address indexed identityProxy,
+        address indexed proxyOwner,
+        address creator
+    );
 
     // MODIFIERS
     modifier onlyRelayHub() {
-		require(relayHub == msg.sender, "You are not allowed to perform this operation");
-		_;
-	}
+        require(
+            relayHub == msg.sender,
+            "You are not allowed to perform this operation"
+        );
+        _;
+    }
 
     mapping(address => mapping(address => bool)) internal proxyOwners;
-	mapping(address => address) internal proxyOwnerMap;
+    mapping(address => address) internal proxyOwnerMap;
+    address[] internal users;
 
     address public relayHub;
+    address public implementation;
 
-    function upgradeRelayHub(address newRelahHub) public onlyOwner {
-        relayHub = newRelahHub;
+    constructor(address _implementation) public {
+        implementation = _implementation;
     }
 
-    function addProxy(address proxyOwner, address proxyAddress) internal {
+    // add appropriate modifier here
+    function updateImplementation(address _newImplementation)
+        external
+        onlyOwner
+    {
+        require(
+            _newImplementation != address(0),
+            "Implementation address can not be zero"
+        );
+        implementation = _newImplementation;
+    }
+    function upgradeRelayHub(address newRelayHub) public onlyOwner {
+        require(newRelayHub != address(0), "RelayHub address can not be zero");
+        relayHub = newRelayHub;
+    }
+
+    function getUsers() public view returns (address[] memory) {
+        return users;
+    }
+
+    function addProxy(address proxyOwner, address proxyAddress)
+        public
+        onlyOwner
+    {
+        require(
+            proxyOwner != address(0),
+            "Proxy Owner address can not be zero"
+        );
+        require(proxyAddress != address(0), "Proxy address can not be zero");
+        _addProxy(proxyOwner, proxyAddress);
+    }
+
+    function _addProxy(address proxyOwner, address proxyAddress) internal {
         proxyOwners[proxyOwner][proxyAddress] = true;
-		proxyOwnerMap[proxyOwner] = proxyAddress;
+        proxyOwnerMap[proxyOwner] = proxyAddress;
     }
 
-    function getProxyAddress(address proxyOwner) public view returns(address) {
+    function getProxyAddress(address proxyOwner) public view returns (address) {
         address proxyAddress = proxyOwnerMap[proxyOwner];
-		if(proxyOwners[proxyOwner][proxyAddress]) {
-			return proxyAddress;
-		}
-		return address(0);
+        if (proxyOwners[proxyOwner][proxyAddress]) {
+            return proxyAddress;
+        }
+        return address(0);
     }
 
-    function getProxyStatus(address proxyOwner, address proxyAddress) public view returns(bool) {
+    function getProxyStatus(address proxyOwner, address proxyAddress)
+        public
+        view
+        returns (bool)
+    {
         return proxyOwners[proxyOwner][proxyAddress];
     }
 
     function createIdentityProxy(address proxyOwner) public onlyRelayHub {
-        IdentityProxy identityProxy = new IdentityProxy(proxyOwner);
-		addProxy(proxyOwner, address(identityProxy));
+        require(
+            proxyOwner != address(0),
+            "Proxy Owner Address can not be zero"
+        );
+        IdentityProxy identityProxy = new IdentityProxy(
+            proxyOwner,
+            implementation
+        );
+        _addProxy(proxyOwner, address(identityProxy));
+        users.push(proxyOwner);
         emit ProxyCreated(address(identityProxy), proxyOwner, address(this));
     }
 
-    function forward(address payable proxyAddress, address payable destination, uint256 amount,
-        bytes memory data) public onlyRelayHub {
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.forward(destination, amount, data);
-    }
+    function() external {
+        bytes20 userWalletAddress;
+        address usr;
+        require(
+            relayHub == msg.sender,
+            "You are not allowed to perform this operation"
+        );
+        assembly {
+            calldatacopy(0x40, sub(calldatasize, 20), calldatasize)
+            userWalletAddress := mload(0x40)
+        }
+        usr = address(uint160(userWalletAddress));
+        assembly {
+            let ptr := add(0x40, 20)
+            calldatacopy(ptr, 0, sub(calldatasize, 20))
+            let result := call(gas, usr, 0, ptr, calldatasize, 0, 0)
+            let size := returndatasize
+            returndatacopy(ptr, 0, size)
 
-    function withdraw(address payable proxyAddress, address payable receiver, uint256 amount) public onlyRelayHub {
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.withdraw(receiver, amount);
-    }
+            switch result
+                case 0 {
+                    revert(ptr, size)
+                }
+                default {
+                    return(ptr, size)
+                }
 
-    function transferERC20(address payable proxyAddress, address erc20ContractAddress,
-        address destination, uint256 amount) public onlyRelayHub {
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.transferERC20(erc20ContractAddress, destination, amount);
-    }
+        }
 
-    function transferERC721(address payable proxyAddress, address erc721ContractAddress,
-        address destination, uint256 tokenId) public onlyRelayHub {
-        IdentityProxy identityProxy = IdentityProxy(proxyAddress);
-        identityProxy.transferERC721(erc721ContractAddress, destination, tokenId);
     }
 }

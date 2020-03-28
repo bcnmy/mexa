@@ -1,73 +1,82 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
-import "./libs/SafeMath.sol";
-import "./token/erc20/IERC20.sol";
-import "./token/erc721/IERC721.sol";
+import "./EternalStorage.sol";
 
-contract IdentityProxy is Ownable {
-    using SafeMath for uint256;
-
-    uint256 public nonce;
-    event Forwarded (address indexed destination, uint amount, bytes data);
-    event Received (address indexed sender, uint amount);
-    event Withdraw (address indexed receiver, uint amount);
-    event TransferERC20(address indexed tokenAddress, address indexed receiver, uint256 amount);
-    event TransferERC721(address indexed tokenAddress, address indexed receiver, uint256 tokenId);
-
-    address private creator;
-
-    constructor(address owner) Ownable(owner) public {
-        creator = msg.sender;
-    }
-
-    function getCreator() public view returns(address) {
-        return creator;
-    }
+contract IdentityProxy is EternalStorage, Ownable {
+    event ManagerChanged(address oldManager, address newManager);
 
     modifier onlyOwnerOrManager() {
-        require(msg.sender == creator || msg.sender == owner(),"Not the Owner or Manager");
+        require(
+            msg.sender == manager || msg.sender == owner(),
+            "Not the Owner or Manager"
+        );
         _;
     }
 
-    function () external payable  { emit Received(msg.sender, msg.value); }
-
-    function getNonce() public view returns(uint256){
-        return nonce;
+    constructor(address owner, address _implementation) public Ownable(owner) {
+        creator = msg.sender;
+        manager = msg.sender;
+        implementation = _implementation;
     }
 
-    function forward(address payable destination, uint256 amount, bytes memory data) public payable onlyOwnerOrManager {
-        require(executeCall(destination,amount,data), "ExecuteCall() failed");
-        nonce = nonce.add(1);
-        emit Forwarded(destination, amount, data);
+    function updateImplementation(address _newImplementation)
+        external
+        onlyOwnerOrManager
+    {
+        require(
+            _newImplementation != address(0),
+            "Implementation address can not be zero"
+        );
+        implementation = _newImplementation;
     }
 
-    // Ref => https://github.com/gnosis/gnosis-safe-contracts/blob/master/contracts/GnosisSafe.sol
-    function executeCall(address to, uint256 amount, bytes memory data) public returns (bool success) {
-        assembly {
-            success := call(gas, to, amount, add(data, 0x20), mload(data), 0, 0)
+    function getCreator() public view returns (address) {
+        return creator;
+    }
+
+    function getManager() public view returns (address) {
+        return manager;
+    }
+
+    function changeManager(address newManager) public onlyOwner {
+        require(
+            newManager != address(0),
+            "New Manager address can not be zero"
+        );
+        address oldManager = manager;
+        manager = newManager;
+        emit ManagerChanged(oldManager, newManager);
+    }
+
+    function getNonce(uint256 batchId) public view returns (uint256) {
+        return batchNonce[batchId];
+    }
+
+    function() external payable {
+        require(
+            msg.sender == manager || msg.sender == owner(),
+            "Not the Owner or Manager"
+        );
+        if (msg.data.length == 0) {
+            emit Received(msg.sender, msg.value);
+        } else {
+            address impl = implementation;
+            require(impl != address(0));
+            assembly {
+                let ptr := mload(0x40)
+                calldatacopy(ptr, 0, calldatasize)
+                let result := delegatecall(gas, impl, ptr, calldatasize, 0, 0)
+                let size := returndatasize
+                returndatacopy(ptr, 0, size)
+
+                switch result
+                    case 0 {
+                        revert(ptr, size)
+                    }
+                    default {
+                        return(ptr, size)
+                    }
+            }
         }
-    }
-
-    function withdraw(address payable receiver, uint256 amount) public onlyOwnerOrManager {
-        require(address(this).balance >= amount, "You dont have enough balance to withdraw");
-        receiver.transfer(amount);
-        nonce = nonce.add(1);
-        emit Withdraw(receiver, amount);
-    }
-
-
-    function transferERC20(address erc20ContractAddress, address destination, uint256 amount) public onlyOwnerOrManager {
-        require(amount > 0, "Please enter a valid value");
-        IERC20 erc20Token = IERC20(erc20ContractAddress);
-        erc20Token.transfer(destination,amount);
-        nonce = nonce.add(1);
-        emit TransferERC20(erc20ContractAddress, destination, amount);
-    }
-
-    function transferERC721(address erc721ContractAddress, address destination, uint256 tokenId) public onlyOwnerOrManager {
-        IERC721 erc721Token = IERC721(erc721ContractAddress);
-        erc721Token.transferFrom(address(this), destination, tokenId);
-        nonce = nonce.add(1);
-        emit TransferERC721(erc721ContractAddress, destination, tokenId);
     }
 }
