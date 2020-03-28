@@ -1,5 +1,6 @@
 pragma solidity ^0.5.13;
 
+
 contract EIP712Base {
     struct EIP712Domain {
         string name;
@@ -30,7 +31,7 @@ contract EIP712Base {
 
     function getChainID() internal pure returns (uint256 id) {
         assembly {
-            id := chainid
+            id := chainid()
         }
     }
 
@@ -39,12 +40,12 @@ contract EIP712Base {
     }
 
     /**
-    * Accept message hash and returns hash message in EIP712 compatible form
-    * So that it can be used to recover signer from signature signed using EIP712 formatted data
-    * https://eips.ethereum.org/EIPS/eip-712
-    * "\\x19" makes the encoding deterministic
-    * "\\x01" is the version byte to make it compatible to EIP-191
-    */
+     * Accept message hash and returns hash message in EIP712 compatible form
+     * So that it can be used to recover signer from signature signed using EIP712 formatted data
+     * https://eips.ethereum.org/EIPS/eip-712
+     * "\\x19" makes the encoding deterministic
+     * "\\x01" is the version byte to make it compatible to EIP-191
+     */
     function toTypedMessageHash(bytes32 messageHash)
         internal
         view
@@ -55,5 +56,4 @@ contract EIP712Base {
                 abi.encodePacked("\x19\x01", getDomainSeperator(), messageHash)
             );
     }
-
 }
