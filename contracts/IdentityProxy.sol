@@ -2,6 +2,7 @@ pragma solidity ^0.5.13;
 import "./libs/Ownable.sol";
 import "./EternalStorage.sol";
 
+
 contract IdentityProxy is EternalStorage, Ownable {
     event ManagerChanged(address oldManager, address newManager);
 
@@ -53,13 +54,13 @@ contract IdentityProxy is EternalStorage, Ownable {
     }
 
     function() external payable {
-        require(
-            msg.sender == manager || msg.sender == owner(),
-            "Not the Owner or Manager"
-        );
         if (msg.data.length == 0) {
             emit Received(msg.sender, msg.value);
         } else {
+            require(
+                msg.sender == manager || msg.sender == owner(),
+                "Not the Owner or Manager"
+            );
             address impl = implementation;
             require(impl != address(0));
             assembly {
