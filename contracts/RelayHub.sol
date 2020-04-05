@@ -7,6 +7,7 @@ import "./libs/SafeMath.sol";
 import "./libs/EIP712MetaTx.sol";
 import "./token/erc20/IERC20.sol";
 
+
 contract RelayHub is
     Ownable(msg.sender),
     EIP712MetaTx("Biconomy Meta Transaction", "1")
@@ -30,45 +31,30 @@ contract RelayHub is
 
     // MODIFIERS
     modifier onlyRelayer() {
-        require(
-            relayerManager.getRelayerStatus(msg.sender),
-            "You are not allowed to perform this operation"
-        );
+        require(relayerManager.getRelayerStatus(msg.sender), "Not allowed");
         _;
     }
 
     modifier onlyProxyOwner(address proxyOwner, address proxy) {
-        require(
-            proxyManager.getProxyStatus(proxyOwner, proxy),
-            "You are not the owner of proxy contract"
-        );
+        require(proxyManager.getProxyStatus(proxyOwner, proxy), "Owner Only");
         _;
     }
 
     constructor(address relayerManagerAddress, address proxyManagerAddress)
         public
     {
-        require(
-            relayerManagerAddress != address(0),
-            "Manager address can not be 0"
-        );
+        require(relayerManagerAddress != address(0), "Address can not be 0");
         relayerManager = RelayerManager(relayerManagerAddress);
         proxyManager = ProxyManager(proxyManagerAddress);
     }
 
     function addRelayerManager(address relayerManagerAddress) public onlyOwner {
-        require(
-            relayerManagerAddress != address(0),
-            "Manager address can not be 0"
-        );
+        require(relayerManagerAddress != address(0), "Address can not be 0");
         relayerManager = RelayerManager(relayerManagerAddress);
     }
 
     function addProxyManager(address proxyManagerAddress) public onlyOwner {
-        require(
-            proxyManagerAddress != address(0),
-            "Proxy manager address can not be 0"
-        );
+        require(proxyManagerAddress != address(0), "Address can not be 0");
         proxyManager = ProxyManager(proxyManagerAddress);
     }
 
@@ -79,6 +65,7 @@ contract RelayHub is
     {
         relayerManagerAddress = address(relayerManager);
     }
+
     function getProxyManager()
         public
         view
@@ -96,25 +83,25 @@ contract RelayHub is
     }
 
     /**
-	 * @dev Forward the transaction to user contract wallet/proxy contract.
-	 * addressArray[0] user address
-	 * addressArray[1] destination contract address
-	 * addressArray[2] user contract wallet address
-	 * addressArray[3] relayer payment address
-	 * uintArray[0] expiry time of meta transaction
-	 * uintArray[1] gas limit to be used in meta transaction
-	 * uintArray[2] base gas required, logic is not implemented now
-	 * uintArray[3] value to be transfered in transaction
-	 * uintArray[4] batchId for which to get the nonce
-	 * uintArray[5] relayer payment amount
-	 *
-	 * @param r r part of the signature
-	 * @param s s part of the signature
-	 * @param v v part of the signature
-	 * @param addressArray array of all param of address type
-	 * @param uintArray array of all param of uint256 type
-	 * @param data data to be executed in meta transaction
-	 */
+     * @dev Forward the transaction to user contract wallet/proxy contract.
+     * addressArray[0] user address
+     * addressArray[1] destination contract address
+     * addressArray[2] user contract wallet address
+     * addressArray[3] relayer payment address
+     * uintArray[0] expiry time of meta transaction
+     * uintArray[1] gas limit to be used in meta transaction
+     * uintArray[2] base gas required, logic is not implemented now
+     * uintArray[3] value to be transfered in transaction
+     * uintArray[4] batchId for which to get the nonce
+     * uintArray[5] relayer payment amount
+     *
+     * @param r r part of the signature
+     * @param s s part of the signature
+     * @param v v part of the signature
+     * @param addressArray array of all param of address type
+     * @param uintArray array of all param of uint256 type
+     * @param data data to be executed in meta transaction
+     */
     function forward(
         address[] memory addressArray,
         bytes memory data,
@@ -124,7 +111,7 @@ contract RelayHub is
         uint8 v
     ) public onlyProxyOwner(addressArray[0], addressArray[2]) onlyRelayer {
         if (uintArray[0] > 0 && block.number > uintArray[0]) {
-            revert("Transaction can not be executed after expiry time");
+            revert("Transaction expired");
         }
         require(
             verifyMetaTxSignature(addressArray, data, uintArray, v, r, s),
@@ -141,34 +128,34 @@ contract RelayHub is
             uintArray[1],
             uintArray[4]
         );
-        (bool success, bytes memory returnData) = address(proxyManager).call(
+        (bool success, ) = address(proxyManager).call(
             abi.encodePacked(functionSignature, proxyAddress)
         );
-        require(success, "Call to Proxy Manager Failed at Relay Hub");
+        require(success, "Call Failed at Relay Hub");
         emit Forwarded(addressArray[1], uintArray[3], data);
     }
 
     /**
-	 * @dev Withdraw funds from user contract wallet.
-	 *
-	 * addressArray[0] user address
-	 * addressArray[1] destination contract address
-	 * addressArray[2] user contract wallet address
-	 * addressArray[3] relayer payment address
-	 * uintArray[0] expiry time of meta transaction
-	 * uintArray[1] gas limit to be used in meta transaction
-	 * uintArray[2] base gas required, logic is not implemented now
-	 * uintArray[3] value to be transfered in transaction
-	 * uintArray[4] batchId for which to get the nonce
-	 * uintArray[5] relayer payment amount
-	 *
-	 * @param r r part of the signature
-	 * @param s s part of the signature
-	 * @param v v part of the signature
-	 * @param addressArray array of all param of address type
-	 * @param uintArray array of all param of uint256 type
-	 * @param data data to be executed in meta transaction
-	 **/
+     * @dev Withdraw funds from user contract wallet.
+     *
+     * addressArray[0] user address
+     * addressArray[1] destination contract address
+     * addressArray[2] user contract wallet address
+     * addressArray[3] relayer payment address
+     * uintArray[0] expiry time of meta transaction
+     * uintArray[1] gas limit to be used in meta transaction
+     * uintArray[2] base gas required, logic is not implemented now
+     * uintArray[3] value to be transfered in transaction
+     * uintArray[4] batchId for which to get the nonce
+     * uintArray[5] relayer payment amount
+     *
+     * @param r r part of the signature
+     * @param s s part of the signature
+     * @param v v part of the signature
+     * @param addressArray array of all param of address type
+     * @param uintArray array of all param of uint256 type
+     * @param data data to be executed in meta transaction
+     **/
     function withdraw(
         address[] memory addressArray,
         bytes memory data,
@@ -178,7 +165,7 @@ contract RelayHub is
         uint8 v
     ) public onlyProxyOwner(addressArray[0], addressArray[2]) onlyRelayer {
         if (uintArray[0] > 0 && block.number > uintArray[0]) {
-            revert("Transaction could not be executed before expiry time");
+            revert("Transaction expired");
         }
         address payable proxyAddress = address(uint160(addressArray[2]));
         require(
@@ -192,10 +179,10 @@ contract RelayHub is
             uintArray[3],
             uintArray[4]
         );
-        (bool success, bytes memory returnData) = address(proxyManager).call(
+        (bool success, ) = address(proxyManager).call(
             abi.encodePacked(functionSignature, proxyAddress)
         );
-        require(success, "Call to Proxy Manager Failed at Relay Hub");
+        require(success, "Call Failed at Relay Hub");
     }
 
     /**
@@ -243,7 +230,7 @@ contract RelayHub is
             to: addressArray[1],
             data: data,
             batchId: uintArray[4],
-            nonce: identityProxy.getNonce(uintArray[4]),
+            nonce: identityProxy.batchNonce(uintArray[4]),
             expiry: uintArray[0],
             txGas: uintArray[1],
             baseGas: uintArray[2],
