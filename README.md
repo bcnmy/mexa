@@ -27,5 +27,5 @@ This is an upgradable smart contract wallet that is created for the User and use
 <h3>To deploy contracts to network</h3>
   <code>truffle migrate --network &lt;network-name&gt; </code>
   
-<br/>
+<br/><br/>
 For more information, join our discord channel https://discord.gg/C4XtWtB 
