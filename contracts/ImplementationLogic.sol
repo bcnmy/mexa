@@ -3,6 +3,7 @@ import "./libs/SafeMath.sol";
 import "./EternalStorage.sol";
 import "./libs/Ownable.sol";
 
+
 contract ImplementationLogic is EternalStorage, Ownable(msg.sender) {
     using SafeMath for uint256;
 
@@ -36,9 +37,13 @@ contract ImplementationLogic is EternalStorage, Ownable(msg.sender) {
         bytes memory data,
         uint256 gasLimit
     ) internal returns (bool success) {
+        require(
+            gasleft() > ((gasLimit + (gasLimit / 63)) + 1000),
+            "Not enough gas"
+        );
         assembly {
             let txGas := gas
-            if not(eq(gasLimit, 0)) {
+            if iszero(eq(gasLimit, 0)) {
                 txGas := gasLimit
             }
             success := call(
@@ -52,6 +57,7 @@ contract ImplementationLogic is EternalStorage, Ownable(msg.sender) {
             )
         }
     }
+
     function withdraw(address payable receiver, uint256 amount, uint256 batchId)
         public
         onlyOwnerOrManager
