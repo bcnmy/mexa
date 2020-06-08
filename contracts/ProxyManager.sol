@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.6.2;
 import "./libs/Ownable.sol";
 import "./IdentityProxy.sol";
 
@@ -102,7 +102,7 @@ contract ProxyManager is Ownable(msg.sender) {
         emit ProxyCreated(address(identityProxy), proxyOwner, address(this));
     }
 
-    function() external {
+    fallback() external {
         bytes20 userWalletAddress;
         address usr;
         require(
@@ -110,15 +110,15 @@ contract ProxyManager is Ownable(msg.sender) {
             "You are not allowed to perform this operation"
         );
         assembly {
-            calldatacopy(0x40, sub(calldatasize, 20), calldatasize)
+            calldatacopy(0x40, sub(calldatasize(), 20), calldatasize())
             userWalletAddress := mload(0x40)
         }
         usr = address(uint160(userWalletAddress));
         assembly {
             let ptr := add(0x40, 20)
-            calldatacopy(ptr, 0, sub(calldatasize, 20))
-            let result := call(gas, usr, 0, ptr, calldatasize, 0, 0)
-            let size := returndatasize
+            calldatacopy(ptr, 0, sub(calldatasize(), 20))
+            let result := call(gas(), usr, 0, ptr, calldatasize(), 0, 0)
+            let size := returndatasize()
             returndatacopy(ptr, 0, size)
 
             switch result

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.6.2;
 import "./IdentityProxy.sol";
 import "./libs/Ownable.sol";
 import "./RelayerManager.sol";

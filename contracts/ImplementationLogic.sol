@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.6.2;
 import "./libs/SafeMath.sol";
 import "./EternalStorage.sol";
 import "./libs/Ownable.sol";
@@ -42,7 +42,7 @@ contract ImplementationLogic is EternalStorage, Ownable(msg.sender) {
             "Not enough gas"
         );
         assembly {
-            let txGas := gas
+            let txGas := gas()
             if iszero(eq(gasLimit, 0)) {
                 txGas := gasLimit
             }

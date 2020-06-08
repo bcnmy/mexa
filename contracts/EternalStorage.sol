@@ -1,4 +1,4 @@
-pragma solidity ^0.5.13;
+pragma solidity ^0.6.2;
 
 contract EternalStorage {
     event Forwarded(address indexed destination, uint256 amount, bytes data);
