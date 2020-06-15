@@ -1,5 +1,6 @@
 pragma solidity ^0.5.13;
 import "./IGST2.sol";
+import "../RelayerManager.sol";
 import "../libs/SafeMath.sol";
 import "../libs/Ownable.sol";
 
@@ -7,20 +8,47 @@ contract GasTokenForwarder is Ownable {
     using SafeMath for uint256;
     
     IGST2 private _gasToken;
+    RelayerManager private _relayerManager;
+
     event Efficiency(uint256 indexed efficiency, uint256 indexed tokens);
-    
-    constructor(address owner, address gasToken2) public Ownable(owner){
-        _gasToken = IGST2(gasToken2);
+
+    // MODIFIERS
+    modifier onlyRelayer() {
+        require(
+            _relayerManager.getRelayerStatus(msg.sender),
+            "You are not allowed to perform this operation"
+        );
+        _;
     }
     
-    function forward(address payable destination, bytes memory data,uint256 mintPrice,uint256 gasLimit) public { 
+    constructor(address owner, address gasToken2, address relayerManager) public Ownable(owner){
+        require(gasToken2 != address(0), "gasToken2 cannot be 0");
+        require( relayerManager != address(0), "Manager address cannot be 0");
+
+        _gasToken = IGST2(gasToken2);
+        _relayerManager = RelayerManager(relayerManager);
+    }
+    
+    /**
+        @param destination contract address
+        @param data call data to be forwarded
+        @param mintPrice: price at which gasToken was minted
+        Method forward the incoming transaction and then execute the gastoken functionality
+     */
+    function forward(address payable destination, bytes memory data,uint256 mintPrice,uint256 gasLimit) public onlyRelayer { 
         uint initialGas = gasleft();
 
         require(executeCall(destination, data, gasLimit),"ExecuteCall() failed");
         refundGas(initialGas,mintPrice);
     }
 
-    function executeCall(address to, bytes memory data, uint256 gasLimit) internal returns (bool success) {
+    /**
+        @param to: destination contract address
+        @param data call data to be forwarded:
+        Method execute the internal transaction send by user
+     */
+
+    function executeCall(address to, bytes memory data, uint256 gasLimit) private returns (bool success) {
         require(
             gasleft() > ((gasLimit + (gasLimit / 63)) + 1000),
             "Not enough gas"
@@ -42,7 +70,13 @@ contract GasTokenForwarder is Ownable {
         }
     }
     
-    function refundGas(uint256 initialGas, uint256 mintPrice) public {
+    /**
+        @param initialGas: Gas sent by transaction at entry in forwad method
+        @param mintPrice: price at which gasToken was minted
+        Calculate the total token needs to be burn and the efficiency.
+        if efficiency is >100 then only tokens will be burned to refund the gas
+     */
+    function refundGas(uint256 initialGas, uint256 mintPrice) private {
         uint256 mintBase = 32254;
         uint256 mintToken = 36543;
         uint256 freeBase = 14154;
@@ -67,6 +101,10 @@ contract GasTokenForwarder is Ownable {
         }
     }
     
+    /**
+        @param tokens: number of tokens to be free
+        Method calls the GST2 freeUpTo() method
+     */
     function freeGasTokens(uint256 tokens) private {
         uint256 tokensToFree = tokens;
         uint256 safeNumTokens = 0;
@@ -88,7 +126,7 @@ contract GasTokenForwarder is Ownable {
 
     }
 
-    function mintGasToken( uint256 mint ) public {
+    function mintGasToken( uint256 mint ) public onlyRelayer{
         _gasToken.mint(mint);
     }
 
@@ -96,27 +134,27 @@ contract GasTokenForwarder is Ownable {
         return _gasToken.balanceOf(who);
     }
 
-    function freeGasToken(uint256 value) public returns (bool success){
+    function freeGasToken(uint256 value) public onlyRelayer returns (bool success){
         return _gasToken.free(value);
     }
 
-    function freeGasTokenFrom(address from, uint256 value) public returns (bool success){
+    function freeGasTokenFrom(address from, uint256 value) public onlyRelayer returns (bool success){
         return _gasToken.freeFrom(from, value);
     }
 
-    function freeGasTokenFromUpTo(address from, uint256 value) public returns (uint256 freed){
+    function freeGasTokenFromUpTo(address from, uint256 value) public onlyRelayer returns (uint256 freed){
         return _gasToken.freeFromUpTo(from , value);
     }
 
-    function approveGasToken(address spender, uint256 value) public returns (bool success){
+    function approveGasToken(address spender, uint256 value) public onlyRelayer returns (bool success){
         return _gasToken.approve(spender, value);
     }
 
-    function transferGasTokenFrom(address from, address to, uint256 value) public returns (bool success){
+    function transferGasTokenFrom(address from, address to, uint256 value) public onlyRelayer returns (bool success){
         return _gasToken.transferFrom(from, to, value);
     }
-    
-    function transferGasToken(address to, uint256 value) public returns (bool success){
+
+    function transferGasToken(address to, uint256 value) public onlyRelayer returns (bool success){
         return _gasToken.transfer(to, value);
     }
 }
