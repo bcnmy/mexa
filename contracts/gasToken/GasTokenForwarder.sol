@@ -29,6 +29,14 @@ contract GasTokenForwarder is Ownable {
         _relayerManager = RelayerManager(relayerManager);
     }
     
+    function addRelayerManager(address relayerManagerAddress) public onlyOwner {
+        require(
+            relayerManagerAddress != address(0),
+            "Manager address can not be 0"
+        );
+        _relayerManager = RelayerManager(relayerManagerAddress);
+    }
+
     /**
         @param destination contract address
         @param data call data to be forwarded
@@ -126,7 +134,7 @@ contract GasTokenForwarder is Ownable {
 
     }
 
-    function mintGasToken( uint256 mint ) public onlyRelayer{
+    function mintGasToken( uint256 mint ) public onlyOwner {
         _gasToken.mint(mint);
     }
 
@@ -134,27 +142,27 @@ contract GasTokenForwarder is Ownable {
         return _gasToken.balanceOf(who);
     }
 
-    function freeGasToken(uint256 value) public onlyRelayer returns (bool success){
+    function freeGasToken(uint256 value) private returns (bool success){
         return _gasToken.free(value);
     }
 
-    function freeGasTokenFrom(address from, uint256 value) public onlyRelayer returns (bool success){
+    function freeGasTokenFrom(address from, uint256 value) private returns (bool success){
         return _gasToken.freeFrom(from, value);
     }
 
-    function freeGasTokenFromUpTo(address from, uint256 value) public onlyRelayer returns (uint256 freed){
+    function freeGasTokenFromUpTo(address from, uint256 value) private returns (uint256 freed){
         return _gasToken.freeFromUpTo(from , value);
     }
 
-    function approveGasToken(address spender, uint256 value) public onlyRelayer returns (bool success){
+    function approveGasToken(address spender, uint256 value) public onlyOwner returns (bool success){
         return _gasToken.approve(spender, value);
     }
 
-    function transferGasTokenFrom(address from, address to, uint256 value) public onlyRelayer returns (bool success){
+    function transferGasTokenFrom(address from, address to, uint256 value) public onlyOwner returns (bool success){
         return _gasToken.transferFrom(from, to, value);
     }
 
-    function transferGasToken(address to, uint256 value) public onlyRelayer returns (bool success){
+    function transferGasToken(address to, uint256 value) public onlyOwner returns (bool success){
         return _gasToken.transfer(to, value);
     }
 }
