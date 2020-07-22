@@ -45,7 +45,7 @@ module.exports = {
     development: {
       host: "127.0.0.1",     // Localhost (default: none)
       port: 8545,            // Standard Ethereum port (default: none)
-      gas: 800000000,
+      gas: 800000000,  
       network_id: "*",       // Any network (default: none)
     },
     kovan: {
@@ -85,9 +85,27 @@ module.exports = {
       provider: new HDWalletProvider(mnemonic, `https://testnetv3.matic.network`),
       network_id: 15001,       // Matic's test network id
       gasPrice: '0x0',
+      gas: 6400000,
       confirmations: 1,    // # of confs to wait between deployments. (default: 0)
       timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
-      skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
+      skipDryRun: false     // Skip dry run before migrations? (default: false for public nets )
+    },
+    poa: {
+      provider: function() {
+            return new HDWalletProvider(
+              mnemonic,
+           "https://sokol.poa.network")
+      },
+      network_id: 77
+    },
+    xdai: {
+      provider: function() {
+            return new HDWalletProvider(
+              mnemonic,
+           "https://dai.poa.network")
+      },
+      network_id: 100,
+      gasPrice: 1000000000
     }
 
     // Another network with more advanced options...
