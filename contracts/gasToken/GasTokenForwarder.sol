@@ -88,7 +88,7 @@ contract GasTokenForwarder is Ownable {
     }
 
     /**
-        @param initialGas: Gas sent by transaction at entry in forwad method
+        @param initialGas: Gas sent by transaction at entry in forward method
         @param mintPrice: price at which gasToken was minted
         Calculate the total token needs to be burn and the efficiency.
         if efficiency is >100 then only tokens will be burned to refund the gas
