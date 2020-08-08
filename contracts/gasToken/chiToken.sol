@@ -60,7 +60,8 @@ Signed raw transaction for chainId 1:
 */
 // File: @openzeppelin/contracts/math/Math.sol
 
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
+pragma solidity ^0.5.13;
 
 /**
  * @dev Standard math utilities missing in the Solidity language.
@@ -92,7 +93,8 @@ library Math {
 
 // File: @openzeppelin/contracts/math/SafeMath.sol
 
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
+pragma solidity ^0.5.13;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -245,7 +247,8 @@ library SafeMath {
 
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
+pragma solidity ^0.5.13;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -323,37 +326,37 @@ interface IERC20 {
 
 // File: contracts/ChiToken.sol
 
-pragma solidity ^0.6.0;
+// pragma solidity ^0.6.0;
+pragma solidity ^0.5.13;
 
 
 
 
-
-abstract contract ERC20WithoutTotalSupply is IERC20 {
+contract ERC20WithoutTotalSupply is IERC20 {
     using SafeMath for uint256;
 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    function balanceOf(address account) public view override returns (uint256) {
+    function balanceOf(address account) public view returns (uint256) {
         return _balances[account];
     }
 
-    function allowance(address owner, address spender) public view override returns (uint256) {
+    function allowance(address owner, address spender) public view returns (uint256) {
         return _allowances[owner][spender];
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
+    function transfer(address recipient, uint256 amount) public returns (bool) {
         _transfer(msg.sender, recipient, amount);
         return true;
     }
 
-    function approve(address spender, uint256 amount) public override returns (bool) {
+    function approve(address spender, uint256 amount) public returns (bool) {
         _approve(msg.sender, spender, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
         _transfer(sender, recipient, amount);
         _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
@@ -395,7 +398,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
     uint256 public totalMinted;
     uint256 public totalBurned;
 
-    function totalSupply() public view override returns(uint256) {
+    function totalSupply() public view  returns(uint256) {
         return totalMinted.sub(totalBurned);
     }
 
