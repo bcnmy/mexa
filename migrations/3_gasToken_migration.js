@@ -1,5 +1,5 @@
 const GasTokenForwarder = artifacts.require("GasTokenForwarder");
-const GasTokenImplementationLogic = artifacts.require("GasTokenImplementationLogic");
+const GasTokenImplementation = artifacts.require("GasTokenImplementation");
 var RelayerManager = artifacts.require("RelayerManager");
 var SafeMath = artifacts.require("SafeMath");
 
@@ -11,13 +11,13 @@ module.exports = function(deployer) {
     var ChiAddress = "0x9994B6C8Dd136157235941A35545Cf6f7eB279c0";
 
     deployer.deploy(SafeMath, { overwrite: false });
-    deployer.link(SafeMath, GasTokenImplementationLogic);
+    deployer.link(SafeMath, GasTokenImplementation);
     deployer.link(SafeMath, GasTokenForwarder);
 
     // Make sure Relayer manager is not already deployed using the other script.
     deployer.deploy(RelayerManager, { overwrite: false }).then(function (relayerManager) {
-        return deployer.deploy(GasTokenImplementationLogic, { overwrite: false }).then(function (gasTokenImplementationLogic) {
-            return deployer.deploy(GasTokenForwarder, owner, ChiAddress, relayerManager.address, gasTokenImplementationLogic.address);
+        return deployer.deploy(GasTokenImplementation, { overwrite: false }).then(function (gasTokenImplementation) {
+            return deployer.deploy(GasTokenForwarder, owner, ChiAddress, relayerManager.address, gasTokenImplementation.address);
         });
     });
 };
