@@ -3,14 +3,14 @@ import "./ICHITOKEN.sol";
 import "../RelayerManager.sol";
 import "../libs/SafeMath.sol";
 import "../libs/Ownable.sol";
-import "./GasTokenImplementationLogic.sol";
+import "./GasTokenImplementation.sol";
 
 contract GasTokenForwarder is Ownable {
     using SafeMath for uint256;
 
     ICHITOKEN public chiToken;
     RelayerManager public relayerManager;
-    GasTokenImplementationLogic public gasTokenImplLogic;
+    GasTokenImplementation public gasTokenImplementation;
 
     // MODIFIERS
     modifier onlyRelayerOrOwner() {
@@ -33,10 +33,10 @@ contract GasTokenForwarder is Ownable {
 
         chiToken = ICHITOKEN(_chiTokenAddress);
         relayerManager = RelayerManager(_relayerManagerAddress);
-        gasTokenImplLogic = GasTokenImplementationLogic(_gasTokenImplAddress);
+        gasTokenImplementation = GasTokenImplementation(_gasTokenImplAddress);
     }
 
-    function addRelayerManager(address _relayerManagerAddress) public onlyRelayerOrOwner {
+    function addRelayerManager(address _relayerManagerAddress) public onlyOwner {
         require(
             _relayerManagerAddress != address(0),
             "Manager address can not be 0"
@@ -44,12 +44,12 @@ contract GasTokenForwarder is Ownable {
         relayerManager = RelayerManager(_relayerManagerAddress);
     }
 
-    function addGasTokenImpl(address _gasTokenImplLogicAddress) public onlyRelayerOrOwner {
+    function addGasTokenImpl(address _gasTokenImplAddress) public onlyOwner {
         require(
-            _gasTokenImplLogicAddress != address(0),
+            _gasTokenImplAddress != address(0),
             "GasTokenImpl contract address can not be 0"
         );
-        gasTokenImplLogic = GasTokenImplementationLogic(_gasTokenImplLogicAddress);
+        gasTokenImplementation = GasTokenImplementation(_gasTokenImplAddress);
     }
 
     function balanceOfGasToken(address who) external view returns (uint256) {
@@ -61,9 +61,8 @@ contract GasTokenForwarder is Ownable {
     }
 
     function() external payable onlyRelayerOrOwner{
-        address target = address(gasTokenImplLogic);
+        address target = address(gasTokenImplementation);
         assembly {
-            // let _target := sload()
             calldatacopy(0x0, 0x0, calldatasize)
             let result := delegatecall(gas, target, 0x0, calldatasize, 0x0, 0)
             returndatacopy(0x0, 0x0, returndatasize)

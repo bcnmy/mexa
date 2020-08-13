@@ -4,7 +4,7 @@ import "../RelayerManager.sol";
 import "../libs/SafeMath.sol";
 import "../libs/Ownable.sol";
 
-contract GasTokenImplementationLogic is Ownable(msg.sender) {
+contract GasTokenImplementation is Ownable(msg.sender) {
     using SafeMath for uint256;
 
     ICHITOKEN public chiToken;
@@ -122,7 +122,7 @@ contract GasTokenImplementationLogic is Ownable(msg.sender) {
         }
     }
 
-    function mintGasToken(uint256 mint) public onlyRelayerOrOwner {
+    function mintGasToken(uint256 mint) public onlyOwner {
         chiToken.mint(mint);
     }
 
@@ -136,7 +136,7 @@ contract GasTokenImplementationLogic is Ownable(msg.sender) {
 
     function freeGasToken(uint256 value)
         public
-        onlyRelayerOrOwner
+        onlyOwner
         returns (uint256 )
     {
         return chiToken.free(value);
@@ -144,7 +144,7 @@ contract GasTokenImplementationLogic is Ownable(msg.sender) {
 
     function freeGasTokenFrom(address from, uint256 value)
         public
-        onlyRelayerOrOwner
+        onlyOwner
         returns (uint256)
     {
         return chiToken.freeFrom(from, value);
@@ -152,7 +152,7 @@ contract GasTokenImplementationLogic is Ownable(msg.sender) {
 
     function freeGasTokenFromUpTo(address from, uint256 value)
         public
-        onlyRelayerOrOwner
+        onlyOwner
         returns (uint256 freed)
     {
         return chiToken.freeFromUpTo(from, value);
@@ -160,7 +160,7 @@ contract GasTokenImplementationLogic is Ownable(msg.sender) {
 
     function approveGasToken(address spender, uint256 value)
         public
-        onlyRelayerOrOwner
+        onlyOwner
         returns (bool success)
     {
         return chiToken.approve(spender, value);
@@ -170,13 +170,13 @@ contract GasTokenImplementationLogic is Ownable(msg.sender) {
         address from,
         address to,
         uint256 value
-    ) public onlyRelayerOrOwner returns (bool success) {
+    ) public onlyOwner returns (bool success) {
         return chiToken.transferFrom(from, to, value);
     }
 
     function transferGasToken(address to, uint256 value)
         public
-        onlyRelayerOrOwner
+        onlyOwner
         returns (bool success)
     {
         return chiToken.transfer(to, value);
