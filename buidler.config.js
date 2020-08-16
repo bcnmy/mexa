@@ -13,7 +13,7 @@ task("accounts", "Prints the list of accounts", async () => {
 const infuraKey = "d126f392798444609246423b06116c77";
 
 const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
+//const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -28,6 +28,6 @@ module.exports = {
     sources: "./contracts/6",
   },
   networks:{
-    
+
   }
 };
