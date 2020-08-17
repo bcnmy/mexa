@@ -1,4 +1,4 @@
-const shouldFail = require("./helpers/shouldFail");
+/** const shouldFail = require("./helpers/shouldFail");
 
 var EthUtil = require('ethereumjs-util');
 
@@ -107,3 +107,4 @@ contract("IdentityProxyManager", function([_, owner,relayerAddress,anotherAddres
 		});
 	});
 });
+**/
