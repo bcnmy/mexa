@@ -59,6 +59,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Secret
+.secret
+
 # next.js build output
 .next
 contracts/SignatureVerify.sol
