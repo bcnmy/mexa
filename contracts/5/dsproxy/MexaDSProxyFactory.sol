@@ -2,7 +2,7 @@ pragma solidity 0.5.13;
 pragma experimental ABIEncoderV2;
 
 import "./dsProxy.sol";
-import "./EIP712.sol";
+import "../libs/EIP712BaseB.sol";
 
 contract MexaDSProxyFactory is DSProxyFactory, EIP712("MexaDSProxyFactory","1",42) {
     //42 = KOVAN

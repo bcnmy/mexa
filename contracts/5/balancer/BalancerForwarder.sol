@@ -1,22 +1,11 @@
 pragma solidity 0.5.13;
 pragma experimental ABIEncoderV2;
 
-import "./EIP712.sol";
-//import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./dsProxy.sol";
+import "../libs/EIP712BaseB.sol";
+import "..dsproxy/dsProxy.sol";
+import "../token/ERC20/IERC20.sol";
 
-interface IERC20 {
-    function totalSupply() external view returns (uint256);
-    function balanceOf(address account) external view returns (uint256);
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function allowance(address owner, address spender) external view returns (uint256);
-    function approve(address spender, uint256 amount) external returns (bool);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-}
-
-contract BalancerForwarder is DSAuthority, EIP712("BalancerForwarder","1",42) {
+contract BalancerForwarder is DSAuthority, EIP712BaseB("BalancerForwarder","1",42) {
     //42 = KOVAN
     
     //all forwarder specific meta tx variables are declared here
