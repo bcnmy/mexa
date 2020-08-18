@@ -1,6 +1,6 @@
 pragma solidity 0.5.13;
 
-contract EIP712 {
+contract EIP712BaseB {
 
 string public name;
 string public version;

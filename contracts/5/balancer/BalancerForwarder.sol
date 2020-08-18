@@ -2,8 +2,8 @@ pragma solidity 0.5.13;
 pragma experimental ABIEncoderV2;
 
 import "../libs/EIP712BaseB.sol";
-import "..dsproxy/dsProxy.sol";
-import "../token/ERC20/IERC20.sol";
+import "../dsproxy/dsProxy.sol";
+import "../token/erc20/IERC20.sol";
 
 contract BalancerForwarder is DSAuthority, EIP712BaseB("BalancerForwarder","1",42) {
     //42 = KOVAN

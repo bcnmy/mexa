@@ -125,7 +125,7 @@ contract MexaExchangeProxy is EIP712BaseB("MexaExchangeProxy","1",42){
         address tokenOut,
         uint totalAmountIn,
         uint minTotalAmountOut,
-        Signature calldata signature
+        Signature memory signature
     )   
         public
         _logs_
@@ -218,8 +218,8 @@ contract MexaExchangeProxy is EIP712BaseB("MexaExchangeProxy","1",42){
         Swap[] memory swaps,
         address tokenIn,
         address tokenOut,
-        uint maxTotalAmountIn
-        Signature calldata signature
+        uint maxTotalAmountIn,
+        Signature memory signature
     )
         public
         _logs_
@@ -304,7 +304,7 @@ contract MexaExchangeProxy is EIP712BaseB("MexaExchangeProxy","1",42){
             weth.withdraw(wethBalance);
             (bool xfer,) = msg.sender.call.value(wethBalance)("");
             require(xfer, "ERR_ETH_FAILED");
-        }                        tokenIn,
+        }                        
         return totalAmountOut;
     }
 
@@ -352,7 +352,7 @@ contract MexaExchangeProxy is EIP712BaseB("MexaExchangeProxy","1",42){
         address tokenIn,
         uint totalAmountIn,
         uint minTotalAmountOut,
-        Signature calldata signature
+        Signature memory signature
     )
         public
         _logs_
@@ -485,7 +485,7 @@ contract MexaExchangeProxy is EIP712BaseB("MexaExchangeProxy","1",42){
         Swap[] memory swaps,
         address tokenIn,
         uint maxTotalAmountIn,
-        Signature calldata signature
+        Signature memory signature
     )
         public
         _logs_

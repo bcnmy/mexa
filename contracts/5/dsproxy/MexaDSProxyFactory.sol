@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./dsProxy.sol";
 import "../libs/EIP712BaseB.sol";
 
-contract MexaDSProxyFactory is DSProxyFactory, EIP712("MexaDSProxyFactory","1",42) {
+contract MexaDSProxyFactory is DSProxyFactory, EIP712BaseB("MexaDSProxyFactory","1",42) {
     //42 = KOVAN
 
     //all factory specific meta tx variables are declared here
