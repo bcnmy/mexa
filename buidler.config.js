@@ -37,11 +37,15 @@ module.exports = {
     sources: "./contracts/6",
   },
   networks:{
+    buidlerevm:{
+      allowUnlimitedContractSize:false
+    },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,
       accounts:hdWallet(mnemonic),
       chainId:42,
-      gas: 6400000
+      gas: 12500000,
+      gasMultiplier:2
     },
     ropsten:{
       url:`https://ropsten.infura.io/v3/${infuraKey}`,

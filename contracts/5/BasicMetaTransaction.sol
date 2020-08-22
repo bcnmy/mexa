@@ -1,7 +1,7 @@
-pragma solidity ^0.6.0;
+pragma solidity ^0.5.12;
 pragma experimental ABIEncoderV2;
 
-import "./lib/SafeMath.sol";
+import "./libs/SafeMath.sol";
 
 contract BasicMetaTransaction {
 

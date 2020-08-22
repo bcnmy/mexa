@@ -8,8 +8,6 @@ THIS BRANCH OF MEXA HAS BEEN ADAPTED TO SUPPORT BUIDLER INSTEAD OF TRUFFLE
 
 In Order to deploy the contracts to networks other than local blockchain, you need to add file with name <code>.secret</code> to the root folder and add the 12 word mnemonic phrase corresponding to your account which will be used to deploy the contracts to selected network.
 
-DEPLOYMENT SUPPORT NOT INTEGRATED YET
-
 <h3>Smart Contracts</h3>
 <h4><a href="https://github.com/bcnmy/mexa/blob/master/contracts/RelayHub.sol" target="_blank">Relay Hub</a></h4>
 Relay hub smart contract is the main contract which interacts with biconomy relayers. All operations including adding relayers, creating a new contract wallet for user or relaying a meta transcation goes through Relay Hub contract.
@@ -29,7 +27,7 @@ This is an upgradable smart contract wallet that is created for the User and use
   <code>npx buidler compile --config buidler.config.5.js && npx buidler compile</code>
 
 <h3>To deploy contracts to network</h3>
-  <code>WORK IN PROGRESS</code>
+  WORK IN PROGRESS - FOR NOW MUST BUILD SCRIPT FOR EACH DEPLOYMENT, see scripts/sample-script.js for info on how to do this
   
 <br/><br/>
 For more information, join our discord channel https://discord.gg/C4XtWtB 
