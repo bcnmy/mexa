@@ -10,12 +10,11 @@ contract BasicMetaTransaction {
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
     mapping(address => uint256) nonces;
 
-    function getChainID() public pure returns (uint256) {
+    function getChainID() public pure returns (uint256 id) {
         uint256 id;
         assembly {
             id := chainid()
         }
-        return id;
     }
 
     /**
@@ -41,10 +40,6 @@ contract BasicMetaTransaction {
         require(success, "Function call not successfull");
         emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
         return returnData;
-    }
-
-    function getNonce(address user) public view returns(uint256 nonce) {
-        nonce = nonces[user];
     }
 
     // Builds a prefixed hash to mimic the behavior of eth_sign.

@@ -3,7 +3,6 @@ const bre = require("@nomiclabs/buidler");
 //{gasLimit:"4000000"}
 
 async function main() {
-    const [account] = await ethers.getSigners();
     const MexaExchangeProxy = await ethers.getContractFactory("MexaExchangeProxy");
     const mexaExchangeProxy = await MexaExchangeProxy.deploy("0xd0a1e359811322d97991e03f863a0c30c2cf029c",{gasLimit:ethers.BigNumber.from("9500000")});
     await mexaExchangeProxy.deployed();

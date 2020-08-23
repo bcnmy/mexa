@@ -9,14 +9,13 @@
 // GNU General Public License for more details.
 
 // You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 pragma solidity ^0.5.12;
 pragma experimental ABIEncoderV2;
 
-import "../BasicMetaTransaction.sol";
 
-interface PoolInterface {
+contract PoolInterface {
     function swapExactAmountIn(address, uint, address, uint, uint) external returns (uint, uint);
     function swapExactAmountOut(address, uint, address, uint, uint) external returns (uint, uint);
 }
@@ -31,7 +30,7 @@ contract TokenInterface {
     function withdraw(uint) public;
 }
 
-contract MexaExchangeProxy is BasicMetaTransaction{
+contract ExchangeProxy {
 
     struct Swap {
         address pool;
@@ -47,7 +46,7 @@ contract MexaExchangeProxy is BasicMetaTransaction{
     ) anonymous;
 
     modifier _logs_() {
-        emit LOG_CALL(msg.sig, msgSender(), msg.data);
+        emit LOG_CALL(msg.sig, msg.sender, msg.data);
         _;
     }
 
@@ -85,7 +84,7 @@ contract MexaExchangeProxy is BasicMetaTransaction{
     {
         TokenInterface TI = TokenInterface(tokenIn);
         TokenInterface TO = TokenInterface(tokenOut);
-        require(TI.transferFrom(msgSender(), address(this), totalAmountIn), "ERR_TRANSFER_FAILED");
+        require(TI.transferFrom(msg.sender, address(this), totalAmountIn), "ERR_TRANSFER_FAILED");
         for (uint i = 0; i < swaps.length; i++) {
             Swap memory swap = swaps[i];
             
@@ -103,8 +102,8 @@ contract MexaExchangeProxy is BasicMetaTransaction{
             totalAmountOut = add(tokenAmountOut, totalAmountOut);
         }
         require(totalAmountOut >= minTotalAmountOut, "ERR_LIMIT_OUT");
-        require(TO.transfer(msgSender(), TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
-        require(TI.transfer(msgSender(), TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TO.transfer(msg.sender, TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TI.transfer(msg.sender, TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
         return totalAmountOut;
     }
 
@@ -121,7 +120,7 @@ contract MexaExchangeProxy is BasicMetaTransaction{
     {
         TokenInterface TI = TokenInterface(tokenIn);
         TokenInterface TO = TokenInterface(tokenOut);
-        require(TI.transferFrom(msgSender(), address(this), maxTotalAmountIn), "ERR_TRANSFER_FAILED");
+        require(TI.transferFrom(msg.sender, address(this), maxTotalAmountIn), "ERR_TRANSFER_FAILED");
         for (uint i = 0; i < swaps.length; i++) {
             Swap memory swap = swaps[i];
             PoolInterface pool = PoolInterface(swap.pool);
@@ -138,8 +137,8 @@ contract MexaExchangeProxy is BasicMetaTransaction{
             totalAmountIn = add(tokenAmountIn, totalAmountIn);
         }
         require(totalAmountIn <= maxTotalAmountIn, "ERR_LIMIT_IN");
-        require(TO.transfer(msgSender(), TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
-        require(TI.transfer(msgSender(), TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TO.transfer(msg.sender, TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TI.transfer(msg.sender, TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
         return totalAmountIn;
     }
 
@@ -171,11 +170,11 @@ contract MexaExchangeProxy is BasicMetaTransaction{
             totalAmountOut = add(tokenAmountOut, totalAmountOut);
         }
         require(totalAmountOut >= minTotalAmountOut, "ERR_LIMIT_OUT");
-        require(TO.transfer(msgSender(), TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TO.transfer(msg.sender, TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
         uint wethBalance = weth.balanceOf(address(this));
         if (wethBalance > 0) {
             weth.withdraw(wethBalance);
-            (bool xfer,) = msgSender().call.value(wethBalance)("");
+            (bool xfer,) = msg.sender.call.value(wethBalance)("");
             require(xfer, "ERR_ETH_FAILED");
         }
         return totalAmountOut;
@@ -193,7 +192,7 @@ contract MexaExchangeProxy is BasicMetaTransaction{
         returns (uint totalAmountOut)
     {
         TokenInterface TI = TokenInterface(tokenIn);
-        require(TI.transferFrom(msgSender(), address(this), totalAmountIn), "ERR_TRANSFER_FAILED");
+        require(TI.transferFrom(msg.sender, address(this), totalAmountIn), "ERR_TRANSFER_FAILED");
         for (uint i = 0; i < swaps.length; i++) {
             Swap memory swap = swaps[i];
             PoolInterface pool = PoolInterface(swap.pool);
@@ -213,9 +212,9 @@ contract MexaExchangeProxy is BasicMetaTransaction{
         require(totalAmountOut >= minTotalAmountOut, "ERR_LIMIT_OUT");
         uint wethBalance = weth.balanceOf(address(this));
         weth.withdraw(wethBalance);
-        (bool xfer,) = msgSender().call.value(wethBalance)("");
+        (bool xfer,) = msg.sender.call.value(wethBalance)("");
         require(xfer, "ERR_ETH_FAILED");
-        require(TI.transfer(msgSender(), TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TI.transfer(msg.sender, TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
         return totalAmountOut;
     }
 
@@ -246,11 +245,11 @@ contract MexaExchangeProxy is BasicMetaTransaction{
 
             totalAmountIn = add(tokenAmountIn, totalAmountIn);
         }
-        require(TO.transfer(msgSender(), TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TO.transfer(msg.sender, TO.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
         uint wethBalance = weth.balanceOf(address(this));
         if (wethBalance > 0) {
             weth.withdraw(wethBalance);
-            (bool xfer,) = msgSender().call.value(wethBalance)("");
+            (bool xfer,) = msg.sender.call.value(wethBalance)("");
             require(xfer, "ERR_ETH_FAILED");
         }
         return totalAmountIn;
@@ -267,7 +266,7 @@ contract MexaExchangeProxy is BasicMetaTransaction{
         returns (uint totalAmountIn)
     {
         TokenInterface TI = TokenInterface(tokenIn);
-        require(TI.transferFrom(msgSender(), address(this), maxTotalAmountIn), "ERR_TRANSFER_FAILED");
+        require(TI.transferFrom(msg.sender, address(this), maxTotalAmountIn), "ERR_TRANSFER_FAILED");
         for (uint i = 0; i < swaps.length; i++) {
             Swap memory swap = swaps[i];
             PoolInterface pool = PoolInterface(swap.pool);
@@ -285,10 +284,10 @@ contract MexaExchangeProxy is BasicMetaTransaction{
             totalAmountIn = add(tokenAmountIn, totalAmountIn);
         }
         require(totalAmountIn <= maxTotalAmountIn, "ERR_LIMIT_IN");
-        require(TI.transfer(msgSender(), TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
+        require(TI.transfer(msg.sender, TI.balanceOf(address(this))), "ERR_TRANSFER_FAILED");
         uint wethBalance = weth.balanceOf(address(this));
         weth.withdraw(wethBalance);
-        (bool xfer,) = msgSender().call.value(wethBalance)("");
+        (bool xfer,) = msg.sender.call.value(wethBalance)("");
         require(xfer, "ERR_ETH_FAILED");
         return totalAmountIn;
     }
