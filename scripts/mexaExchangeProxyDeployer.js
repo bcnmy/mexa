@@ -1,6 +1,6 @@
 const bre = require("@nomiclabs/buidler");
 
-//{gasLimit:"4000000"}
+//{gasLimit:"4000000"} 0xf5D53D5C38204b9dFbF68B780834e6c1e0FF5378
 
 async function main() {
     const MexaExchangeProxy = await ethers.getContractFactory("MexaExchangeProxy");
@@ -9,6 +9,8 @@ async function main() {
     console.log("MexaExchangeProxy at ",mexaExchangeProxy.address);
     const deploymentData = await mexaExchangeProxy.deployTransaction.wait();
     console.log(deploymentData);
+    const chainId = await mexaExchangeProxy.getChainID();
+    console.log(chainId.toNumber());
 }
   
   // We recommend this pattern to be able to use async/await everywhere

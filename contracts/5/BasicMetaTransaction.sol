@@ -8,10 +8,9 @@ contract BasicMetaTransaction {
     using SafeMath for uint256;
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
-    mapping(address => uint256) nonces;
+    mapping(address => uint256) public nonces;
 
     function getChainID() public pure returns (uint256 id) {
-        uint256 id;
         assembly {
             id := chainid()
         }
@@ -37,7 +36,7 @@ contract BasicMetaTransaction {
         // Append userAddress at the end to extract it from calling context
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
 
-        require(success, "Function call not successfull");
+        require(success, "Function call not successful");
         emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
         return returnData;
     }
