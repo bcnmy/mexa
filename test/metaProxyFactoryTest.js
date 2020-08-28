@@ -35,7 +35,7 @@ let proxy0;
 let WETH;
 let testToken;
 
-describe("Biconomy x Balancer Contracts", function() {
+describe("Biconomy DSProxy Contracts", function() {
 
   before(async function(){
 
@@ -144,15 +144,13 @@ describe("Biconomy x Balancer Contracts", function() {
     expect(wrongAccSignFails).to.equal(true);
   });
 
-  /** it("MetaBuildWithBasicSign", async function(){
+  it("MetaBuildWithBasicSign", async function(){
 
      // - sign metaTx for MetaBuildWithBasicSign(account1,BalancerForwarder) "\x19Ethereum Signed Message:\n32"
-    const dataToSign1 = ethers.utils.solidityKeccak256(["string","bytes32"],[
-      "\x19Ethereum Signed Message:\n32",
-      ethers.utils.solidityKeccak256(
+    const dataToSign1 = ethers.utils.solidityKeccak256(
         ["uint256","address","uint256","bytes4","address"],
         [0,mexaDSProxyFactory.address,42,metaBuildBasicSignature,balancerForwarder.address]
-      )]);
+      );
       
     const metaBuildSig2 = await ethers.provider.send("eth_sign",[await account2.getAddress(),dataToSign1]);
     const signature2 = metaBuildSig2.substring(2);
@@ -179,7 +177,7 @@ describe("Biconomy x Balancer Contracts", function() {
     // - sign metaTx for MetaBuildWithBasicSign(account1,BalancerForwarder) INCORRECTLY (same nonce again)
     // - sign metaTx for MetaBuildWithBasicSign(account1,BalancerForwarder) INCORRECTLY (account0 signature)
     // - check second and third attempts fail
-  });**/
+  });
 
   it("BalancerForwarder", async function(){
     // - build call data

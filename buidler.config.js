@@ -24,6 +24,14 @@ const hdWallet = (mn,index=0,num=1,path="m/44'/60'/0'/0/") => {
   return accounts;
 }
 
+const localWallet = (hdW,b) =>{ 
+  let lW = [];
+  for(i=0; i<hdW.length; i++){
+    lW.push({privateKey:hdW[i],balance:b});
+  }
+  return lW;
+}
+
 // You have to export an object to set up your config
 // This object can have the following optional entries:
 // defaultNetwork, networks, solc, and paths.
@@ -38,7 +46,8 @@ module.exports = {
   },
   networks:{
     buidlerevm:{
-      allowUnlimitedContractSize:false
+      allowUnlimitedContractSize:false,
+      accounts:localWallet(hdWallet(mnemonic),"1000000000000000000000")
     },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,
