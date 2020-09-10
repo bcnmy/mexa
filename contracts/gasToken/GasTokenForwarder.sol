@@ -49,7 +49,7 @@ contract GasTokenForwarder is Ownable {
     function addGasTokenImpl(address _gasTokenImplAddress) public onlyOwner {
         require(
             _gasTokenImplAddress != address(0),
-            "GasTokenImpl contract address can not be 0"
+            "Implementation Contract address can not be 0"
         );
         gasTokenImplementation = GasTokenImplementation(_gasTokenImplAddress);
     }
@@ -70,7 +70,7 @@ contract GasTokenForwarder is Ownable {
         return chiToken.allowance(owner, spender);
     }
 
-    function() external payable onlyRelayerOrOwner{
+    function() external payable onlyRelayerOrOwner {
         address _gasTokenImplAddress = gasTokenImplAddress;
         assembly {
             calldatacopy(0x0, 0x0, calldatasize)

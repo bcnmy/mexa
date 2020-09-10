@@ -45,7 +45,6 @@ contract GasTokenImplementation is Ownable(msg.sender) {
             }
             success := call(txGas, destination, 0, add(data, 0x20), mload(data), 0, 0) 
         }
-        emit successVal(success);
         require(success==1,"Internal Call failed");
     }
 
