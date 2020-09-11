@@ -5,9 +5,9 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./PersonalSignForwarder.sol";
-import "./IForwarder.sol";
+import "../interface/IForwarder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./IFeeMultiplier.sol";
+import "../interface/IFeeMultiplier.sol";
 
 contract ERC20FeeProxy is IForwarder{
     

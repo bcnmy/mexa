@@ -3,7 +3,7 @@ pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "./IForwarder.sol";
+import "../interface/IForwarder.sol";
 
 contract Forwarder is IForwarder {
     using ECDSA for bytes32;

@@ -2,7 +2,7 @@ pragma solidity ^0.6.8;
 
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./BaseRelayRecipient.sol";
+import "../forwarder/BaseRelayRecipient.sol";
 
 contract GEODT is BaseRelayRecipient {
 
