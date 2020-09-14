@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 //to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
 
-import "./Forwarder.sol";
+import "@opengsn/gsn/contracts/forwarder/Forwarder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract PersonalSignForwarder is Forwarder {
