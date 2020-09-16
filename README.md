@@ -2,6 +2,8 @@
 Mexa is Biconomy's implementation of meta transactions.
 This repository contains smart contracts for mexa and allow dapp users to perform blockchain operations without holding any ether or other crypto currency.
 
+THIS BRANCH OF MEXA HAS BEEN ADAPTED TO SUPPORT BUIDLER INSTEAD OF TRUFFLE
+
 <h3>Pre-Requisite</h3>
 
 In Order to deploy the contracts to networks other than local blockchain, you need to add file with name <code>.secret</code> to the root folder and add the 12 word mnemonic phrase corresponding to your account which will be used to deploy the contracts to selected network.
@@ -22,10 +24,10 @@ Relayer Manager stores the relayers that are allowed to relay meta transactions 
 This is an upgradable smart contract wallet that is created for the User and user's EOA address is set as the owner of smart contract wallet.
 
 <h3>To compile contracts</h3>
-  <code>truffle compile</code>
+  <code>npx buidler compile --config buidler.config.5.js && npx buidler compile</code>
 
 <h3>To deploy contracts to network</h3>
-  <code>truffle migrate --network &lt;network-name&gt; </code>
+  WORK IN PROGRESS - FOR NOW MUST BUILD SCRIPT FOR EACH DEPLOYMENT, see scripts/sample-script.js for info on how to do this
   
 <br/><br/>
 For more information, join our discord channel https://discord.gg/C4XtWtB 

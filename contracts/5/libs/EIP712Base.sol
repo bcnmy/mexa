@@ -1,6 +1,5 @@
 pragma solidity ^0.5.13;
 
-
 contract EIP712Base {
     struct EIP712Domain {
         string name;
@@ -45,7 +44,7 @@ contract EIP712Base {
      * https://eips.ethereum.org/EIPS/eip-712
      * "\\x19" makes the encoding deterministic
      * "\\x01" is the version byte to make it compatible to EIP-191
-     */
+     **/
     function toTypedMessageHash(bytes32 messageHash)
         internal
         view
