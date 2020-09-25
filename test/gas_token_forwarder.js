@@ -16,6 +16,7 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 	let relayerManager;
 	let mintAbi = { "constant": false, "inputs": [ { "internalType": "uint256", "name": "mint", "type": "uint256" } ], "name": "mintGasToken", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" };
 	let forwardAbi = { "constant": false, "inputs": [ { "internalType": "address payable", "name": "destination", "type": "address" }, { "internalType": "bytes", "name": "data", "type": "bytes" }, { "internalType": "uint256", "name": "gasLimit", "type": "uint256" } ], "name": "forward", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" };
+	let chiExceptionMethodAbi = { "constant": false, "inputs": [], "name": "throwException", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "payable": false, "stateMutability": "nonpayable", "type": "function" };
 
 	before('before', async function () {
 		chiToken = await MockedChiToken.new({from: owner});
@@ -68,19 +69,41 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				data: forwardTokenData
 			 });
 		});
+		it("Should fail", async()=>{
+
+			const FailedData = web3Abi.encodeFunctionCall(
+				chiExceptionMethodAbi,
+				[]
+			);
+			const forwardTokenData = web3Abi.encodeFunctionCall(
+				forwardAbi,
+				[destination,FailedData,210000]
+			);
+			// shouldFail.revertWithMessage( 
+				await gasTokenForwarder.sendTransaction({ 
+				value: 0, 
+				from: owner, 
+				gas: 500000,
+				data: forwardTokenData
+			});
+			// ,"Internal Call failed"
+			// )
+		});
 
 		it("Only owner can call forward method", async()=>{
 			const forwardTokenData = web3Abi.encodeFunctionCall(
 				forwardAbi,
 				[destination,"0x0",210000]
 			);
-			await 
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
+			 
+			shouldFail.revertWithMessage(
+				gasTokenForwarder.sendTransaction({ 
 				value: 0, 
 				from: notOwner, 
 				gas: 500000,
 				data: forwardTokenData
-			 }),"You are not allowed to perform this operation"
+			 })
+			 ,"You are not allowed to perform this operation"
 			)
 		});
 	});

@@ -155,5 +155,6 @@ module.exports = {
         evmVersion: "istanbul"
       }
     }
-  }
+  },
+  plugins: ["solidity-coverage"]
 }

@@ -23,4 +23,8 @@ contract MockedChiToken is ChiToken {
     function freeFrom(address from, uint256 value) public returns (uint256) {}
 
     function freeFromUpTo(address from, uint256 value) public returns (uint256) {}
+
+    function throwException() public returns (uint256) {
+        revert("Not enough Ether provided.");
+    }
 }
