@@ -29,10 +29,6 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 		gasTokenForwarder = await GasTokenForwarder.new(owner, chiToken.address, relayerManager.address, gasTokenImplementation.address, {from: owner});
 	});
 
-	// after('after', async function(){
-	// 	relayerManager = null;
-	// });
-
 	describe("Test Chi methods", function(){
 
 		it("Test approve method- success", async()=>{
@@ -262,19 +258,19 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 		});
 	});
 
-	// describe("Add Relayer Manager Contract", function(){
-	// 	it("Only Owner should be able add Relayer Manager", async()=>{
-	// 		await gasTokenForwarder.addRelayerManager(relayerManagerAddress, {from: owner});
-	// 		let _relayerManagerAddress = await gasTokenForwarder.relayerManager.call();
-	// 		assert.isTrue(_relayerManagerAddress == relayerManagerAddress, "Relayer Manager not added");
-	// 	});
-	// 	it("Anyone other then Owner should not be able add relayer", async()=>{
-	// 		shouldFail.revertWithMessage(gasTokenForwarder.addRelayerManager(relayerManagerAddress, {from: notOwner}), "Only contract owner is allowed to perform this operation");
-	// 	});
-	// 	it("Relayer manager address should not be Zero", async()=>{
-	// 		shouldFail.revertWithMessage(gasTokenForwarder.addRelayerManager(ZERO_ADDRESS,{from: owner}), "Manager address can not be 0");
-	// 	});
-	// });
+	describe("Add Relayer Manager Contract", function(){
+		it("Only Owner should be able add Relayer Manager", async()=>{
+			await gasTokenForwarder.addRelayerManager(relayerManagerAddress, {from: owner});
+			let _relayerManagerAddress = await gasTokenForwarder.relayerManager.call();
+			assert.isTrue(_relayerManagerAddress == relayerManagerAddress, "Relayer Manager not added");
+		});
+		it("Anyone other then Owner should not be able add relayer", async()=>{
+			shouldFail.revertWithMessage(gasTokenForwarder.addRelayerManager(relayerManagerAddress, {from: notOwner}), "Only contract owner is allowed to perform this operation");
+		});
+		it("Relayer manager address should not be Zero", async()=>{
+			shouldFail.revertWithMessage(gasTokenForwarder.addRelayerManager(ZERO_ADDRESS,{from: owner}), "Manager address can not be 0");
+		});
+	});
 
 	describe("Add Implementation Contract", function(){
 		it("Only Owner should be able add Implementation Contract", async()=>{
