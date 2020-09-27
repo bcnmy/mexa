@@ -17,12 +17,29 @@ contract MockedChiToken is ChiToken {
         return fakeMinttokenBalance;
     }
 
+    function transferFrom(address from, address to, uint256 value) public returns (bool success) {
+        return true;
+    }
 
-    function freeUpTo(uint256 value) public returns (uint256) {}
+    function approve(address spender, uint256 value) public returns (bool success){
+        return true;
+    }
 
-    function freeFrom(address from, uint256 value) public returns (uint256) {}
+    function allowance(address owner, address spender) public view returns (uint256){
+        return 2;
+    }
 
-    function freeFromUpTo(address from, uint256 value) public returns (uint256) {}
+    function transfer(address to, uint256 value) public returns (bool success) {
+        return true;
+    }
+
+    function freeFrom(address from, uint256 value) public returns (uint256) {
+        return 2;
+    }
+
+    function freeFromUpTo(address from, uint256 value) public returns (uint256) {
+        return 2;
+    }
 
     function throwException() public returns (uint256) {
         revert("Not enough Ether provided.");
