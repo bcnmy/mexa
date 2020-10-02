@@ -29,7 +29,8 @@ module.exports = {
   networks:{
     buidlerevm:{
       allowUnlimitedContractSize:false,
-      accounts:walletUtils.localWallet("1000000000000000000000")
+      accounts:walletUtils.localWallet("1000000000000000000000",num=10),
+      chainId:42
     },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,

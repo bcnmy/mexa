@@ -4,86 +4,70 @@ pragma experimental ABIEncoderV2;
 //to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./PersonalSignForwarder.sol";
-import "@opengsn/gsn/contracts/forwarder/IForwarder.sol";
+import "./BiconomyForwarder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IFeeMultiplier.sol";
+import "./ERC20ForwardRequest.sol";
 
-contract ERC20FeeProxy is IForwarder{
+contract ERC20FeeProxy is ERC20ForwarderRequest{
     
     using SafeMath for uint256;
     uint256 transferHandlerGas;
-    PersonalSignForwarder forwarder;
+    BiconomyForwarder forwarder;
 
     constructor(address payable _forwarder, uint256 tHGas) public {
-        forwarder = PersonalSignForwarder(_forwarder);
-        forwarder.registerRequestType("ERC20ForwardRequest(",",address token,address feeReceiver,address feeMultiplierManager,uint256 price,uint256 gasToCover)");
+        forwarder = BiconomyForwarder(_forwarder);
         transferHandlerGas = tHGas; //safe figure we can change later to be more accurate
     }
 
-    function verify(
-        ForwardRequest calldata forwardRequest,
-        bytes32 domainSeparator,
-        bytes32 requestTypeHash,
-        bytes calldata suffixData,
-        bytes calldata signature
-    ) external view override {revert("Not supported");}
-
     function getNonce(address from)
-    external view override
-    returns(uint256){ revert("not supported");}
+    external view
+    returns(uint256){
+        uint256 nonce = forwarder.getNonce(from);
+        return nonce;
+    }
 
-    function execute(
-        ForwardRequest calldata forwardRequest,
+    function executeEIP712(
+        ERC20ForwardRequest memory req,
         bytes32 domainSeparator,
-        bytes32 requestTypeHash,
-        bytes calldata suffixData,
-        bytes calldata signature
-    )
-    external payable override
-    returns (bool success, bytes memory ret){revert("not supported");}
-
-    function registerRequestType(string calldata typeName, string calldata typeSuffix) external override{revert("not supported");}
-
-    function erc20Execute(
-        ForwardRequest memory req,
-        bytes32 domainSeparator,
-        bytes32 requestTypeHash,
-        bytes calldata suffixData,
         bytes calldata sig
         ) 
         external payable 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = forwarder.execute.value(req.value)(req,domainSeparator,requestTypeHash,suffixData,sig);
+            (success,ret) = forwarder.executeEIP712.value(req.msgValue)(req,domainSeparator,sig);
             uint256 postGas = gasleft();
-            _transferHandler(req,suffixData,initialGas.sub(postGas));
+            _transferHandler(req,initialGas.sub(postGas));
+            if ( address(this).balance>0 ) {
+            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
+            payable(req.from).transfer(address(this).balance);
+        }
     }
 
-    function erc20ExecutePersonalSign(
-        ForwardRequest memory req,
-        bytes32 domainSeparator,
-        bytes32 requestTypeHash,
-        bytes calldata suffixData,
+
+    function executePersonalSign(
+        ERC20ForwardRequest memory req,
         bytes calldata sig
         ) 
         external payable 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = forwarder.executePersonalSign.value(req.value)(req,domainSeparator,requestTypeHash,suffixData,sig);
+            (success,ret) = forwarder.executePersonalSign.value(req.msgValue)(req,sig);
             uint256 postGas = gasleft();
-            _transferHandler(req,suffixData,initialGas.sub(postGas));
+            _transferHandler(req,initialGas.sub(postGas));
+            if ( address(this).balance>0 ) {
+            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
+            payable(req.from).transfer(address(this).balance);
+        }
     }
 
-
-    function _transferHandler(ForwardRequest memory req,bytes memory suffixData,uint256 executionGas) internal{
-        (address token,address feeReceiver,address feeMultiplierManager,uint256 price,uint256 gasToCover) = 
-        abi.decode(suffixData,(address,address,address,uint256,uint256));
-        gasToCover = executionGas < gasToCover ? executionGas : gasToCover;
-        uint16 multiplierBasisPoints = IFeeMultiplier(feeMultiplierManager).getFeeMultiplier(req.from,token);
-        require(IERC20(token).transferFrom(req.from,feeReceiver,price.mul(gasToCover.add(transferHandlerGas)).
-        mul(multiplierBasisPoints).
-        div(10000)));
+    //good
+    function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal{
+        uint16 multiplierBasisPoints = IFeeMultiplier(req.feeMultiplierManager).getFeeMultiplier(req.from,req.token);
+        require(IERC20(req.token).transferFrom(
+            req.from,
+            req.feeReceiver,
+            req.price.mul(executionGas.add(transferHandlerGas)).mul(multiplierBasisPoints).div(10000)));
     }
 
 
