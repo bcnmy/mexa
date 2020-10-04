@@ -1,8 +1,8 @@
 pragma solidity ^0.5.13;
 import "./ICHITOKEN.sol";
 import "../RelayerManager.sol";
-import "../libs/SafeMath.sol";
 import "../libs/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract GasTokenImplementation is Ownable(msg.sender) {
     using SafeMath for uint256;
@@ -43,7 +43,7 @@ contract GasTokenImplementation is Ownable(msg.sender) {
             if iszero(eq(gasLimit, 0)) {
                 txGas := gasLimit
             }
-            success := call(txGas, destination, 0, add(data, 0x20), mload(data), 0, 0) 
+            success := call(txGas, destination, 0, add(data, 0x20), mload(data), 0, 0)
         }
         require(success==1,"Internal Call failed");
     }

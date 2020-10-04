@@ -1,24 +1,19 @@
 const GasTokenForwarder = artifacts.require("GasTokenForwarder");
 const GasTokenImplementation = artifacts.require("GasTokenImplementation");
 var RelayerManager = artifacts.require("RelayerManager");
-var SafeMath = artifacts.require("SafeMath");
 
 module.exports = function(deployer) {
     // Owner of GasTokenForwarder Contract
-    var owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
+    var owner = "0x256144a60f34288F7b03D345F8Cb256C502e0f2C";
 
-    //Chi token address on mainnet. Replace if deploying on another address
-    // var ChiAddress = "0x0000000000004946c0e9F43F4Dee607b0eF1fA1c";
+    //Chi token address on Kovan and Mainnet is same. Replace if deploying on another address
+    // var ChiAddress = "0x0000000000004946c0e9f43f4dee607b0ef1fa1c";
 
-    //Chi token address on Kovan. Replace if deploying on another address
-    var ChiAddress = "0x0000000000004946c0e9f43f4dee607b0ef1fa1c";
-
-    deployer.deploy(SafeMath, { overwrite: false });
-    deployer.link(SafeMath, GasTokenImplementation);
-    deployer.link(SafeMath, GasTokenForwarder);
+    //Chi token address on Ropsten;
+    var ChiAddress = "0x063f83affbCF64D7d84d306f5B85eD65C865Dca4";
 
     // Make sure Relayer manager is not already deployed using the other script.
-    deployer.deploy(RelayerManager, { overwrite: false }).then(function (relayerManager) {
+    deployer.deploy(RelayerManager, owner).then(function (relayerManager) {
         return deployer.deploy(GasTokenImplementation, { overwrite: false }).then(function (gasTokenImplementation) {
             return deployer.deploy(GasTokenForwarder, owner, ChiAddress, relayerManager.address, gasTokenImplementation.address);
         });

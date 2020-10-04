@@ -1,9 +1,9 @@
 pragma solidity ^0.5.13;
 import "./ICHITOKEN.sol";
 import "../RelayerManager.sol";
-import "../libs/SafeMath.sol";
 import "../libs/Ownable.sol";
 import "./GasTokenImplementation.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract GasTokenForwarder is Ownable {
     using SafeMath for uint256;
