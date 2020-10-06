@@ -405,7 +405,101 @@ describe("ERC20FeeProxy", function () {
       expect((await testnetDai.balanceOf(await accounts[5].getAddress())).lt(expectedMax)).to.equal(true);
   });
 
-  it("fee handler charges based on gas used, not req.gas", async function(){
+  it("fee handler considers price correctly", async function(){
+    const price0 = (ethers.utils.parseUnits('10000','gwei')).toString();
+    const price1 = (ethers.utils.parseUnits('20000','gwei')).toString();
+
+    const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+    req.from = await accounts[1].getAddress();
+    req.nonce = (await erc20FeeProxy.getNonce(req.from)).toNumber();
+    req.gas = 250000;
+    req.price = price0
+    req.msgValue = 0;
+    delete req.gasPrice;
+    delete req.gasLimit;
+    delete req.chainId;
+    req.token = testnetDai.address;
+    req.feeReceiver = await accounts[6].getAddress();
+    req.feeMultiplierManager = mockFeeMultiplier.address;
+    const hashToSign = abi.soliditySHA3(['address','address','address','address','address',
+                                         'uint256','uint256','uint256','uint256','bytes32'],
+                                        [req.from,req.to,req.token,req.feeReceiver,req.feeMultiplierManager,
+                                         req.msgValue,req.gas,req.price,req.nonce,ethers.utils.keccak256(req.data)]);
+    const sig = await accounts[1].signMessage(hashToSign);
+    await erc20FeeProxy.executePersonalSign(req,sig);
+    const amountSpent = await testnetDai.balanceOf(await accounts[6].getAddress());
+    const req1 = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+    req1.from = await accounts[1].getAddress();
+    req1.nonce = (await erc20FeeProxy.getNonce(req1.from)).toNumber();
+    req1.gas = 250000;
+    req1.price = price1
+    req1.msgValue = 0;
+    delete req1.gasPrice;
+    delete req1.gasLimit;
+    delete req1.chainId;
+    req1.token = testnetDai.address;
+    req1.feeReceiver = await accounts[7].getAddress();
+    req1.feeMultiplierManager = mockFeeMultiplier.address;
+    const hashToSign1 = abi.soliditySHA3(['address','address','address','address','address',
+                                         'uint256','uint256','uint256','uint256','bytes32'],
+                                        [req1.from,req1.to,req1.token,req1.feeReceiver,req1.feeMultiplierManager,
+                                         req1.msgValue,req1.gas,req1.price,req1.nonce,ethers.utils.keccak256(req1.data)]);
+    const sig1 = await accounts[1].signMessage(hashToSign1);
+    await erc20FeeProxy.executePersonalSign(req1,sig1);
+    const amountSpent1 = await testnetDai.balanceOf(await accounts[7].getAddress());
+    const expectedMax1 = (ethers.BigNumber.from(req1.gas*1.5)).mul(ethers.BigNumber.from(req1.price));//gas*price*1.5
+    expect((amountSpent1).lt(expectedMax1)).to.equal(true);
+    expect((amountSpent1.div(amountSpent)).toString()).to.equal("2");
+  });
+
+  it("fee handler considers multiplier correctly", async function(){
+    const price0 = (ethers.utils.parseUnits('10000','gwei')).toString();
+    const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+    req.from = await accounts[1].getAddress();
+    req.nonce = (await erc20FeeProxy.getNonce(req.from)).toNumber();
+    req.gas = 250000;
+    req.price = price0
+    req.msgValue = 0;
+    delete req.gasPrice;
+    delete req.gasLimit;
+    delete req.chainId;
+    req.token = testnetDai.address;
+    req.feeReceiver = await accounts[8].getAddress();
+    req.feeMultiplierManager = mockFeeMultiplier.address;
+    const hashToSign = abi.soliditySHA3(['address','address','address','address','address',
+                                         'uint256','uint256','uint256','uint256','bytes32'],
+                                        [req.from,req.to,req.token,req.feeReceiver,req.feeMultiplierManager,
+                                         req.msgValue,req.gas,req.price,req.nonce,ethers.utils.keccak256(req.data)]);
+    const sig = await accounts[1].signMessage(hashToSign);
+    await erc20FeeProxy.executePersonalSign(req,sig);
+    const amountSpent = await testnetDai.balanceOf(await accounts[8].getAddress());
+
+    await mockFeeMultiplier.setFeeMultiplier(30000);
+    const req1 = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+    req1.from = await accounts[1].getAddress();
+    req1.nonce = (await erc20FeeProxy.getNonce(req1.from)).toNumber();
+    req1.gas = 250000;
+    req1.price = price0;
+    req1.msgValue = 0;
+    delete req1.gasPrice;
+    delete req1.gasLimit;
+    delete req1.chainId;
+    req1.token = testnetDai.address;
+    req1.feeReceiver = await accounts[9].getAddress();
+    req1.feeMultiplierManager = mockFeeMultiplier.address;
+    const hashToSign1 = abi.soliditySHA3(['address','address','address','address','address',
+                                         'uint256','uint256','uint256','uint256','bytes32'],
+                                        [req1.from,req1.to,req1.token,req1.feeReceiver,req1.feeMultiplierManager,
+                                         req1.msgValue,req1.gas,req1.price,req1.nonce,ethers.utils.keccak256(req1.data)]);
+    const sig1 = await accounts[1].signMessage(hashToSign1);
+    await erc20FeeProxy.executePersonalSign(req1,sig1);
+    const amountSpent1 = await testnetDai.balanceOf(await accounts[9].getAddress());
+    const expectedMax1 = (ethers.BigNumber.from(req1.gas*3)).mul(ethers.BigNumber.from(req1.price));//gas*price*3
+    expect((amountSpent1).lt(expectedMax1)).to.equal(true);
+    expect((amountSpent1.div(amountSpent)).toString()).to.equal("2");
+  });
+
+  it("transfers from correct address", async function(){
     const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
     req.from = await accounts[1].getAddress();
     req.nonce = (await erc20FeeProxy.getNonce(req.from)).toNumber();
@@ -423,17 +517,64 @@ describe("ERC20FeeProxy", function () {
                                         [req.from,req.to,req.token,req.feeReceiver,req.feeMultiplierManager,
                                          req.msgValue,req.gas,req.price,req.nonce,ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
+    const balance0 = await testnetDai.balanceOf(await accounts[1].getAddress());
     await erc20FeeProxy.executePersonalSign(req,sig);
-    const expectedMax = (ethers.BigNumber.from(req.gas*1.5)).mul(ethers.BigNumber.from(req.price));//gas*price*1.5
-    expect((await testnetDai.balanceOf(await accounts[5].getAddress())).lt(expectedMax)).to.equal(true);
-  });
-    //fee handler multiplies fee correctly
-    //fee handler considers price correctly
-    //fee handler charges based on gas used, not req.gas
+    const balance1 = await testnetDai.balanceOf(await accounts[1].getAddress());
+    expect((balance1).lt(balance0)).to.equal(true);
+});
+
+it("transfer handler gas amount added correctly to total gas charged", async function(){
+  const price0 = (ethers.utils.parseUnits('10000','gwei')).toString();
+
+  const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+  req.from = await accounts[1].getAddress();
+  req.nonce = (await erc20FeeProxy.getNonce(req.from)).toNumber();
+  req.gas = 250000;
+  req.price = price0
+  req.msgValue = 0;
+  delete req.gasPrice;
+  delete req.gasLimit;
+  delete req.chainId;
+  req.token = testnetDai.address;
+  req.feeReceiver = await accounts[10].getAddress();
+  req.feeMultiplierManager = mockFeeMultiplier.address;
+  const hashToSign = abi.soliditySHA3(['address','address','address','address','address',
+                                       'uint256','uint256','uint256','uint256','bytes32'],
+                                      [req.from,req.to,req.token,req.feeReceiver,req.feeMultiplierManager,
+                                       req.msgValue,req.gas,req.price,req.nonce,ethers.utils.keccak256(req.data)]);
+  const sig = await accounts[1].signMessage(hashToSign);
+  await erc20FeeProxy.executePersonalSign(req,sig);
+  const amountSpent = await testnetDai.balanceOf(await accounts[10].getAddress());
+
+  await erc20FeeProxy.setTHG(0);
+
+  const req1 = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+  req1.from = await accounts[1].getAddress();
+  req1.nonce = (await erc20FeeProxy.getNonce(req1.from)).toNumber();
+  req1.gas = 250000;
+  req1.price = price0
+  req1.msgValue = 0;
+  delete req1.gasPrice;
+  delete req1.gasLimit;
+  delete req1.chainId;
+  req1.token = testnetDai.address;
+  req1.feeReceiver = await accounts[11].getAddress();
+  req1.feeMultiplierManager = mockFeeMultiplier.address;
+  const hashToSign1 = abi.soliditySHA3(['address','address','address','address','address',
+                                       'uint256','uint256','uint256','uint256','bytes32'],
+                                      [req1.from,req1.to,req1.token,req1.feeReceiver,req1.feeMultiplierManager,
+                                       req1.msgValue,req1.gas,req1.price,req1.nonce,ethers.utils.keccak256(req1.data)]);
+  const sig1 = await accounts[1].signMessage(hashToSign1);
+  await erc20FeeProxy.executePersonalSign(req1,sig1);
+  const amountSpent1 = await testnetDai.balanceOf(await accounts[11].getAddress());
+  const expectedDifference = (ethers.BigNumber.from(300000)).mul(ethers.BigNumber.from(req1.price));
+  expect((amountSpent1).lt(amountSpent)).to.equal(true);
+  expect((((amountSpent.sub(expectedDifference)).sub(amountSpent1)).abs()).lte(amountSpent1.div(ethers.BigNumber.from(100)))).to.equal(true);
+});
     //transfer handler gas amount added correctly to total gas charged
-    //transfers from correct token
-    //transfers to correct address
-    //transfers from correct address
+    //transfers from correct token - validated implicitly from the other tests working
+    //transfers to correct address - validated implicitly from the other tests working
+    //transfers from correct address 
   });
 
 })

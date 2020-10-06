@@ -4,12 +4,13 @@ pragma experimental ABIEncoderV2;
 //to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./BiconomyForwarder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IFeeMultiplier.sol";
 import "./ERC20ForwardRequest.sol";
 
-contract ERC20FeeProxy is ERC20ForwarderRequest{
+contract ERC20FeeProxy is ERC20ForwarderRequest,Ownable{
     
     using SafeMath for uint256;
     uint256 transferHandlerGas;
@@ -18,6 +19,10 @@ contract ERC20FeeProxy is ERC20ForwarderRequest{
     constructor(address payable _forwarder, uint256 tHGas) public {
         forwarder = BiconomyForwarder(_forwarder);
         transferHandlerGas = tHGas; //safe figure we can change later to be more accurate
+    }
+
+    function setTHG(uint256 tHGas) external onlyOwner{
+        transferHandlerGas = tHGas;
     }
 
     function getNonce(address from)

@@ -29,7 +29,7 @@ module.exports = {
   networks:{
     buidlerevm:{
       allowUnlimitedContractSize:false,
-      accounts:walletUtils.localWallet("1000000000000000000000",num=10),
+      accounts:walletUtils.localWallet("1000000000000000000000",num=20),
       chainId:42
     },
     kovan:{
