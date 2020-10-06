@@ -36,12 +36,12 @@ contract ERC20FeeProxy is ERC20ForwarderRequest{
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             (success,ret) = forwarder.executeEIP712.value(req.msgValue)(req,domainSeparator,sig);
+            if ( address(this).balance>0 ) {
+                //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
+                payable(req.from).transfer(address(this).balance);
+            }
             uint256 postGas = gasleft();
             _transferHandler(req,initialGas.sub(postGas));
-            if ( address(this).balance>0 ) {
-            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
-            payable(req.from).transfer(address(this).balance);
-        }
     }
 
 
@@ -53,21 +53,22 @@ contract ERC20FeeProxy is ERC20ForwarderRequest{
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             (success,ret) = forwarder.executePersonalSign.value(req.msgValue)(req,sig);
+            if ( address(this).balance>0 ) {
+                //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
+                payable(req.from).transfer(address(this).balance);
+            }
             uint256 postGas = gasleft();
             _transferHandler(req,initialGas.sub(postGas));
-            if ( address(this).balance>0 ) {
-            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
-            payable(req.from).transfer(address(this).balance);
-        }
     }
 
     //good
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal{
         uint16 multiplierBasisPoints = IFeeMultiplier(req.feeMultiplierManager).getFeeMultiplier(req.from,req.token);
+        executionGas = executionGas.add(transferHandlerGas);
         require(IERC20(req.token).transferFrom(
             req.from,
             req.feeReceiver,
-            req.price.mul(executionGas.add(transferHandlerGas)).mul(multiplierBasisPoints).div(10000)));
+            req.price.mul(executionGas).mul(multiplierBasisPoints).div(10000)));
     }
 
 

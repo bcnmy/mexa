@@ -10,7 +10,7 @@ contract BiconomyForwarder is ERC20ForwarderRequest{
 
     string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 
-    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes(string(abi.encodePacked("ERC20ForwardRequest(address from,address to,address token,address feeReceiver,address feeMultiplierManager,uint256 msgValue,uint256 gas,uint256 price,bytes data)"))));
+    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,address feeReceiver,address feeMultiplierManager,uint256 msgValue,uint256 gas,uint256 price,uint256 nonce,bytes32 dataHash)"));
 
     mapping(bytes32 => bool) public domains;
 
@@ -129,7 +129,7 @@ contract BiconomyForwarder is ERC20ForwarderRequest{
                                      req.gas,
                                      req.price,
                                      req.nonce,
-                                     req.data))
+                                     keccak256(req.data)))
         ));
         require(digest.recover(sig) == req.from, "signature mismatch");
     }
@@ -154,7 +154,7 @@ contract BiconomyForwarder is ERC20ForwarderRequest{
             req.gas,
             req.price,
             req.nonce,
-            req.data
+            keccak256(req.data)
         )));
         require(digest.recover(sig) == req.from, "signature mismatch");
     }
