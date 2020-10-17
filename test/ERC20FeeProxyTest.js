@@ -29,6 +29,7 @@ describe("ERC20FeeProxy", function () {
         {name:'tokenGasPrice',type:'uint256'},
         {name:'batchId',type:'uint256'},
         {name:'batchNonce',type:'uint256'},
+        {name:'deadline',type:'uint256'},
         {name:'dataHash',type:'bytes32'}
     ];
 
@@ -95,12 +96,13 @@ describe("ERC20FeeProxy", function () {
         req.batchId = 0;
         req.txGas = (req.gasLimit).toNumber();
         req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+        req.deadline = 0;
         delete req.gasPrice;
         delete req.gasLimit;
         delete req.chainId;
         req.token = testnetDai.address;
-        const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                            [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+        const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                            [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                              ethers.utils.keccak256(req.data)]);
         const sig = await accounts[1].signMessage(hashToSign);
         await erc20FeeProxy.executePersonalSign(req,sig);
@@ -124,12 +126,13 @@ describe("ERC20FeeProxy", function () {
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
       req.tokenGasPrice = 0;
+      req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
       delete req.chainId;
       req.token = testnetDai.address;
-      const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                          [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+      const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                          [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                               ethers.utils.keccak256(req.data)]);
       const sig = await accounts[1].signMessage(hashToSign);
       await expect(erc20FeeProxy.executePersonalSign(req,sig)).to.be.revertedWith();
@@ -142,12 +145,13 @@ describe("ERC20FeeProxy", function () {
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
       req.tokenGasPrice = 0;
+      req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
       delete req.chainId;
       req.token = testnetDai.address;
-      const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                          [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+      const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                          [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                               ethers.utils.keccak256(req.data)]);
       const sig = await accounts[0].signMessage(hashToSign);
       await expect(erc20FeeProxy.executePersonalSign(req,sig)).to.be.revertedWith();
@@ -165,6 +169,7 @@ describe("ERC20FeeProxy", function () {
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
       req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+      req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
       delete req.chainId;
@@ -203,6 +208,7 @@ describe("ERC20FeeProxy", function () {
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
       req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+      req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
       delete req.chainId;
@@ -230,6 +236,7 @@ describe("ERC20FeeProxy", function () {
     req.batchId = 1;
     req.txGas = (req.gasLimit).toNumber();
     req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+    req.deadline = 0;
     delete req.gasPrice;
     delete req.gasLimit;
     delete req.chainId;
@@ -261,12 +268,13 @@ describe("ERC20FeeProxy", function () {
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
       req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+      req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
       delete req.chainId;
       req.token = testnetDai.address;
-      const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                          [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+      const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                          [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                             ethers.utils.keccak256(req.data)]);
       const sig = await accounts[3].signMessage(hashToSign);
       await erc20FeeProxy.executePersonalSign(req,sig);
@@ -286,12 +294,13 @@ describe("ERC20FeeProxy", function () {
     req.batchId = 2;
     req.txGas = (req.gasLimit).toNumber();
     req.tokenGasPrice = price0;
+    req.deadline = 0;
     delete req.gasPrice;
     delete req.gasLimit;
     delete req.chainId;
     req.token = testnetDai.address;
-    const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                        [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+    const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                        [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
     await erc20FeeProxy.executePersonalSign(req,sig);
@@ -304,12 +313,13 @@ describe("ERC20FeeProxy", function () {
     req1.batchId = 3;
     req1.txGas = (req1.gasLimit).toNumber();
     req1.tokenGasPrice = price1;
+    req1.deadline = 0;
     delete req1.gasPrice;
     delete req1.gasLimit;
     delete req1.chainId;
     req1.token = testnetDai.address;
-    const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                        [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,
+    const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                        [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
                                           ethers.utils.keccak256(req1.data)]);
     const sig1 = await accounts[1].signMessage(hashToSign1);
     await erc20FeeProxy.executePersonalSign(req1,sig1);
@@ -331,12 +341,13 @@ describe("ERC20FeeProxy", function () {
     req.batchId = 4;
     req.txGas = (req.gasLimit).toNumber();
     req.tokenGasPrice = price0;
+    req.deadline = 0;
     delete req.gasPrice;
     delete req.gasLimit;
     delete req.chainId;
     req.token = testnetDai.address;
-    const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                        [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+    const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                        [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
     await erc20FeeProxy.executePersonalSign(req,sig);
@@ -350,12 +361,13 @@ describe("ERC20FeeProxy", function () {
     req1.batchId = 5;
     req1.txGas = (req1.gasLimit).toNumber();
     req1.tokenGasPrice = price0;
+    req1.deadline = 0;
     delete req1.gasPrice;
     delete req1.gasLimit;
     delete req1.chainId;
     req1.token = testnetDai.address;
-    const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                        [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,
+    const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                        [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
                                           ethers.utils.keccak256(req1.data)]);
     const sig1 = await accounts[1].signMessage(hashToSign1);
     await erc20FeeProxy.executePersonalSign(req1,sig1);
@@ -375,12 +387,13 @@ describe("ERC20FeeProxy", function () {
     req.batchId = 6;
     req.txGas = (req.gasLimit).toNumber();
     req.tokenGasPrice = price0;
+    req.deadline = 0;
     delete req.gasPrice;
     delete req.gasLimit;
     delete req.chainId;
     req.token = testnetDai.address;
-    const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                        [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+    const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                        [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
     const balance0 = await testnetDai.balanceOf(await accounts[1].getAddress());
@@ -399,12 +412,13 @@ it("transfer handler gas amount added correctly to total gas charged", async fun
   req.batchId = 7;
   req.txGas = (req.gasLimit).toNumber();
   req.tokenGasPrice = price0;
+  req.deadline = 0;
   delete req.gasPrice;
   delete req.gasLimit;
   delete req.chainId;
   req.token = testnetDai.address;
-  const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                      [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+  const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                      [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                         ethers.utils.keccak256(req.data)]);
   const sig = await accounts[1].signMessage(hashToSign);
   await erc20FeeProxy.executePersonalSign(req,sig);
@@ -419,12 +433,13 @@ it("transfer handler gas amount added correctly to total gas charged", async fun
   req1.batchId = 8;
   req1.txGas = (req1.gasLimit).toNumber();
   req1.tokenGasPrice = price0;
+  req1.deadline = 0;
   delete req1.gasPrice;
   delete req1.gasLimit;
   delete req1.chainId;
   req1.token = testnetDai.address;
-  const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                      [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,
+  const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                      [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
                                         ethers.utils.keccak256(req1.data)]);
   const sig1 = await accounts[1].signMessage(hashToSign1);
   await erc20FeeProxy.executePersonalSign(req1,sig1);
@@ -442,12 +457,13 @@ it("Reverts requests which use non-permitted tokens", async function(){
   req.batchId = 9;
   req.txGas = (req.gasLimit).toNumber();
   req.tokenGasPrice = 0;
+  req.deadline = 0;
   delete req.gasPrice;
   delete req.gasLimit;
   delete req.chainId;
   req.token = testnetDai.address;
-  const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                      [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+  const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                      [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
   const sig = await accounts[1].signMessage(hashToSign);
   await expect(erc20FeeProxy.executePersonalSign(req,sig)).to.be.revertedWith();

@@ -27,6 +27,7 @@ describe("Biconomy Forwarder", function(){
         {name:'tokenGasPrice',type:'uint256'},
         {name:'batchId',type:'uint256'},
         {name:'batchNonce',type:'uint256'},
+        {name:'deadline',type:'uint256'},
         {name:'dataHash',type:'bytes32'}
     ];
 
@@ -82,12 +83,13 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 0;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[1].signMessage(hashToSign);
             await forwarder.executePersonalSign(req,sig);
@@ -106,12 +108,13 @@ describe("Biconomy Forwarder", function(){
             req.batchNonce = 0;
             req.batchId = 0;
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await rwallet.signMessage(hashToSign);
             await forwarder.executePersonalSign(req,sig);
@@ -125,12 +128,13 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 0;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[1].signMessage(hashToSign);
             await expect(forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
@@ -143,12 +147,13 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 1;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[0].signMessage(hashToSign);
             await expect(forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
@@ -161,12 +166,13 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 1;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[1].signMessage(hashToSign);
             await forwarder.executePersonalSign(req,sig);
@@ -180,12 +186,13 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 1;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[1].signMessage(hashToSign);
             await forwarder.callStatic.verifyPersonalSign(req,sig);
@@ -198,15 +205,54 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 1;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[1].signMessage(hashToSign);
             await expect(forwarder.callStatic.verifyPersonalSign(req,sig)).to.be.revertedWith();
+        });
+
+        it("Fails when deadline non-zero and below current time", async function(){
+            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            req.from = await accounts[1].getAddress();
+            req.batchNonce = 0;
+            req.batchId = 2;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = 0;
+            req.deadline = 1;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = testnetDai.address;
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
+                                                    ethers.utils.keccak256(req.data)]);
+            const sig = await accounts[1].signMessage(hashToSign);
+            await expect(forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
+        });
+
+        it("Executes successfully when deadline is above current time", async function(){
+            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            req.from = await accounts[1].getAddress();
+            req.batchNonce = 0;
+            req.batchId = 2;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = 0;
+            req.deadline = Math.floor(Date.now()/1000)+600;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = testnetDai.address;
+            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
+                                                    ethers.utils.keccak256(req.data)]);
+            const sig = await accounts[1].signMessage(hashToSign);
+            await forwarder.executePersonalSign(req,sig);
         });
 
     });
@@ -219,6 +265,7 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 0;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
@@ -251,6 +298,7 @@ describe("Biconomy Forwarder", function(){
             req.batchNonce = 0;
             req.batchId = 0;
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
@@ -280,6 +328,7 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 0;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
@@ -307,6 +356,7 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 0;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
@@ -334,6 +384,7 @@ describe("Biconomy Forwarder", function(){
             req.batchId = 1;
             req.txGas = (req.gasLimit).toNumber();
             req.tokenGasPrice = 0;
+            req.deadline = 0;
             delete req.gasPrice;
             delete req.gasLimit;
             delete req.chainId;
@@ -354,6 +405,119 @@ describe("Biconomy Forwarder", function(){
             await forwarder.executeEIP712(req,domainSeparator,sig);
             expect(await forwarder.highestBatchId(req.from)).to.equal(1);
         });
+
+        it("External verify function validates compliant requests/signatures as correct", async function(){
+            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            req.from = await accounts[1].getAddress();
+            req.batchNonce = 1;
+            req.batchId = 1;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = 0;
+            req.deadline = 0;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = testnetDai.address;
+            const erc20fr = Object.assign({}, req);;
+            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            delete erc20fr.data;
+            const dataToSign = {
+                types: {
+                    EIP712Domain: domainType,
+                    ERC20ForwardRequest: erc20ForwardRequest
+                  },
+                  domain: domainData,
+                  primaryType: "ERC20ForwardRequest",
+                  message: erc20fr
+                };
+            const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
+            await forwarder.callStatic.verifyEIP712(req,domainSeparator,sig);
+        });
+
+        it("External verify function validates non-compliant requests/signatures as incorrect", async function(){
+            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            req.from = await accounts[1].getAddress();
+            req.batchNonce = 0;
+            req.batchId = 1;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = 0;
+            req.deadline = 0;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = testnetDai.address;
+            const erc20fr = Object.assign({}, req);
+            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            delete erc20fr.data;
+            const dataToSign = {
+                types: {
+                    EIP712Domain: domainType,
+                    ERC20ForwardRequest: erc20ForwardRequest
+                  },
+                  domain: domainData,
+                  primaryType: "ERC20ForwardRequest",
+                  message: erc20fr
+                };
+            const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
+            await expect(forwarder.callStatic.verifyEIP712(req,domainSeparator,sig)).to.be.revertedWith();
+        });
+
+        it("Fails when deadline non-zero and below current time", async function(){
+            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            req.from = await accounts[2].getAddress();
+            req.batchNonce = 0;
+            req.batchId = 2;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = 0;
+            req.deadline = 1;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = testnetDai.address;
+            const erc20fr = Object.assign({}, req);
+            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            delete erc20fr.data;
+            const dataToSign = {
+                types: {
+                    EIP712Domain: domainType,
+                    ERC20ForwardRequest: erc20ForwardRequest
+                  },
+                  domain: domainData,
+                  primaryType: "ERC20ForwardRequest",
+                  message: erc20fr
+                };
+            const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
+            await expect(forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
+        });
+
+        it("Executes successfully when deadline is above current time", async function(){
+            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            req.from = await accounts[2].getAddress();
+            req.batchNonce = 0;
+            req.batchId = 2;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = 0;
+            req.deadline = Math.floor(Date.now()/1000)+600;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = testnetDai.address;
+            const erc20fr = Object.assign({}, req);
+            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            delete erc20fr.data;
+            const dataToSign = {
+                types: {
+                    EIP712Domain: domainType,
+                    ERC20ForwardRequest: erc20ForwardRequest
+                  },
+                  domain: domainData,
+                  primaryType: "ERC20ForwardRequest",
+                  message: erc20fr
+                };
+            const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
+            await forwarder.executeEIP712(req,domainSeparator,sig);
+        });
+
 
     });
 

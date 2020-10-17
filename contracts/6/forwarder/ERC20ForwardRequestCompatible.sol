@@ -11,6 +11,7 @@ contract ERC20ForwardRequestCompatible{
         uint256 tokenGasPrice;
         uint256 batchId; //maybe
         uint256 batchNonce; //maybe
+        uint256 deadline;
         bytes data;
     }
     

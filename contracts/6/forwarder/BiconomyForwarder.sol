@@ -26,7 +26,7 @@ contract BiconomyForwarder is ERC20ForwardRequestCompatible{
 
     string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 
-    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,bytes32 dataHash)"));
+    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes32 dataHash)"));
     
     mapping(address => uint256) public highestBatchId;
 
@@ -198,6 +198,7 @@ contract BiconomyForwarder is ERC20ForwardRequestCompatible{
     internal
     view
     {
+        require(req.deadline == 0 || now <= req.deadline, "request expired");
         require(domains[domainSeparator], "unregistered domain separator");
         bytes32 digest =
             keccak256(abi.encodePacked(
@@ -211,6 +212,7 @@ contract BiconomyForwarder is ERC20ForwardRequestCompatible{
                             req.tokenGasPrice,
                             req.batchId,
                             nonces[req.from][req.batchId],
+                            req.deadline,
                             keccak256(req.data)
                         ))));
         require(digest.recover(sig) == req.from, "signature mismatch");
@@ -240,6 +242,7 @@ contract BiconomyForwarder is ERC20ForwardRequestCompatible{
     internal
     view
     {
+        require(req.deadline == 0 || now <= req.deadline, "request expired");
         bytes32 digest = prefixed(keccak256(abi.encodePacked(
             req.from,
             req.to,
@@ -248,6 +251,7 @@ contract BiconomyForwarder is ERC20ForwardRequestCompatible{
             req.tokenGasPrice,
             req.batchId,
             nonces[req.from][req.batchId],
+            req.deadline,
             keccak256(req.data)
         )));
         require(digest.recover(sig) == req.from, "signature mismatch");
