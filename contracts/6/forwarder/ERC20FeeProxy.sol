@@ -20,11 +20,12 @@ import "./ERC20ForwardRequestCompatible.sol";
  * @dev Tx Flow : call BiconomyForwarder to handle forwarding, call _transferHandler() to charge fee after
  *
  */
-contract ERC20FeeProxy is ERC20ForwardRequestCompatible,Ownable{
+contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
 
     using SafeMath for uint256;
     uint256 transferHandlerGas;
-    address feeReceiver;
+    address public feeReceiver;
+    address public oracleAggregator;
     IFeeManager feeManager;
     BiconomyForwarder forwarder;
 
@@ -45,6 +46,10 @@ contract ERC20FeeProxy is ERC20ForwardRequestCompatible,Ownable{
         feeManager = IFeeManager(_feeManager);
         forwarder = BiconomyForwarder(_forwarder);
         transferHandlerGas = _transferHandlerGas; //safe figure we can change later to be more accurate
+    }
+
+    function setOracleAggregator(address oa) external onlyOwner{
+        oracleAggregator = oa;
     }
 
     /**

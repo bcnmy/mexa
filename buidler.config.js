@@ -1,4 +1,5 @@
 usePlugin("@nomiclabs/buidler-waffle");
+usePlugin('solidity-coverage');
 const ethers = require("ethers");
 const walletUtils = require("./walletUtils");
 
@@ -27,6 +28,9 @@ module.exports = {
     sources: "./contracts/6",
   },
   networks:{
+    coverage: {
+      url: 'http://localhost:8555'
+    },
     buidlerevm:{
       allowUnlimitedContractSize:false,
       accounts:walletUtils.localWallet("1000000000000000000000",num=20),

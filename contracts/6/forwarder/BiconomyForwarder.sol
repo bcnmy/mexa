@@ -19,7 +19,7 @@ import "./ERC20ForwardRequestCompatible.sol";
  * @dev - maintains a list of verified domain seperators
  * 
  */
-contract BiconomyForwarder is ERC20ForwardRequestCompatible{
+contract BiconomyForwarder is ERC20ForwardRequestTypes{
     using ECDSA for bytes32;
 
     mapping(bytes32 => bool) public domains;

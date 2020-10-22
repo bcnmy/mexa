@@ -29,7 +29,7 @@ contract MockFeeManager is IFeeManager,Ownable{
         allowed = !bannedTokens[token];
     }
 
-    function getPriceFeedAddress(address token) external override view returns (address priceFeed){
+    function getPriceFeedAddress(address token) external view returns (address priceFeed){
         priceFeed = address(0);
     }
 

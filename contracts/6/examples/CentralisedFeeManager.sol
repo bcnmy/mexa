@@ -97,7 +97,7 @@ contract CentralisedFeeManager is IFeeManager,Ownable{
         bannedTokens[token] = banned;
     }
 
-    function getPriceFeedAddress(address token) external override view returns (address priceFeed){
+    function getPriceFeedAddress(address token) external view returns (address priceFeed){
         priceFeed = tokenPriceFeed[token];
     }
 

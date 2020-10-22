@@ -27,9 +27,20 @@ const localWallet = (b,num=1,mn=mnemonic,index=0,path="m/44'/60'/0'/0/") =>{
   }
   return lW;
 }
+
+const ganacheWallet = (b,num=1,mn=mnemonic,index=0,path="m/44'/60'/0'/0/") =>{
+  let hdW = makeKeyList(num,mn,index,path);
+  let lW = [];
+  for(i=0; i<hdW.length; i++){
+    lW.push({secretKey:hdW[i],balance:b});
+  }
+  return lW;
+};
+
 let walletUtils = () => {};
 walletUtils.makeKeyList = makeKeyList;
 walletUtils.makeSignerList = makeSignerList;
 walletUtils.localWallet = localWallet;
+walletUtils.ganacheWallet = ganacheWallet;
 
 module.exports = walletUtils;

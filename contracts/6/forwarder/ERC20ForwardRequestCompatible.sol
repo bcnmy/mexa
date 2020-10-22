@@ -1,7 +1,7 @@
 pragma solidity ^0.6.8;
 pragma experimental ABIEncoderV2;
 
-contract ERC20ForwardRequestCompatible{
+contract ERC20ForwardRequestTypes{
 
     struct ERC20ForwardRequest {
         address from; //index
