@@ -1,6 +1,6 @@
 # Mexa
 Mexa is Biconomy's implementation of meta transactions.
-This repository contains smart contracts for mexa and allow dapp users to perform blockchain operations without holding any ether or other crypto currency.
+This repository contains smart contracts related to Gas Token implementation that is used in meta transactions via Biconomy to save gas.
 
 <h3>Pre-Requisite</h3>
 
