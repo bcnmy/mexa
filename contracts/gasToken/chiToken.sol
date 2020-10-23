@@ -60,8 +60,7 @@ Signed raw transaction for chainId 1:
 */
 // File: @openzeppelin/contracts/math/Math.sol
 
-// pragma solidity ^0.6.0;
-pragma solidity ^0.5.13;
+pragma solidity 0.5.13;
 
 /**
  * @dev Standard math utilities missing in the Solidity language.
