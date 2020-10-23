@@ -24,7 +24,7 @@ Run Unit Tests :
 
 <h3>📡 Deploying Contracts</h3>
 
-See <a href="https://hardhat.org/plugins/hardhat-deploy.html"> Hardhat deploy </a>
+See <a href="https://hardhat.org/plugins/hardhat-deploy.html"> Hardhat Deploy </a>
 
 
 <h2>👋 How to Reach Out to Us</h2>
