@@ -11,3 +11,14 @@ In Order to deploy the contracts to networks other than local blockchain, you ne
 
 <h3>To deploy contracts to network</h3>
   <code>truffle migrate --network &lt;network-name&gt; </code>
+
+
+<h3>Commands to run test cases</h3><br/>
+  1.<code>npm install </code><br/>
+  2. Run ganache-cli in another console <code> ganache-cli</code><br/>
+  3.<code>npm run test </code>
+
+<h3>Commands to run test cases</h3><br/>
+1.<code>npm install </code><br/>
+2. Run ganache-cli in another console <code> ganache-cli</code><br/>
+3.<code>npm run coverage </code>
