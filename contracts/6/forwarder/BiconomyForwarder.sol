@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -39,15 +39,17 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes{
      * @param version : version of dApp/dApp fee proxy
      */
     function registerDomainSeparator(string calldata name, string calldata version) external {
-        uint256 chainId;
+        uint256 id;
         /* solhint-disable-next-line no-inline-assembly */
-        assembly { chainId := chainid() }
+        assembly { 
+            id := chainid() 
+            }
 
         bytes memory domainValue = abi.encode(
             keccak256(bytes(EIP712_DOMAIN_TYPE)),
             keccak256(bytes(name)),
             keccak256(bytes(version)),
-            chainId,
+            id,
             address(this));
 
         bytes32 domainHash = keccak256(domainValue);
