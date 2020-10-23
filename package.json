@@ -1,0 +1,29 @@
+{
+  "name": "mexa",
+  "version": "1.0.0",
+  "description": "Mexa is Biconomy's implementation of meta transactions.",
+  "main": "",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcnmy/mexa.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bcnmy/mexa/issues"
+  },
+  "homepage": "https://github.com/bcnmy/mexa#readme",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-etherscan": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "hardhat": "^2.0.1",
+    "solidity-coverage": "^0.7.11"
+  }
+}
