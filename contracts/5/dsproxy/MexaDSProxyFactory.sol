@@ -2,15 +2,21 @@ pragma solidity 0.5.13;
 pragma experimental ABIEncoderV2;
 
 import "./dsProxy.sol";
-import "../libs/EIP712BaseB.sol";
+import "../libs/EIP712Base.sol";
 
-contract MexaDSProxyFactory is DSProxyFactory, EIP712BaseB("MexaDSProxyFactory","1",42) {
+contract MexaDSProxyFactory is DSProxyFactory, EIP712Base("MexaDSProxyFactory","1") {
     //42 = KOVAN
 
     //all factory specific meta tx variables are declared here
     bytes32 internal constant META_TRANSACTION_TYPEHASH = 
     keccak256(bytes("MetaTransaction(address holder,address authority,uint256 nonce)"));
     mapping(address => uint256) public nonces;
+
+    struct Signature{
+        uint8 v;
+        bytes32 r; 
+        bytes32 s;
+    }
 
 
     //Re written build method sets the authority before transferring ownership to the user's EOA
@@ -19,7 +25,7 @@ contract MexaDSProxyFactory is DSProxyFactory, EIP712BaseB("MexaDSProxyFactory",
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
-                DOMAIN_SEPARATOR,
+                domainSeperator,
                 keccak256(
                     abi.encode(
                         META_TRANSACTION_TYPEHASH,
@@ -46,7 +52,7 @@ contract MexaDSProxyFactory is DSProxyFactory, EIP712BaseB("MexaDSProxyFactory",
     function metaBuildWithBasicSign(address holder, address authority, Signature calldata signature) 
     external returns (address payable proxy){
 
-        bytes32 hash = prefixed(keccak256(abi.encodePacked(nonces[holder], this, chainId, msg.sig, authority)));
+        bytes32 hash = prefixed(keccak256(abi.encodePacked(nonces[holder], this, getChainID(), msg.sig, authority)));
         address signer = ecrecover(hash, signature.v, signature.r, signature.s);
         require(signer != address(0), "invalid-address-0");
         require(signer == holder, "Invalid signature");
