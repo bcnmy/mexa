@@ -32,7 +32,6 @@ module.exports = {
       {
         version: "0.6.9",
         settings:{
-          evmVersion: "istanbul",
           optimizer: { enabled: true, runs: 200 }
         }
       }
@@ -46,7 +45,6 @@ module.exports = {
       allowUnlimitedContractSize:false,
       accounts:walletUtils.localWallet("1000000000000000000000",num=20),
       chainId:42,
-      hardfork : "istanbul"
     },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,
