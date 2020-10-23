@@ -26,4 +26,4 @@ See <a href="https://hardhat.org/plugins/hardhat-deploy.html"> Hardhat deploy </
 
 <h2>How to Reach Out to Us</h2>
 
-For more information, join our discord channel https://discord.gg/C4XtWtB
+Join our discord channel https://discord.gg/C4XtWtB
