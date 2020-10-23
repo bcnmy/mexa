@@ -14,17 +14,15 @@ To keep testing and deployment consistent, we use a seed phrase to generate the 
 
  <h3>Compiling Contracts</h3>
 
-<code>npx buidler compile --config buidler.config.5.js && npx buidler compile</code>
+<code>npx hardhat compile</code>
 
 <h3>Running Tests </h3>
 Run Unit Tests : 
-<code>npx buidler test</code><br>
-
-Run Unit Tests with Code Coverage (this is currently broken due to issues involving Ganache 😢): <code>npx buidler coverage --network coverage</code><br>
+<code>npx hardhat test</code><br>
 
 <h3>Deploying Contracts</h3>
 
-WORK IN PROGRESS - FOR NOW MUST BUILD SCRIPT FOR EACH DEPLOYMENT, see scripts/sample-script.js for info on how to do this
+See <a href="https://hardhat.org/plugins/hardhat-deploy.html"> Hardhat deploy </a>
 
 <h2>How to Reach Out to Us</h2>
 
