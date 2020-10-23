@@ -52,22 +52,6 @@ contract GasTokenImplementation is Ownable(msg.sender) {
         chiToken.mint(mint);
     }
 
-    function balanceOfGasToken(address who) external view returns (uint256) {
-        return chiToken.balanceOf(who);
-    }
-
-    function allowance(address owner, address spender) public view returns (uint256) {
-        return chiToken.allowance(owner, spender);
-    }
-
-    function freeGasToken(uint256 value)
-        public
-        onlyOwner
-        returns (uint256 )
-    {
-        return chiToken.free(value);
-    }
-
     function freeGasTokenFrom(address from, uint256 value)
         public
         onlyOwner

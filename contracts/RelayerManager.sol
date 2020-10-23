@@ -7,15 +7,6 @@ contract RelayerManager is Ownable {
 
     event RelayerAdded(address relayer, address owner);
 
-    // MODIFIERS
-    modifier onlyRelayer() {
-        require(
-            relayerStatus[msg.sender],
-            "You are not allowed to perform this operation"
-        );
-        _;
-    }
-
     constructor(address owner) public Ownable(owner) {
         // Empty constructor to pass owner as parameter during deployment
     }

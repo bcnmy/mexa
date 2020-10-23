@@ -24,7 +24,7 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 
 	before('before', async function () {
 		chiToken = await MockedChiToken.new({from: owner});
-		relayerManager = await RelayerManager.new({from: owner});
+		relayerManager = await RelayerManager.new(owner);
 		gasTokenImplementation = await GasTokenImplementation.new({from: owner});
 		gasTokenForwarder = await GasTokenForwarder.new(owner, chiToken.address, relayerManager.address, gasTokenImplementation.address, {from: owner});
 	});
@@ -36,13 +36,13 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				approveChiAbi,
 				[newChiOwner, 5]
 			);
-			let isSuccess = await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			let isSuccess = await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: approveGasTokenData
 			});
-			
+
 			assert.isTrue(isSuccess.receipt.status, "Token approved Successfully");
 		});
 
@@ -52,12 +52,12 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				[newChiOwner, 5]
 			);
 
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: approveGasTokenData
-			}),"You are not allowed to perform this operation")			
+			}),"You are not allowed to perform this operation")
 		});
 
 		it("Test transferGasToken method- success", async()=>{
@@ -65,13 +65,13 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				transferFromChiAbi,
 				[gasTokenForwarder.address, newChiOwner, 5]
 			);
-			let isSuccess = await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			let isSuccess = await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: transferFromGasTokenData
 			});
-			
+
 			assert.isTrue(isSuccess.receipt.status, "Token transferred Successfully");
 		});
 
@@ -81,12 +81,12 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				[gasTokenForwarder.address, newChiOwner, 5]
 			);
 
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: transferFromGasTokenData
-			}),"You are not allowed to perform this operation")			
+			}),"You are not allowed to perform this operation")
 		});
 
 		it("Test transferGasToken method- success", async()=>{
@@ -94,12 +94,12 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				transferChiAbi,
 				[newChiOwner, 5]
 			);
-			let isSuccess = await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			let isSuccess = await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: transferGasTokenData
-			});			
+			});
 			assert.isTrue(isSuccess.receipt.status, "Token transferred Successfully");
 		});
 
@@ -109,12 +109,12 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				[newChiOwner, 5]
 			);
 
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: transferGasTokenData
-			}),"You are not allowed to perform this operation")			
+			}),"You are not allowed to perform this operation")
 		});
 
 		it("Test Free From method- success", async()=>{
@@ -122,13 +122,13 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				freeFromChiAbi,
 				[gasTokenForwarder.address, 2]
 			);
-			let isSuccess = await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			let isSuccess = await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: freeFromGasTokenData
 			});
-			
+
 			assert.isTrue(isSuccess.receipt.status, "Token freed Successfully");
 		});
 		it("Test Free From method- Only owner is allowed", async()=>{
@@ -136,12 +136,12 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				freeFromChiAbi,
 				[gasTokenForwarder.address, 2]
 			);
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: freeFromGasTokenData
-			}),"You are not allowed to perform this operation")	
+			}),"You are not allowed to perform this operation")
 		});
 
 		it("Test FreeFrom upto method- success", async()=>{
@@ -149,13 +149,13 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				freeFromUptoAbi,
 				[gasTokenForwarder.address,2]
 			);
-			let isSuccess = await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			let isSuccess = await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: freeFromUptoGasTokenData
 			});
-			
+
 			assert.isTrue(isSuccess.receipt.status, "Token free Successfully");
 		});
 		it("Test FreeFrom upto method- Only owner is allowed", async()=>{
@@ -163,12 +163,12 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				freeFromUptoAbi,
 				[gasTokenForwarder.address,2]
 			);
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: freeFromUptoGasTokenData
-			}),"You are not allowed to perform this operation")	
+			}),"You are not allowed to perform this operation")
 		});
 
 		it("Test allowance method- success", async()=>{
@@ -178,15 +178,15 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 	});
 
 	describe("Mint and Fetch Balance", function(){
-		
+
 		it("Should be able to Mint and get token Balance", async()=>{
 			let mintGasTokenData = web3Abi.encodeFunctionCall(
 				mintAbi,
 				[tokenToMint]
 			);
-			await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: mintGasTokenData
 			 });
@@ -199,9 +199,9 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				mintAbi,
 				[tokenToMint]
 			);
-			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+			shouldFail.revertWithMessage(gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: mintGasTokenData
 			 }),"You are not allowed to perform this operation"
@@ -215,9 +215,9 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				forwardAbi,
 				[destination,"0x0",210000]
 			);
-			await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: forwardTokenData
 			 });
@@ -232,9 +232,9 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				forwardAbi,
 				[destination,FailedData,210000]
 			);
-			await gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: owner, 
+			await gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: owner,
 				gas: 500000,
 				data: forwardTokenData
 			});
@@ -245,11 +245,11 @@ contract("GasTokenForwarder", function([_, owner,relayerManagerAddress, implemen
 				forwardAbi,
 				[destination,"0x0",210000]
 			);
-			 
+
 			shouldFail.revertWithMessage(
-				gasTokenForwarder.sendTransaction({ 
-				value: 0, 
-				from: notOwner, 
+				gasTokenForwarder.sendTransaction({
+				value: 0,
+				from: notOwner,
 				gas: 500000,
 				data: forwardTokenData
 			 })
