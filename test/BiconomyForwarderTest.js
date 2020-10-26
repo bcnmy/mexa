@@ -50,7 +50,7 @@ describe("Biconomy Forwarder", function(){
         domainData = {
             name : "TestRecipient",
             version : "1",
-            chainId : 42,
+            chainId : 1,
             verifyingContract : forwarder.address
           };
 
@@ -526,7 +526,7 @@ describe("Biconomy Forwarder", function(){
             const exampleDomain = {
                 name : "BiconomyForwarder",
                 version : "1",
-                chainId : 42,
+                chainId : 1,
                 verifyingContract : forwarder.address
               };
     
@@ -542,7 +542,7 @@ describe("Biconomy Forwarder", function(){
             const exampleDomain = {
                 name : "BiconomyForwarder",
                 version : "1",
-                chainId : 42,
+                chainId : 1,
                 verifyingContract : testnetDai.address
               };
     

@@ -51,7 +51,7 @@ describe("ERC20FeeProxy", function () {
       domainData = {
           name : "TestRecipient",
           version : "1",
-          chainId : 42,
+          chainId : 1,
           verifyingContract : forwarder.address
         };
 
