@@ -36,6 +36,10 @@ describe("ERC20FeeProxy", function () {
     before(async function(){
       accounts = await ethers.getSigners();
 
+      const TestnetDai = await ethers.getContractFactory("TestnetDAI");
+      testnetDai = await TestnetDai.deploy();
+      await testnetDai.deployed();
+
       const Forwarder = await ethers.getContractFactory("BiconomyForwarder");
       forwarder = await Forwarder.deploy();
       await forwarder.deployed();
@@ -57,10 +61,7 @@ describe("ERC20FeeProxy", function () {
                                [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                                ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
                                domainData.chainId,domainData.verifyingContract]));
-      
-      const TestnetDai = await ethers.getContractFactory("TestnetDAI");
-      testnetDai = await TestnetDai.deploy();
-      await testnetDai.deployed();
+    
 
       //deploy fee multiplier with a factor of 1.5x
       //deploy fee manager with a factor of 1.5x

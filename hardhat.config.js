@@ -1,6 +1,6 @@
-usePlugin("@nomiclabs/buidler-waffle");
-usePlugin('solidity-coverage');
-const ethers = require("ethers");
+require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-ethers");
+//require('solidity-coverage');
 const walletUtils = require("./walletUtils");
 
 // This is a sample Buidler task. To learn how to create your own go to
@@ -20,21 +20,31 @@ const infuraKey = "d126f392798444609246423b06116c77";
 // defaultNetwork, networks, solc, and paths.
 // Go to https://buidler.dev/config/ to learn more
 module.exports = {
-  // This is a sample solc configuration that specifies which version of solc to use
-  solc: {
-    version: "0.6.10",
-  },
-  paths: {
-    sources: "./contracts/6",
+  solidity: {
+    compilers: [
+      {
+        version: "0.5.13",
+        settings:{
+          evmVersion: "istanbul",
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },
+      {
+        version: "0.6.9",
+        settings:{
+          optimizer: { enabled: true, runs: 200 }
+        }
+      }
+    ]
   },
   networks:{
     coverage: {
       url: 'http://localhost:8555'
     },
-    buidlerevm:{
+    hardhat:{
       allowUnlimitedContractSize:false,
       accounts:walletUtils.localWallet("1000000000000000000000",num=20),
-      chainId:42
+      chainId:42,
     },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,
