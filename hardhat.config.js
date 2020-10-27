@@ -13,8 +13,10 @@ task("accounts", "Prints the list of accounts", async () => {
   }
 });
 
+//1 foot in 1 foot out lmao
 const fs = require('fs');
 const infuraKey = fs.readFileSync(".infura").toString().trim();
+const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -46,7 +48,8 @@ module.exports = {
       allowUnlimitedContractSize:false,
       accounts:walletUtils.localWallet("1000000000000000000000",num=20),
       forking : {
-        url:`https://mainnet.infura.io/v3/${infuraKey}`
+        //url:`https://mainnet.infura.io/v3/${infuraKey}`
+        url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{
