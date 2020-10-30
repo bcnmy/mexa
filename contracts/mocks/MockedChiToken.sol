@@ -1,4 +1,4 @@
-import "../gasToken/chitoken.sol";
+import "../gasToken/chiToken.sol";
 
 contract MockedChiToken is ChiToken {
 
