@@ -24,11 +24,6 @@ contract OracleAggregator is Ownable{
         _tokenOracleDecimals = tokenOracleDecimals[token];
     }
 
-    function getTokenGasPrice(address token, uint ethGasPrice) external view returns (uint tokenGasPriceUnadjusted){
-        uint tokenPriceUnadjusted =  _getTokenPrice(token);
-        tokenGasPriceUnadjusted = tokenPriceUnadjusted.mul(ethGasPrice);
-    }
-
     function getTokenPrice(address token) external view returns (uint tokenPriceUnadjusted){
         tokenPriceUnadjusted =  _getTokenPrice(token);
     }

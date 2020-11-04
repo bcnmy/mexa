@@ -27,12 +27,6 @@ describe("Oracle Aggregrator", function(){
         expect(oracleAggregatorPrice).to.equal(priceFeedPrice);
     });
 
-    it("Returns correct token gas price", async function(){
-        let priceFeedPrice = await priceFeed.latestAnswer();
-        let tokenGasPrice = priceFeedPrice.mul(ethers.utils.parseUnits('200','gwei'));
-        expect(await oracleAggregator.getTokenGasPrice(daiAddress,ethers.utils.parseUnits('200','gwei'))).to.equal(tokenGasPrice);
-    });
-
 
 
 
