@@ -23,11 +23,11 @@ import "./ERC20ForwardRequestCompatible.sol";
 contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
 
     using SafeMath for uint256;
-    uint256 transferHandlerGas;
+    uint256 public transferHandlerGas;
     address public feeReceiver;
     address public oracleAggregator;
-    IFeeManager feeManager;
-    BiconomyForwarder forwarder;
+    address public feeManager;
+    address payable public forwarder;
 
     /**
      * @dev sets contract variables
@@ -43,8 +43,8 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     constructor(uint256 _transferHandlerGas,address _feeReceiver,address _feeManager,address payable _forwarder) public {
         transferHandlerGas = _transferHandlerGas;
         feeReceiver = _feeReceiver;
-        feeManager = IFeeManager(_feeManager);
-        forwarder = BiconomyForwarder(_forwarder);
+        feeManager = _feeManager;
+        forwarder = _forwarder;
         transferHandlerGas = _transferHandlerGas; //safe figure we can change later to be more accurate
     }
 
@@ -63,7 +63,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * @dev enable dApps to change the contract that manages fee collection logic 
      * @param _feeManager : the address of the contract that controls the charging of fees */
     function setFeeManager(address _feeManager) external onlyOwner{
-        feeManager = IFeeManager(_feeManager);
+        feeManager = _feeManager;
     }
 
     /**
@@ -87,7 +87,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     function getNonce(address from, uint256 batchId)
     external view
     returns(uint256){
-        uint256 nonce = forwarder.getNonce(from,batchId);
+        uint256 nonce = BiconomyForwarder(forwarder).getNonce(from,batchId);
         return nonce;
     }
 
@@ -112,7 +112,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         external payable 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = forwarder.executeEIP712(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
@@ -137,7 +137,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         external payable 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = forwarder.executePersonalSign(req,sig);
+            (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
@@ -156,8 +156,9 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * @param executionGas : amount of gas used to execute the forwarded request call 
      */
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
-        require(feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
-        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas)).mul(feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
+        IFeeManager _feeManager = IFeeManager(feeManager);
+        require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
+        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
         require(IERC20(req.token).transferFrom(
             req.from,
             feeReceiver,
