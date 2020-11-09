@@ -51,7 +51,7 @@ describe("ERC20FeeProxy", function () {
       domainData = {
           name : "TestRecipient",
           version : "1",
-          chainId : 42,
+          chainId : 1,
           verifyingContract : forwarder.address
         };
 
@@ -62,7 +62,6 @@ describe("ERC20FeeProxy", function () {
                                ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
                                domainData.chainId,domainData.verifyingContract]));
     
-
       //deploy fee multiplier with a factor of 1.5x
       //deploy fee manager with a factor of 1.5x
       const MockFeeManager = await ethers.getContractFactory("MockFeeManager");

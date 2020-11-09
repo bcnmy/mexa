@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
+require("hardhat-gas-reporter");
 //require('solidity-coverage');
 const walletUtils = require("./walletUtils");
 
@@ -13,7 +14,10 @@ task("accounts", "Prints the list of accounts", async () => {
   }
 });
 
-const infuraKey = "d126f392798444609246423b06116c77";
+//1 foot in 1 foot out lmao
+const fs = require('fs');
+const infuraKey = fs.readFileSync(".infura").toString().trim();
+const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -44,7 +48,10 @@ module.exports = {
     hardhat:{
       allowUnlimitedContractSize:false,
       accounts:walletUtils.localWallet("1000000000000000000000",num=20),
-      chainId:42,
+      forking : {
+        //url:`https://mainnet.infura.io/v3/${infuraKey}`
+        url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+      }
     },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,
