@@ -32,9 +32,9 @@ contract CentralisedFeeManagerWithLimits is IFeeManager,Ownable{
 
     mapping(address => address) tokenPriceFeed;
 
-    constructor(uint16 _bp, uint _MINBP) public{
+    constructor(uint16 _bp, uint16 _MINBP) public{
         bp = _bp;
-        MINBP = _MINBP
+        MINBP = _MINBP;
     }
 
     /**
@@ -73,9 +73,6 @@ contract CentralisedFeeManagerWithLimits is IFeeManager,Ownable{
     function setUserTokenFeeMultiplier(address token, address user, uint16 _bp) external onlyOwner{
         require(_bp > MINBP);
         tokenUserBP[token][user] = _bp;
-        if (_bp == 0){
-            tokenUserExempt[token][user] = true;
-        }
     }
 
     function removeUserTokenFeeMultiplier(address token, address user) external onlyOwner{
