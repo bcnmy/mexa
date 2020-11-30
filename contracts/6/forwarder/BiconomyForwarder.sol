@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC20ForwardRequestCompatible.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  *
@@ -19,7 +20,7 @@ import "./ERC20ForwardRequestCompatible.sol";
  * @dev - maintains a list of verified domain seperators
  * 
  */
-contract BiconomyForwarder is ERC20ForwardRequestTypes{
+contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     using ECDSA for bytes32;
 
     mapping(bytes32 => bool) public domains;
@@ -38,7 +39,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes{
      * @param name : name of dApp/dApp fee proxy
      * @param version : version of dApp/dApp fee proxy
      */
-    function registerDomainSeparator(string calldata name, string calldata version) external {
+    function registerDomainSeparator(string calldata name, string calldata version) external onlyOwner{
         uint256 id;
         /* solhint-disable-next-line no-inline-assembly */
         assembly { 
@@ -200,7 +201,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes{
     internal
     view
     {
-        require(req.deadline == 0 || now <= req.deadline, "request expired");
+        require(req.deadline == 0 || now + 20 <= req.deadline, "request expired");
         require(domains[domainSeparator], "unregistered domain separator");
         bytes32 digest =
             keccak256(abi.encodePacked(
@@ -244,7 +245,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes{
     internal
     view
     {
-        require(req.deadline == 0 || now <= req.deadline, "request expired");
+        require(req.deadline == 0 || now + 20 <= req.deadline, "request expired");
         bytes32 digest = prefixed(keccak256(abi.encodePacked(
             req.from,
             req.to,
