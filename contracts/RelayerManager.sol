@@ -26,19 +26,18 @@ contract RelayerManager is Ownable {
     //Register new Relayers
     function addRelayers(address[] memory relayerArray) public onlyOwner {
         for (uint256 i = 0; i < relayerArray.length; i++) {
-            require(
-                relayerArray[i] != address(0),
-                "Relayer address cannot be zero"
-            );
-            relayers.push(relayerArray[i]);
-            relayerStatus[relayerArray[i]] = true;
-            emit RelayerAdded(relayerArray[i], msg.sender);
+            _addRelayer(relayerArray[i]);
         }
     }
 
     // Register single relayer
     function addRelayer(address relayerAddress) public onlyOwner {
-        require(relayerAddress != address(0), "relayer address can not be 0");
+        _addRelayer(relayerAddress);
+    }
+
+    function _addRelayer(address relayerAddress) internal {
+        require(relayerAddress != address(0), "Relayer address can not be 0");
+        require(relayerStatus[relayerAddress] == false, "Can not add already added relayer");
         relayers.push(relayerAddress);
         relayerStatus[relayerAddress] = true;
         emit RelayerAdded(relayerAddress, msg.sender);

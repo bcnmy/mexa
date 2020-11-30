@@ -34,7 +34,7 @@ contract GasTokenImplementation is Ownable(msg.sender) {
         uint256 gasLimit
     ) public onlyRelayerOrOwner discountCHI {
         require(
-            gasleft() > ((gasLimit + (gasLimit / 63)) + 1000),
+            gasleft() > gasLimit.div(63).add(gasLimit).add(1000),
             "Not enough gas"
         );
         int8 success;
