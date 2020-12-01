@@ -26,11 +26,12 @@
     "@opengsn/gsn": "^2.0.1",
     "@openzeppelin/contracts": "^3.2.0",
     "ethereum-waffle": "^3.1.2",
-    "hardhat": "^2.0.1",
+    "hardhat": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.0",
     "solidity-coverage": "^0.7.11"
   },
   "dependencies": {
-    "ethers": "^5.0.19"
+    "ethers": "^5.0.19",
+    "openzeppelin-solidity": "3.3.0"
   }
 }
