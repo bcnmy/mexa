@@ -66,22 +66,10 @@ module.exports = {
       chainId:3,
       gas: 6400000
     },
-    maticTest:{
-      url: `https://testnet2.matic.network`,
+    maticMumbai: {
+      url:`https://rpc-mumbai.matic.today`,
       accounts:walletUtils.makeKeyList(),
-      chainId:8995,
-      gas: 7000000
-    },
-    maticBetaMainnet: {
-      url:`https://betav2.matic.network`,
-      accounts:walletUtils.makeKeyList(),
-      network_id: 16110,       // Matic's test network id
-      gas: 7000000
-    },
-    maticTestV3: {
-      url:`https://testnetv3.matic.network`,
-      accounts:walletUtils.makeKeyList(),
-      network_id: 15001
+      network_id: 80001
     }
   }
 };
