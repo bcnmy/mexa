@@ -28,7 +28,7 @@ describe("Biconomy Forwarder", function(){
         {name:'batchId',type:'uint256'},
         {name:'batchNonce',type:'uint256'},
         {name:'deadline',type:'uint256'},
-        {name:'dataHash',type:'bytes32'}
+        {name:'data',type:'bytes'}
     ];
 
     before(async function(){
@@ -50,7 +50,7 @@ describe("Biconomy Forwarder", function(){
         domainData = {
             name : "TestRecipient",
             version : "1",
-            chainId : 1,
+            chainId : 31337,
             verifyingContract : forwarder.address
           };
 
@@ -95,7 +95,7 @@ describe("Biconomy Forwarder", function(){
             await forwarder.executePersonalSign(req,sig);
             expect(await testRecipient.callsMade(req.from)).to.equal(1);
         });
-    
+
         it("Updates nonces", async function(){
             expect(await forwarder.getNonce(await accounts[1].getAddress(),0)).to.equal(1);
         });
@@ -270,9 +270,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);;
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);;
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -280,13 +280,13 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await forwarder.executeEIP712(req,domainSeparator,sig);
             expect(await testRecipient.callsMade(req.from)).to.equal(1);
         });
-    
+
         it("Updates nonces", async function(){
             expect(await forwarder.getNonce(await accounts[2].getAddress(),0)).to.equal(1);
         });
@@ -303,9 +303,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -313,7 +313,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             const preBalance = await ethers.provider.getBalance(req.from);
@@ -333,9 +333,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);;
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);;
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -343,7 +343,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await expect(forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
@@ -361,9 +361,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);;
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);;
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -371,7 +371,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[await accounts[3].getAddress(),dataToSign]);
             await expect(forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
@@ -389,9 +389,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);;
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);;
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -399,7 +399,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await forwarder.executeEIP712(req,domainSeparator,sig);
@@ -418,9 +418,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);;
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);;
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -428,7 +428,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await forwarder.callStatic.verifyEIP712(req,domainSeparator,sig);
@@ -446,9 +446,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -456,7 +456,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await expect(forwarder.callStatic.verifyEIP712(req,domainSeparator,sig)).to.be.revertedWith();
@@ -474,9 +474,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -484,7 +484,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await expect(forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
@@ -502,9 +502,9 @@ describe("Biconomy Forwarder", function(){
             delete req.gasLimit;
             delete req.chainId;
             req.token = testnetDai.address;
-            const erc20fr = Object.assign({}, req);
-            erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            delete erc20fr.data;
+            // const erc20fr = Object.assign({}, req);
+            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+            // delete erc20fr.data;
             const dataToSign = {
                 types: {
                     EIP712Domain: domainType,
@@ -512,7 +512,7 @@ describe("Biconomy Forwarder", function(){
                   },
                   domain: domainData,
                   primaryType: "ERC20ForwardRequest",
-                  message: erc20fr
+                  message: req
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await forwarder.executeEIP712(req,domainSeparator,sig);
@@ -526,10 +526,10 @@ describe("Biconomy Forwarder", function(){
             const exampleDomain = {
                 name : "BiconomyForwarder",
                 version : "1",
-                chainId : 1,
+                chainId : 31337,
                 verifyingContract : forwarder.address
               };
-    
+
             await forwarder.registerDomainSeparator("BiconomyForwarder","1");
             const exampleDomainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
                               encode(['bytes32','bytes32','bytes32','uint256','address'],
@@ -542,10 +542,10 @@ describe("Biconomy Forwarder", function(){
             const exampleDomain = {
                 name : "BiconomyForwarder",
                 version : "1",
-                chainId : 1,
+                chainId : 31337,
                 verifyingContract : testnetDai.address
               };
-    
+
             await forwarder.registerDomainSeparator("BiconomyForwarder","1");
             const exampleDomainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
                               encode(['bytes32','bytes32','bytes32','uint256','address'],
@@ -561,7 +561,7 @@ describe("Biconomy Forwarder", function(){
                 chainId : 69,
                 verifyingContract : forwarder.address
               };
-    
+
             await forwarder.registerDomainSeparator("BiconomyForwarder","1");
             const exampleDomainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
                               encode(['bytes32','bytes32','bytes32','uint256','address'],
@@ -571,7 +571,7 @@ describe("Biconomy Forwarder", function(){
             expect(await forwarder.domains(exampleDomainSeparator)).to.equal(false);
         });
     });
-      
+
 
 
 });

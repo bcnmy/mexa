@@ -30,7 +30,7 @@ describe("ERC20FeeProxy", function () {
         {name:'batchId',type:'uint256'},
         {name:'batchNonce',type:'uint256'},
         {name:'deadline',type:'uint256'},
-        {name:'dataHash',type:'bytes32'}
+        {name:'data',type:'bytes'}
     ];
 
     before(async function(){
@@ -51,7 +51,7 @@ describe("ERC20FeeProxy", function () {
       domainData = {
           name : "TestRecipient",
           version : "1",
-          chainId : 1,
+          chainId : 31337,
           verifyingContract : forwarder.address
         };
 
@@ -61,7 +61,7 @@ describe("ERC20FeeProxy", function () {
                                [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
                                ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
                                domainData.chainId,domainData.verifyingContract]));
-    
+
       //deploy fee multiplier with a factor of 1.5x
       //deploy fee manager with a factor of 1.5x
       const MockFeeManager = await ethers.getContractFactory("MockFeeManager");
@@ -174,9 +174,9 @@ describe("ERC20FeeProxy", function () {
       delete req.gasLimit;
       delete req.chainId;
       req.token = testnetDai.address;
-      const erc20fr = Object.assign({}, req);
-      erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-      delete erc20fr.data;
+      // const erc20fr = Object.assign({}, req);
+      // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+      // delete erc20fr.data;
       const dataToSign = {
           types: {
               EIP712Domain: domainType,
@@ -184,7 +184,7 @@ describe("ERC20FeeProxy", function () {
             },
             domain: domainData,
             primaryType: "ERC20ForwardRequest",
-            message: erc20fr
+            message: req
           };
       const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
       await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
@@ -213,9 +213,9 @@ describe("ERC20FeeProxy", function () {
       delete req.gasLimit;
       delete req.chainId;
       req.token = testnetDai.address;
-      const erc20fr = Object.assign({}, req);
-      erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-      delete erc20fr.data;
+      // const erc20fr = Object.assign({}, req);
+      // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+      // delete erc20fr.data;
       const dataToSign = {
           types: {
               EIP712Domain: domainType,
@@ -223,7 +223,7 @@ describe("ERC20FeeProxy", function () {
             },
             domain: domainData,
             primaryType: "ERC20ForwardRequest",
-            message: erc20fr
+            message: req
           };
       const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);;
       await expect(erc20FeeProxy.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
@@ -241,9 +241,9 @@ describe("ERC20FeeProxy", function () {
     delete req.gasLimit;
     delete req.chainId;
     req.token = testnetDai.address;
-    const erc20fr = Object.assign({}, req);
-    erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-    delete erc20fr.data;
+    // const erc20fr = Object.assign({}, req);
+    // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+    // delete erc20fr.data;
     const dataToSign = {
         types: {
             EIP712Domain: domainType,
@@ -251,7 +251,7 @@ describe("ERC20FeeProxy", function () {
           },
           domain: domainData,
           primaryType: "ERC20ForwardRequest",
-          message: erc20fr
+          message: req
         };
     const sig = await ethers.provider.send("eth_signTypedData",[await accounts[0].getAddress(),dataToSign]);
     await expect(erc20FeeProxy.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
@@ -331,7 +331,7 @@ describe("ERC20FeeProxy", function () {
   });
 
   it("fee handler considers multiplier correctly", async function(){
-    
+
     const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
 
     await erc20FeeProxy.setFeeReceiver(await accounts[8].getAddress());
