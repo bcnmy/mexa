@@ -1,6 +1,5 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
-import "hardhat/console.sol";
 
 //to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
 
@@ -44,7 +43,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         feeReceiver = _feeReceiver;
         feeManager = _feeManager;
         forwarder = _forwarder;
-        transferHandlerGas = _transferHandlerGas; //safe figure we can change later to be more accurate
     }
 
     function setOracleAggregator(address oa) external onlyOwner{
@@ -111,11 +109,8 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         external payable
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            console.log("txGas sent in the request is %s", req.txGas);
-            console.log("Gas left before forwarder call is %s", initialGas);
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
-            console.log("Gas left after forwarder call is %s", postGas);
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
     }
@@ -160,8 +155,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
-        console.log("Gas hardcoded for transfer handler is %s", transferHandlerGas);
-        console.log("Execution gas was %s", executionGas);
         charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
         require(IERC20(req.token).transferFrom(
             req.from,

@@ -1,6 +1,5 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
-import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
@@ -111,7 +110,6 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     returns (bool success, bytes memory ret) {
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
-        console.log("Trusted forwarder calling recipient contract with %s txGas", req.txGas);
         // solhint-disable-next-line avoid-low-level-calls
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         if ( address(this).balance>0 ) {
