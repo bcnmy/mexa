@@ -13,6 +13,7 @@ describe("ERC20FeeProxy", function () {
     let domainSeparator;
     let faucet;
     var req0;
+    let uniswapRouter;
 
     let domainType = [
         { name: "name", type: "string" },
@@ -75,7 +76,7 @@ describe("ERC20FeeProxy", function () {
       await accounts[0].sendTransaction({value:ethers.utils.parseEther("100"),to:faucet.address});
 
       const ERC20FeeProxy = await ethers.getContractFactory("ERC20FeeProxy");
-      erc20FeeProxy = await ERC20FeeProxy.deploy(100000, await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
+      erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
       await erc20FeeProxy.deployed();
 
       await testnetDai.mint(await accounts[1].getAddress(), ethers.utils.parseEther("1000"));

@@ -48,10 +48,10 @@ module.exports = {
     hardhat:{
       allowUnlimitedContractSize:false,
       accounts:walletUtils.localWallet("1000000000000000000000",num=20),
-      // forking : {
+      forking : {
       //   url:`https://mainnet.infura.io/v3/${infuraKey}`
-      //   // url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
-      // }
+      url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+      }
     },
     kovan:{
       url:`https://kovan.infura.io/v3/${infuraKey}`,

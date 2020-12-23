@@ -9,6 +9,7 @@ import "./BiconomyForwarder.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IFeeManager.sol";
 import "./ERC20ForwardRequestCompatible.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /**
  * @title ERC20 Fee Proxy
@@ -23,7 +24,8 @@ import "./ERC20ForwardRequestCompatible.sol";
 contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
 
     using SafeMath for uint256;
-    uint256 public transferHandlerGas;
+    mapping(address=>uint256) public transferHandlerGas;
+    mapping(address=>bool) public safeTransferRequired;
     address public feeReceiver;
     address public oracleAggregator;
     address public feeManager;
@@ -32,14 +34,12 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     /**
      * @dev sets contract variables
      *
-     * @param _transferHandlerGas : max amount of gas the function _transferHandler is expected to use
      * @param _feeReceiver : address that will receive fees charged in ERC20 tokens
      * @param _feeManager : the address of the contract that controls the charging of fees
      * @param _forwarder : the address of the BiconomyForwarder contract
      *
      */
-    constructor(uint256 _transferHandlerGas,address _feeReceiver,address _feeManager,address payable _forwarder) public {
-        transferHandlerGas = _transferHandlerGas;
+    constructor(address _feeReceiver,address _feeManager,address payable _forwarder) public {
         feeReceiver = _feeReceiver;
         feeManager = _feeManager;
         forwarder = _forwarder;
@@ -71,8 +71,12 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * - etc
      */
      /// @param _transferHandlerGas : max amount of gas the function _transferHandler is expected to use
-    function setTransferHandlerGas(uint256 _transferHandlerGas) external onlyOwner{
-        transferHandlerGas = _transferHandlerGas;
+    function setTransferHandlerGas(address token, uint256 _transferHandlerGas) external onlyOwner{
+        transferHandlerGas[token] = _transferHandlerGas;
+    }
+
+    function setSafeTransferRequired(address token, bool _safeTransferRequired) external onlyOwner{
+        safeTransferRequired[token] = _safeTransferRequired;
     }
 
     /**
@@ -155,11 +159,16 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
-        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
-        require(IERC20(req.token).transferFrom(
+        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token])).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
+        if (safeTransferRequired[req.token]){
+            SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
+        }
+        else{
+            require(IERC20(req.token).transferFrom(
             req.from,
             feeReceiver,
             charge));
+        }
     }
 
 }
