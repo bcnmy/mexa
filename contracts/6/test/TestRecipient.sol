@@ -15,6 +15,10 @@ contract TestRecipient is BaseRelayRecipient{
         callsMade[sender]++;
     }
 
+    function nada() external {
+        
+    }
+
     function versionRecipient() external virtual override view returns (string memory){return "1";}
 
 }
