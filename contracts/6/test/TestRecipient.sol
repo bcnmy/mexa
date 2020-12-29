@@ -16,8 +16,8 @@ contract TestRecipient is BaseRelayRecipient{
         callsMade[sender]++;
     }
 
-    function nada() external{
-        console.log("nada gasleft ou nao? ",gasleft());
+
+    function nada() external {
     }
 
     function versionRecipient() external virtual override view returns (string memory){return "1";}
