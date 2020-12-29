@@ -14,31 +14,31 @@ async function main() {
     let usdcDecimals = 18;*/
 
     const accounts = await hre.ethers.getSigners();
-    const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
-    const forwarder = await Forwarder.deploy();
+    //const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
+    //const forwarder = await Forwarder.deploy();
 
-    await forwarder.deployed();
-    console.log("Biconomy Forwarder deployed at : ",forwarder.address);
-    await forwarder.registerDomainSeparator("TEST","1");
+    //await forwarder.deployed();
+    //console.log("Biconomy Forwarder deployed at : ",forwarder.address);
+    //await forwarder.registerDomainSeparator("TEST","1");
 
-    const MockFeeManager = await hre.ethers.getContractFactory("MockFeeManager");
-    const mockFeeManager = await MockFeeManager.deploy(15000);
-    await mockFeeManager.deployed();
-    console.log("Fee Manager deployed at ",mockFeeManager.address);
+    //const MockFeeManager = await hre.ethers.getContractFactory("MockFeeManager");
+    //const mockFeeManager = await MockFeeManager.deploy(15000);
+    //await mockFeeManager.deployed();
+    //console.log("Fee Manager deployed at ",mockFeeManager.address);
 
     const ERC20FeeProxy = await hre.ethers.getContractFactory("ERC20FeeProxy");
-    const erc20FeeProxy = await ERC20FeeProxy.deploy(45000, await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
+    const erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), "0x0D0470B409Ad6dfd9faBa374A53a9353Dac02cb9", "0x46a7Aa64578F40F34CdC63c96E5340B6be1f7bba");
     await erc20FeeProxy.deployed();
     console.log("Fee Proxy deployed at ",erc20FeeProxy.address);
 
-    let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
-    oracleAggregator = await OracleAggregator.deploy();
-    await oracleAggregator.deployed();
-    console.log("Oracle Aggregator deployed at ",oracleAggregator.address);
+  //let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
+    //oracleAggregator = await OracleAggregator.deploy();
+    //await oracleAggregator.deployed();
+    //console.log("Oracle Aggregator deployed at ",oracleAggregator.address);
 
-    priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface",daiEthPriceFeedAddress);
-    let priceFeedTxDai = await priceFeedDai.populateTransaction.latestAnswer();
-    await oracleAggregator.setTokenOracle(daiAddress,daiEthPriceFeedAddress,18,priceFeedTxDai.data,true);
+    //priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface",daiEthPriceFeedAddress);
+    //let priceFeedTxDai = await priceFeedDai.populateTransaction.latestAnswer();
+    //await oracleAggregator.setTokenOracle(daiAddress,daiEthPriceFeedAddress,18,priceFeedTxDai.data,true);
     
     /*console.log('dai support added');
     console.log('dai address' + daiAddress);
@@ -55,7 +55,7 @@ async function main() {
     console.log('usdc support added');
     console.log('usdc address' + usdcAddress);*/
 
-    await erc20FeeProxy.setOracleAggregator(oracleAggregator.address);
+    await erc20FeeProxy.setOracleAggregator("0xa1095C06709Bbbb4a2B476ED0418d3B841a0Fec8");
 }
 
 main()

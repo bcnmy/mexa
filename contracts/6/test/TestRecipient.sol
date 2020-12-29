@@ -1,6 +1,7 @@
 pragma solidity ^0.6.8;
 
 import "@opengsn/gsn/contracts/BaseRelayRecipient.sol";
+import "hardhat/console.sol";
 
 contract TestRecipient is BaseRelayRecipient{
 
@@ -13,6 +14,10 @@ contract TestRecipient is BaseRelayRecipient{
     function  doCall(address sender) external{
         require(_msgSender() == sender);
         callsMade[sender]++;
+    }
+
+    function nada() external{
+        console.log("nada gasleft ou nao? ",gasleft());
     }
 
     function versionRecipient() external virtual override view returns (string memory){return "1";}

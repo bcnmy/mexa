@@ -14,6 +14,11 @@ describe("ERC20FeeProxy", function () {
     let faucet;
     var req0;
     let uniswapRouter;
+    let realDai;
+    let GUSD;
+    let USDC;
+    let USDT;
+    let WETHAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
     let domainType = [
         { name: "name", type: "string" },
@@ -40,6 +45,23 @@ describe("ERC20FeeProxy", function () {
       const TestnetDai = await ethers.getContractFactory("TestnetDAI");
       testnetDai = await TestnetDai.deploy();
       await testnetDai.deployed();
+
+      //setup contracts
+      realDai = await ethers.getContractAt("contracts/5/token/erc20/IERC20.sol:IERC20","0x6b175474e89094c44da98b954eedeac495271d0f");
+      GUSD = await ethers.getContractAt("contracts/5/token/erc20/IERC20.sol:IERC20","0x056fd409e1d7a124bd7017459dfea2f387b6d5cd");
+      USDC = await ethers.getContractAt("contracts/5/token/erc20/IERC20.sol:IERC20","0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
+      USDT = await ethers.getContractAt("contracts/5/token/erc20/IERC20.sol:IERC20","0xdac17f958d2ee523a2206206994597c13d831ec7");
+
+      uniswapRouter = await ethers.getContractAt("IUniswapV2Router02","0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+
+      //fill account 0
+      //await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[0].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("1").toString()});
+      //await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,GUSD.address], await accounts[0].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
+      //await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDC.address], await accounts[0].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("1").toString()});
+    
+      //console.log("USDC Balance : "+(await USDC.balanceOf(await accounts[0].getAddress())).toString());
+      //console.log("Dai Balance : "+(await realDai.balanceOf(await accounts[0].getAddress())).toString());
+      
 
       const Forwarder = await ethers.getContractFactory("BiconomyForwarder");
       forwarder = await Forwarder.deploy();
@@ -79,12 +101,18 @@ describe("ERC20FeeProxy", function () {
       erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
       await erc20FeeProxy.deployed();
 
+      await erc20FeeProxy.setSafeTransferRequired(USDT.address,true);
+
       await testnetDai.mint(await accounts[1].getAddress(), ethers.utils.parseEther("1000"));
       await testnetDai.mint(await accounts[2].getAddress(), ethers.utils.parseEther("1000"));
       await testnetDai.mint(await accounts[3].getAddress(), ethers.utils.parseEther("1000"));
       await testnetDai.connect(accounts[1]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
       await testnetDai.connect(accounts[2]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
       await testnetDai.connect(accounts[3]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+      await realDai.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+      await USDC.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+      await GUSD.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+      await USDT.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
 
     });
 
@@ -475,5 +503,30 @@ it("Reverts requests which use non-permitted tokens", async function(){
     //transfers from correct address
     //prevents transfers from banned tokens
   });
+
+describe("Token specific tests ", function(){
+  it("USDT", async function(){
+    await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[0].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
+    console.log("USDT Balance : "+(await USDT.balanceOf(await accounts[0].getAddress())).toString());
+    const req = await testRecipient.populateTransaction.doCall(await accounts[0].getAddress());
+        req.from = await accounts[0].getAddress();
+        req.batchNonce = 0;
+        req.batchId = 0;
+        req.txGas = (req.gasLimit).toNumber();
+        req.tokenGasPrice = "1000";
+        req.deadline = 0;
+        delete req.gasPrice;
+        delete req.gasLimit;
+        delete req.chainId;
+        req.token = USDT.address;
+        const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
+                                            [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
+                                             ethers.utils.keccak256(req.data)]);
+        const sig = await accounts[0].signMessage(hashToSign);
+        await erc20FeeProxy.executePersonalSign(req,sig);
+        expect(await testRecipient.callsMade(req.from)).to.equal(1);
+      req0=req;
+  })
+})
 
 })

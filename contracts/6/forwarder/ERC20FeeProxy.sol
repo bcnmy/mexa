@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IFeeManager.sol";
 import "./ERC20ForwardRequestCompatible.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "hardhat/console.sol";
 
 /**
  * @title ERC20 Fee Proxy
@@ -117,6 +118,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
+            console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
     }
 
     /**
@@ -142,6 +144,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
+            console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
     }
 
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
@@ -159,16 +162,21 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
+        uint gasleft0 = gasleft();
         charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token])).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
-        if (safeTransferRequired[req.token]){
-            SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
-        }
-        else{
+        if (!safeTransferRequired[req.token]){
+            console.log("if");
             require(IERC20(req.token).transferFrom(
             req.from,
             feeReceiver,
             charge));
         }
+        else{
+            console.log("else");
+            SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
+        }
+        uint gasUsed = gasleft0 - gasleft();
+        console.log(gasUsed);
     }
 
 }
