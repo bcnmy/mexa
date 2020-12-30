@@ -148,7 +148,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     }
 
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
-    event FeeCharged(address indexed from, uint256 indexed batchId, uint256 indexed batchNonce, uint256 charge, address token);
+    event FeeCharged(address indexed from, uint256 batchId, uint256 batchNonce, uint256 indexed charge, address indexed token);
 
     /**
      * @dev

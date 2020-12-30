@@ -109,7 +109,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     )
     external payable
     returns (bool success, bytes memory ret) {
-        uint gas0 = gasleft();
+        //uint gas0 = gasleft();
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
         // solhint-disable-next-line avoid-low-level-calls
@@ -118,8 +118,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
             //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
-        //emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
-        console.log("BiconomyForwarder.executeEIP712 gas used (without event): ",gas0 - gasleft());
+        emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
+        //console.log("BiconomyForwarder.executeEIP712 gas used (without event): ",gas0 - gasleft());
     }
 
     /**
@@ -146,7 +146,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     function executePersonalSign(ERC20ForwardRequest memory req,bytes calldata sig)
     external payable
     returns(bool success, bytes memory ret){
-        uint gas0 = gasleft();
+        //uint gas0 = gasleft();
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
         // solhint-disable-next-line avoid-low-level-calls
@@ -155,8 +155,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
             //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
-        //emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
-        console.log("BiconomyForwarder.executePersonalSign gas used (without event): ",gas0 - gasleft());
+        emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
+        //console.log("BiconomyForwarder.executePersonalSign gas used (without event): ",gas0 - gasleft());
     }
 
     // Designed to enable linking to FeeProxy events in external services such as The Graph
