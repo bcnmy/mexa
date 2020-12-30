@@ -506,7 +506,7 @@ it("Reverts requests which use non-permitted tokens", async function(){
 
 describe("Token specific tests ", function(){
   it("USDT", async function(){
-    await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[0].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
+    await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
     console.log("USDT Balance : "+(await USDT.balanceOf(await accounts[0].getAddress())).toString());
     const req = await testRecipient.populateTransaction.doCall(await accounts[0].getAddress());
         req.from = await accounts[0].getAddress();

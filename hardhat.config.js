@@ -24,6 +24,9 @@ const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 // defaultNetwork, networks, solc, and paths.
 // Go to https://buidler.dev/config/ to learn more
 module.exports = {
+  mocha: {
+    timeout: 50000
+  },
   solidity: {
     compilers: [
       {
@@ -47,17 +50,17 @@ module.exports = {
     },
     hardhat:{
       allowUnlimitedContractSize:false,
-      accounts:walletUtils.localWallet("1000000000000000000000",num=20),
+      accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
       //   url:`https://mainnet.infura.io/v3/${infuraKey}`
       url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{
-      url:`https://kovan.infura.io/v3/${infuraKey}`,
-      accounts:walletUtils.makeKeyList(),
+      url:"https://eth-kovan.alchemyapi.io/v2/DvW1I4OgMAVXJIw3zzfWHnQz1Lpeki9I",
+      accounts:walletUtils.makeKeyList(num=5),
       chainId:42,
-      gas: 12500000,
+      gas: 1250000,
       gasMultiplier:2
     },
     ropsten:{
