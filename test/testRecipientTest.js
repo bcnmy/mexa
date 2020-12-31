@@ -39,9 +39,10 @@ describe("Test Recipient", function(){
 
     describe("Calls", function(){
         it("doCall (to log gas)", async function(){
-            for (i = 0; i < accounts.length - 1; i++){
-                await testRecipient.connect(accounts[i]).doCall(await accounts[i].getAddress());
-                await testRecipient.connect(accounts[i]).doCall(await accounts[i].getAddress());
+            for (i = 0; i < 20; i++){
+                const tx = await testRecipient.connect(accounts[1]).doCall(await accounts[1].getAddress());
+                const receipt = await tx.wait();
+                console.log(receipt.gasUsed.toString())
             }
         })
         it("nada (to log gas)", async function(){

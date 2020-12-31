@@ -57,7 +57,7 @@ module.exports = {
       }
     },
     kovan:{
-      url:"https://eth-kovan.alchemyapi.io/v2/DvW1I4OgMAVXJIw3zzfWHnQz1Lpeki9I",
+      url:`https://kovan.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(num=5),
       chainId:42,
       gas: 1250000,
