@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
@@ -13,7 +15,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     using SafeMath for uint256;
 
     address private constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
     uint256 public biconomyCommission;
     mapping ( address => bool ) public supportedTokenMap;    // tokenAddress => active_status
@@ -45,7 +46,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     constructor(address _executorManagerAddress,  address owner, uint256 _commissionRate) public Ownable(owner) Pausable(owner) {
         require(_executorManagerAddress != address(0), "ExecutorManager Contract Address cannot be 0");
-        executorManager = ExecutorManager(_executorManagerAddress); 
+        executorManager = ExecutorManager(_executorManagerAddress);
         supportedTokenMap[NATIVE] = true;
         trustedForwarder = address(this);
         biconomyCommission = _commissionRate;
@@ -130,9 +131,9 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, string memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
-        require(tokenCapMap[tokenAddress] == 0 || tokenCapMap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
+        require(tokenCapMap[tokenAddress] == 0 || tokenCapMap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");
         require(receiver != address(0), "Bad receiver address");
-         
+
         bytes32 hashSendTransaction = keccak256(
             abi.encode(
                 tokenAddress,
