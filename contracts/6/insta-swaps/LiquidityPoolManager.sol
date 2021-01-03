@@ -123,7 +123,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit Deposit(tokenAddress, receiver, amount);
     }
 
-    function send( address tokenAddress, uint256 amount, address payable receiver, string memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks whenNotPaused {
+    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, string memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks whenNotPaused {
         require(receiver != address(0), "Bad receiver address");
          
         bytes32 hashSendTransaction = keccak256(
