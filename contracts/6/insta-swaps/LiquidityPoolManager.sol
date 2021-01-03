@@ -35,7 +35,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         _;
     }
 
-    modifier tokenChecks(){
+    modifier tokenChecks(address tokenAddress){
         require(tokenAddress != address(0), "Token address cannot be 0");
         require(tokenMap[tokenAddress], "Token not supported");
 
@@ -50,7 +50,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         biconomyCommission = _commissionRate;
     }
 
-    function changeCommissionRate(uint256 newCommissionRate) public Ownable(owner) Pausable(owner) {
+    function changeCommissionRate(uint256 newCommissionRate) public onlyOwner whenNotPaused {
         require(newCommissionRate != 0, "Commission Rate cannot be 0");
         biconomyCommission = newCommissionRate;
     }
@@ -68,11 +68,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         trustedForwarder = forwarderAddress;
     }
 
-    function addSupportedToken( address tokenAddress ) public tokenChecks onlyOwner {
+    function addSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
         tokenMap[tokenAddress] = true;
     }
 
-    function removeSupportedToken( address tokenAddress ) public tokenChecks onlyOwner {
+    function removeSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
         require(tokenAddress != NATIVE, "Native currency can't be removed");
         tokenMap[tokenAddress] = false;
     }
@@ -90,7 +90,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         require(_msgSender().send(amount), "Native Transfer Failed");
     }
 
-    function addTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks whenNotPaused {
+    function addTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
 
         IERC20 erc20 = IERC20(tokenAddress);
@@ -101,7 +101,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         tokenBalanceMap[tokenAddress] = tokenBalanceMap[tokenAddress].add(amount);
     }
 
-    function removeTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks whenNotPaused {
+    function removeTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
         require(liquidityProviderMap[tokenAddress][_msgSender()] >= amount, "Not enough balance");
 
@@ -112,7 +112,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         tokenBalanceMap[tokenAddress] = tokenBalanceMap[tokenAddress].sub(amount);
     }
 
-    function deposit( address tokenAddress, address receiver, uint256 amount ) public tokenChecks onlyExecutorOrOwner whenNotPaused {
+    function deposit( address tokenAddress, address receiver, uint256 amount ) public tokenChecks(tokenAddress) onlyExecutorOrOwner whenNotPaused {
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
@@ -123,7 +123,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit Deposit(tokenAddress, receiver, amount);
     }
 
-    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, string memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks whenNotPaused {
+    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, string memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
         require(receiver != address(0), "Bad receiver address");
          
         bytes32 hashSendTransaction = keccak256(
