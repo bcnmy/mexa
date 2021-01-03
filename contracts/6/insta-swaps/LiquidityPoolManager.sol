@@ -16,7 +16,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
     uint256 public biconomyCommission;
-    mapping ( address => bool ) public tokenMap;    // tokenAddress => active_status
+    mapping ( address => bool ) public supportedTokenMap;    // tokenAddress => active_status
+    mapping ( address => uint256 ) public tokenCapMap;    // tokenAddress => cap
     mapping ( address => uint256) public tokenBalanceMap;
     mapping ( address => mapping ( address => uint256) ) public liquidityProviderMap; // tokenAddress => LPaddress => amount
     mapping ( address => mapping ( address => uint256) ) public rewardMap;
@@ -37,7 +38,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     modifier tokenChecks(address tokenAddress){
         require(tokenAddress != address(0), "Token address cannot be 0");
-        require(tokenMap[tokenAddress], "Token not supported");
+        require(supportedTokenMap[tokenAddress], "Token not supported");
 
         _;
     }
@@ -45,7 +46,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     constructor(address _executorManagerAddress,  address owner, uint256 _commissionRate) public Ownable(owner) Pausable(owner) {
         require(_executorManagerAddress != address(0), "ExecutorManager Contract Address cannot be 0");
         executorManager = ExecutorManager(_executorManagerAddress); 
-        tokenMap[NATIVE] = true;
+        supportedTokenMap[NATIVE] = true;
         trustedForwarder = address(this);
         biconomyCommission = _commissionRate;
     }
@@ -68,15 +69,19 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         trustedForwarder = forwarderAddress;
     }
 
-    function addSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
-        tokenMap[tokenAddress] = true;
+    function addSupportedToken( address tokenAddress, uint256 capLimit ) public tokenChecks(tokenAddress) onlyOwner {
+        supportedTokenMap[tokenAddress] = true;
+        tokenCapMap[tokenAddress] = capLimit;
     }
 
     function removeSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
         require(tokenAddress != NATIVE, "Native currency can't be removed");
-        tokenMap[tokenAddress] = false;
+        supportedTokenMap[tokenAddress] = false;
     }
 
+    function updateTokenCap( address tokenAddress, uint256 capLimit ) public tokenChecks(tokenAddress) onlyOwner {
+        tokenCapMap[tokenAddress] = capLimit;
+    }
     function addEthLiquidity() public payable whenNotPaused {
         require(msg.value > 0, "amount should be greater then 0");
         liquidityProviderMap[NATIVE][_msgSender()] = liquidityProviderMap[NATIVE][_msgSender()].add(msg.value);
@@ -113,6 +118,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function deposit( address tokenAddress, address receiver, uint256 amount ) public tokenChecks(tokenAddress) onlyExecutorOrOwner whenNotPaused {
+        require(tokenCapMap[tokenAddress] == 0 || tokenCapMap[tokenAddress] >= amount,"Deposit amount exceeds allowed Cap limit");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
@@ -124,6 +130,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, string memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
+        require(tokenCapMap[tokenAddress] == 0 || tokenCapMap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
         require(receiver != address(0), "Bad receiver address");
          
         bytes32 hashSendTransaction = keccak256(
@@ -134,6 +141,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
                 keccak256(bytes(depositHash))
             )
         );
+
         require(!sendFundsMap[hashSendTransaction],"Already Processed");
 
         uint256 bcnmyCommission = amount.mul(biconomyCommission).div(100);
