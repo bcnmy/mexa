@@ -25,7 +25,7 @@ const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 // Go to https://buidler.dev/config/ to learn more
 module.exports = {
   mocha: {
-    timeout: 50000
+    timeout: 500000
   },
   solidity: {
     compilers: [
@@ -39,8 +39,7 @@ module.exports = {
       {
         version: "0.6.9",
         settings:{
-          evmVersion: "istanbul",
-          optimizer: { enabled: true, runs: 200 }
+          optimizer: { enabled: true, runs: 10000 }
         }
       }
     ]
@@ -59,6 +58,7 @@ module.exports = {
       }
     },
     kovan:{
+      //url:`https://kovan.infura.io/v3/${infuraKey}`,
       url:"https://eth-kovan.alchemyapi.io/v2/DvW1I4OgMAVXJIw3zzfWHnQz1Lpeki9I",
       accounts:walletUtils.makeKeyList(num=5),
       chainId:42,

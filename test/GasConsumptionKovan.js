@@ -77,7 +77,7 @@ describe("Gas Consumption Kovan", function(){
             verifyingContract : forwarder.address
           };
   
-        await forwarder.registerDomainSeparator("TestRecipient","1");
+        await (await forwarder.registerDomainSeparator("TestRecipient","1")).wait(confirmations=2);
         domainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
                           encode(['bytes32','bytes32','bytes32','uint256','address'],
                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -103,7 +103,7 @@ describe("Gas Consumption Kovan", function(){
   
       });
 
-      it("Biconomy Forwarder Only Personal", async function(){
+      /*it("Biconomy Forwarder Only Personal", async function(){
           //new nonce x10 personal
           //new batch x10 personal
           for(i=0;i<10;i++){
@@ -172,7 +172,7 @@ describe("Gas Consumption Kovan", function(){
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             const tx = await forwarder.executeEIP712(req,domainSeparator,sig);
-            const receipt = await tx.wait();
+            const receipt = await tx.wait(confirmations = 5);
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
           for(i=0;i<3;i++){
@@ -198,14 +198,14 @@ describe("Gas Consumption Kovan", function(){
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             const tx = await forwarder.executeEIP712(req,domainSeparator,sig);
-            const receipt = await tx.wait();
+            const receipt = await tx.wait(confirmations = 5);
             console.log("Biconomy Forwarder Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
-      });
+      });*/
 
       it("Baseline Token personal ", async function(){
-        await testnetDai.mint(await accounts[3].getAddress(), ethers.utils.parseEther("1000"));
-        await testnetDai.connect(accounts[3]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+        await (await testnetDai.mint(await accounts[3].getAddress(), ethers.utils.parseEther("1000"))).wait(confirmations=2);
+        await (await testnetDai.connect(accounts[3]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"))).wait(confirmations=2);
         for(i=0;i<3;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[3].getAddress();
@@ -223,7 +223,7 @@ describe("Gas Consumption Kovan", function(){
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[3].signMessage(hashToSign);
             const tx = await erc20FeeProxy.executePersonalSign(req,sig);
-            const receipt = await tx.wait();
+            const receipt = await tx.wait(confirmations = 5);
             console.log("FeeProxy with Baseline token nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
         for(i=0;i<3;i++){
@@ -243,14 +243,14 @@ describe("Gas Consumption Kovan", function(){
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[3].signMessage(hashToSign);
             const tx = await erc20FeeProxy.executePersonalSign(req,sig);
-            const receipt = await tx.wait();
+            const receipt = await tx.wait(confirmations = 5);
             console.log("FeeProxy with Baseline token Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
       });
 
       it("Baseline Token EIP712", async function(){
-        await testnetDai.mint(await accounts[4].getAddress(), ethers.utils.parseEther("1000"));
-        await testnetDai.connect(accounts[4]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+        await (await testnetDai.mint(await accounts[4].getAddress(), ethers.utils.parseEther("1000"))).wait(confirmations=2);
+        await (await testnetDai.connect(accounts[4]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"))).wait(confirmations=2);
         for(i=0;i<3;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[4].getAddress();
@@ -274,7 +274,7 @@ describe("Gas Consumption Kovan", function(){
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             const tx = await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
-            const receipt = await tx.wait();
+            const receipt = await tx.wait(confirmations = 5);
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
           for(i=0;i<3;i++){
@@ -300,7 +300,7 @@ describe("Gas Consumption Kovan", function(){
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             const tx = await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
-            const receipt = await tx.wait();
+            const receipt = await tx.wait(confirmations = 5);
             console.log("Biconomy Forwarder Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
     });
