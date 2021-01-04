@@ -31,6 +31,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     address public oracleAggregator;
     address public feeManager;
     address payable public forwarder;
+    uint128 public baseGas=21000;
 
     /**
      * @dev sets contract variables
@@ -48,6 +49,11 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
 
     function setOracleAggregator(address oa) external onlyOwner{
         oracleAggregator = oa;
+    }
+
+    //review for security 
+    function setBaseGas(uint128 gas) external onlyOwner{
+        baseGas = gas;
     }
 
     /**
@@ -150,6 +156,9 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
     event FeeCharged(address indexed from, uint256 batchId, uint256 batchNonce, uint256 indexed charge, address indexed token);
 
+    // Designed to retreive execution gas and transfer handler gas
+    event GasUsage(uint256 indexed executionGas,uint256 indexed transferHandlerGas);
+
     /**
      * @dev
      * - Verifies if token supplied in request is allowed
@@ -160,10 +169,10 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
-        IFeeManager _feeManager = IFeeManager(feeManager);
-        require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
         uint gasleft0 = gasleft();
-        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token])).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
+        IFeeManager _feeManager = IFeeManager(feeManager);
+        require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
+        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token]).add(baseGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
         if (!safeTransferRequired[req.token]){
             console.log("if");
             require(IERC20(req.token).transferFrom(
@@ -176,6 +185,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
         }
         uint gasUsed = gasleft0 - gasleft();
+        emit GasUsage(executionGas,gasUsed);
         console.log(gasUsed);
     }
 

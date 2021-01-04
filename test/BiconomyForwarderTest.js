@@ -61,9 +61,9 @@ describe("Biconomy Forwarder", function(){
                                  ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
                                  domainData.chainId,domainData.verifyingContract]));
 
-        //deploy fee manager with a factor of 1.5x
+        //deploy fee manager with a factor of 1.2x
         const MockFeeManager = await ethers.getContractFactory("MockFeeManager");
-        mockFeeManager = await MockFeeManager.deploy(15000);
+        mockFeeManager = await MockFeeManager.deploy(12000);
         await mockFeeManager.deployed();
 
         //deploy and fill up faucet
@@ -77,7 +77,7 @@ describe("Biconomy Forwarder", function(){
 
     describe("personal sign", function(){
         it("executes call successfully", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 0;
@@ -93,7 +93,7 @@ describe("Biconomy Forwarder", function(){
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[1].signMessage(hashToSign);
             await forwarder.executePersonalSign(req,sig);
-            expect(await testRecipient.callsMade(req.from)).to.equal(1);
+            //expect(await testRecipient.callsMade(req.from)).to.equal(1);
         });
 
         it("Updates nonces", async function(){
@@ -122,7 +122,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Fails when nonce invalid", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 0;
@@ -141,7 +141,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Fails when signer invalid", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 1;
@@ -160,7 +160,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Updates HighestBatchId", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 1;
@@ -180,7 +180,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("External verify function validates compliant requests/signatures as correct", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 1;
             req.batchId = 1;
@@ -199,7 +199,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("External verify function validates non-compliant requests/signatures as incorrect", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 1;
@@ -218,7 +218,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Fails when deadline non-zero and below current time", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 2;
@@ -237,7 +237,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Executes successfully when deadline is above current time", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 2;
@@ -259,7 +259,7 @@ describe("Biconomy Forwarder", function(){
 
     describe("EIP712", function(){
         it("executes call successfully", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = 0;
@@ -284,7 +284,7 @@ describe("Biconomy Forwarder", function(){
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
             await forwarder.executeEIP712(req,domainSeparator,sig);
-            expect(await testRecipient.callsMade(req.from)).to.equal(1);
+            //expect(await testRecipient.callsMade(req.from)).to.equal(1);
         });
 
         it("Updates nonces", async function(){
@@ -322,7 +322,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Fails when nonce invalid", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = 0;
@@ -350,7 +350,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Fails when signer invalid", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = 0;
@@ -378,7 +378,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Updates HighestBatchId", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = 1;
@@ -407,7 +407,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("External verify function validates compliant requests/signatures as correct", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 1;
             req.batchId = 1;
@@ -435,7 +435,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("External verify function validates non-compliant requests/signatures as incorrect", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = 1;
@@ -463,7 +463,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Fails when deadline non-zero and below current time", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = 2;
@@ -491,7 +491,7 @@ describe("Biconomy Forwarder", function(){
         });
 
         it("Executes successfully when deadline is above current time", async function(){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = 2;

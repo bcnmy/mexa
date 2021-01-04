@@ -107,7 +107,7 @@ describe("Gas Consumption Kovan", function(){
           //new nonce x10 personal
           //new batch x10 personal
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -127,7 +127,7 @@ describe("Gas Consumption Kovan", function(){
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -150,7 +150,7 @@ describe("Gas Consumption Kovan", function(){
 
       it("Biconomy Forwarder Only EIP712", async function(){
         for(i=0;i<3;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -176,7 +176,7 @@ describe("Gas Consumption Kovan", function(){
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
           for(i=0;i<3;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[2].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[2].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -207,7 +207,7 @@ describe("Gas Consumption Kovan", function(){
         await testnetDai.mint(await accounts[3].getAddress(), ethers.utils.parseEther("1000"));
         await testnetDai.connect(accounts[3]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
         for(i=0;i<3;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[3].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[3].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -227,7 +227,7 @@ describe("Gas Consumption Kovan", function(){
             console.log("FeeProxy with Baseline token nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
         for(i=0;i<3;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[3].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[3].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -252,7 +252,7 @@ describe("Gas Consumption Kovan", function(){
         await testnetDai.mint(await accounts[4].getAddress(), ethers.utils.parseEther("1000"));
         await testnetDai.connect(accounts[4]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
         for(i=0;i<3;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[4].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[4].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -278,7 +278,7 @@ describe("Gas Consumption Kovan", function(){
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString()+" Tx Hash :"+receipt.transactionHash)
           }
           for(i=0;i<3;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[4].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[4].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;

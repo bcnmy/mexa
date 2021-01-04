@@ -39,6 +39,7 @@ module.exports = {
       {
         version: "0.6.9",
         settings:{
+          evmVersion: "istanbul",
           optimizer: { enabled: true, runs: 200 }
         }
       }
@@ -50,6 +51,7 @@ module.exports = {
     },
     hardhat:{
       allowUnlimitedContractSize:false,
+      gas: 6000000,
       accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
       //   url:`https://mainnet.infura.io/v3/${infuraKey}`

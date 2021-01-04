@@ -116,7 +116,7 @@ describe("Gas Consumption", function(){
           //new nonce x10 personal
           //new batch x10 personal
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -136,7 +136,7 @@ describe("Gas Consumption", function(){
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -159,7 +159,7 @@ describe("Gas Consumption", function(){
 
       it("Biconomy Forwarder Only EIP712", async function(){
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -185,7 +185,7 @@ describe("Gas Consumption", function(){
             console.log("Biconomy Forwarder nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -214,7 +214,7 @@ describe("Gas Consumption", function(){
 
       it("Baseline Token personal ", async function(){
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -234,7 +234,7 @@ describe("Gas Consumption", function(){
             console.log("FeeProxy with Baseline token nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -257,7 +257,7 @@ describe("Gas Consumption", function(){
 
       it("Baseline Token EIP712", async function(){
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -283,7 +283,7 @@ describe("Gas Consumption", function(){
             console.log("FeeProxy with Baseline token nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -313,7 +313,7 @@ describe("Gas Consumption", function(){
       it("USDC personal", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDC.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -333,7 +333,7 @@ describe("Gas Consumption", function(){
             console.log("Fee Proxy with USDC nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -357,7 +357,7 @@ describe("Gas Consumption", function(){
       it("USDC EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDC.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -383,7 +383,7 @@ describe("Gas Consumption", function(){
             console.log("Fee Proxy with USDC nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -416,7 +416,7 @@ describe("Gas Consumption", function(){
       it("USDT personal", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -436,7 +436,7 @@ describe("Gas Consumption", function(){
             console.log("Fee Proxy with USDT nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -460,7 +460,7 @@ describe("Gas Consumption", function(){
       it("USDT EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -486,7 +486,7 @@ describe("Gas Consumption", function(){
             console.log("Fee Proxy with USDT nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -516,7 +516,7 @@ describe("Gas Consumption", function(){
       it("DAI personal", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -536,7 +536,7 @@ describe("Gas Consumption", function(){
             console.log("FeeProxy with Dai nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
@@ -560,7 +560,7 @@ describe("Gas Consumption", function(){
       it("DAI EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
             req.batchId = 0;
@@ -586,7 +586,7 @@ describe("Gas Consumption", function(){
             console.log("Fee Proxy with Dai nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
           for(i=0;i<10;i++){
-            const req = await testRecipient.populateTransaction.doCall(await accounts[1].getAddress());
+            const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
             req.batchId = i+1;
