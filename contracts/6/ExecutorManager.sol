@@ -2,8 +2,7 @@ pragma solidity 0.6.9;
 
 import "./libs/Ownable.sol";
 
-
-contract ExecutorManager is Ownable(msg.sender) {
+contract ExecutorManager is Ownable {
     address[] internal executors;
     mapping(address => bool) internal executorStatus;
 
@@ -17,6 +16,8 @@ contract ExecutorManager is Ownable(msg.sender) {
         );
         _;
     }
+
+    constructor(address owner) public Ownable(owner) {}
 
     function getExecutorStatus(address executor)
         public
@@ -33,13 +34,7 @@ contract ExecutorManager is Ownable(msg.sender) {
     //Register new Executors
     function addExecutors(address[] memory executorArray) public onlyOwner {
         for (uint256 i = 0; i < executorArray.length; i++) {
-            require(
-                executorArray[i] != address(0),
-                "Executor address cannot be zero"
-            );
-            executors.push(executorArray[i]);
-            executorStatus[executorArray[i]] = true;
-            emit ExecutorAdded(executorArray[i], msg.sender);
+            addExecutor(executorArray[i]);
         }
     }
 
