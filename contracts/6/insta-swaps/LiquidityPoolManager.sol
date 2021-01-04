@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.9;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -140,7 +142,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
         require(tokenCap[tokenAddress] == 0 || tokenCap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
         require(receiver != address(0), "Bad receiver address");
-         
+
         bytes32 hashSendTransaction = keccak256(
             abi.encode(
                 tokenAddress,
