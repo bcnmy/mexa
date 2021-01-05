@@ -149,7 +149,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
                 tokenAddress,
                 amount,
                 receiver,
-                depositHash
+                keccak256(depositHash)
             )
         );
 
