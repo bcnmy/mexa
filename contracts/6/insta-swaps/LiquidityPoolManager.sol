@@ -9,7 +9,6 @@ import "./ReentrancyGuard.sol";
 import "../libs/Pausable.sol";
 import "../libs/Ownable.sol";
 import "../ExecutorManager.sol";
-import "../interfaces/IERC20.sol";
 
 contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, Pausable {
     using SafeMath for uint256;
@@ -27,8 +26,9 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     event AssetSent(address indexed asset, uint256 indexed amount, address indexed target);
     event Received(address indexed from, uint256 indexed amount);
-    event Deposit(address indexed tokenAddress, address indexed receiver, uint256 indexed amount);
-    event LiquidityRemoved( address indexed tokenAddress, unit256 indexed amount, address indexed sender);
+    event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
+    event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
+    event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
 
     // MODIFIERS
     modifier onlyExecutorOrOwner() {
@@ -101,7 +101,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         liquidityProvider[NATIVE][_msgSender()] = liquidityProvider[NATIVE][_msgSender()].sub(amount);
         tokenBalance[NATIVE] = tokenBalance[NATIVE].sub(amount);
         require(_msgSender().send(amount), "Native Transfer Failed");
-        emit LiquidityRemoved( tokenAddress, amount, msg.sender);
+        emit LiquidityRemoved( NATIVE, amount, msg.sender);
     }
 
     function addTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
@@ -112,7 +112,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         liquidityProvider[tokenAddress][_msgSender()] = liquidityProvider[tokenAddress][_msgSender()].add(amount);
         tokenBalance[tokenAddress] = tokenBalance[tokenAddress].add(amount);
         
-        require(SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(),address(this),amount),"Token Transfer Failed");
+        SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(), address(this), amount);
+        emit LiquidityAdded(_msgSender(), tokenAddress, address(this), amount);
     }
 
     function removeTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
@@ -134,12 +135,12 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         IERC20 erc20 = IERC20(tokenAddress);
 
-        require(SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(),address(this),amount),"Deposit Failed");
+        SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(),address(this),amount);
 
-        emit Deposit(sender, tokenAddress, receiver, amount);
+        emit Deposit(_msgSender(), tokenAddress, receiver, amount);
     }
 
-    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
+    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
         require(tokenCap[tokenAddress] == 0 || tokenCap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
         require(receiver != address(0), "Bad receiver address");
 
@@ -167,6 +168,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
             require(erc20.transfer(receiver,amountToTransfer),"Token Transfer Failed");
         }
 
-        emit AssetSent(sender, tokenAddress, amountToTransfer, receiver);
+        emit AssetSent(tokenAddress, amountToTransfer, receiver);
     }
 }
