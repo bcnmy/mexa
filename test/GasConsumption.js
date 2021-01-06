@@ -112,7 +112,7 @@ describe("Gas Consumption", function(){
   
       });
 
-      it("Biconomy Forwarder Only Personal", async function(){
+      /*it("Biconomy Forwarder Only Personal", async function(){
           //new nonce x10 personal
           //new batch x10 personal
           for(i=0;i<10;i++){
@@ -352,11 +352,11 @@ describe("Gas Consumption", function(){
             const receipt = await tx.wait();
             console.log("Fee Proxy with USDC Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString())
           }
-      });
+      });*/
 
       it("USDC EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDC.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
-        for(i=0;i<10;i++){
+        for(i=0;i<5;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
@@ -382,7 +382,7 @@ describe("Gas Consumption", function(){
             const receipt = await tx.wait();
             console.log("Fee Proxy with USDC nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
-          for(i=0;i<10;i++){
+          /*for(i=0;i<10;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
@@ -407,13 +407,13 @@ describe("Gas Consumption", function(){
             const tx = await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
             const receipt = await tx.wait();
             console.log("Fee Proxy with USDC Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString())
-          }
+          }*/
         //new batch x10 personal
         //new nonce x10 eip712
         //new batch x10 eip712
     });
 
-      it("USDT personal", async function(){
+      /*it("USDT personal", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
             const req = await testRecipient.populateTransaction.nada();
@@ -455,11 +455,11 @@ describe("Gas Consumption", function(){
             const receipt = await tx.wait();
             console.log("Fee Proxy with USDT Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString())
           }
-      });
+      });*/
 
       it("USDT EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
-        for(i=0;i<10;i++){
+        for(i=0;i<5;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
@@ -485,7 +485,7 @@ describe("Gas Consumption", function(){
             const receipt = await tx.wait();
             console.log("Fee Proxy with USDT nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
-          for(i=0;i<10;i++){
+          /*for(i=0;i<10;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
@@ -510,10 +510,10 @@ describe("Gas Consumption", function(){
             const tx = await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
             const receipt = await tx.wait();
             console.log("Fee Proxy with USDT Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString())
-          }
+          }*/
         });
 
-      it("DAI personal", async function(){
+      /*it("DAI personal", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<10;i++){
             const req = await testRecipient.populateTransaction.nada();
@@ -555,11 +555,11 @@ describe("Gas Consumption", function(){
             const receipt = await tx.wait();
             console.log("FeeProxy with Dai Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString())
           }
-      });
+      });*/
 
       it("DAI EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
-        for(i=0;i<10;i++){
+        for(i=0;i<5;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = i;
@@ -585,7 +585,7 @@ describe("Gas Consumption", function(){
             const receipt = await tx.wait();
             console.log("Fee Proxy with Dai nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
           }
-          for(i=0;i<10;i++){
+          /*for(i=0;i<10;i++){
             const req = await testRecipient.populateTransaction.nada();
             req.from = await accounts[1].getAddress();
             req.batchNonce = 0;
@@ -610,7 +610,7 @@ describe("Gas Consumption", function(){
             const tx = await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
             const receipt = await tx.wait();
             console.log("Fee Proxy with Dai Batch="+req.batchId+" gas used :"+receipt.gasUsed.toString())
-          }
+          }*/
     });
 
 })
