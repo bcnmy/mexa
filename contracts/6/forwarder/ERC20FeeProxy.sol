@@ -123,7 +123,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
-            emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
+            emit FeeCharged(req.from,charge,req.token);
             console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
     }
 
@@ -149,7 +149,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
-            emit FeeCharged(req.from,req.batchId,req.batchNonce,charge,req.token);
+            emit FeeCharged(req.from,charge,req.token);
             console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
     }
 
