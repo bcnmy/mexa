@@ -65,6 +65,13 @@ module.exports = {
       gas: 1250000,
       gasMultiplier:2
     },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/d126f392798444609246423b06116c77`,
+      accounts: walletUtils.makeKeyList(),
+      chainId:4,
+      gas: 1250000,
+      gasMultiplier:2
+    },
     ropsten:{
       url:`https://ropsten.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
