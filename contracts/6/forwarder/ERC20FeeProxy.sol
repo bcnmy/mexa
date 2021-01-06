@@ -154,10 +154,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     }
 
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
-    event FeeCharged(address indexed from, uint256 batchId, uint256 batchNonce, uint256 indexed charge, address indexed token);
-
-    // Designed to retreive execution gas and transfer handler gas
-    event GasUsage(uint256 indexed executionGas,uint256 indexed transferHandlerGas);
+    event FeeCharged(address indexed from, uint256 indexed charge, address indexed token);
 
     /**
      * @dev
@@ -174,18 +171,16 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
         charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token]).add(baseGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
         if (!safeTransferRequired[req.token]){
-            console.log("if");
+            
             require(IERC20(req.token).transferFrom(
             req.from,
             feeReceiver,
             charge));
         }
         else{
-            console.log("else");
             SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
         }
         uint gasUsed = gasleft0 - gasleft();
-        emit GasUsage(executionGas,gasUsed);
         console.log(gasUsed);
     }
 
