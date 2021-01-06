@@ -30,8 +30,6 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
 
     bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
 
-    mapping(address => uint256) public highestBatchId;
-
     mapping(address => mapping(uint256 => uint256)) nonces;
 
     /**
@@ -118,8 +116,6 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
             //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
-        emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
-        //console.log("BiconomyForwarder.executeEIP712 gas used (without event): ",gas0 - gasleft());
     }
 
     /**
@@ -155,23 +151,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
             //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
-        emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
-        //console.log("BiconomyForwarder.executePersonalSign gas used (without event): ",gas0 - gasleft());
     }
-
-    // Designed to enable linking to FeeProxy events in external services such as The Graph
-    event ForwardedTx(
-        address indexed from,
-        uint256 indexed batchId,
-        uint256 indexed batchNonce,
-        bool success,
-        bytes returnData,
-        address feeProxy,
-        address token,
-        uint256 txGas,
-        uint256 tokenGasPrice,
-        bytes data
-    );
 
     /**
      * @dev Increments the nonce of given user/batch pair
@@ -180,9 +160,6 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
      * @param req : request that was executed
      */
     function _updateNonce(ERC20ForwardRequest memory req) internal {
-        if(highestBatchId[req.from]<req.batchId){
-            highestBatchId[req.from] = req.batchId;
-        }
         nonces[req.from][req.batchId]++;
     }
 
