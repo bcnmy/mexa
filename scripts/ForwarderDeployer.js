@@ -15,19 +15,19 @@ async function main() {
 
     const accounts = await hre.ethers.getSigners();
     
-    //const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
-    //const forwarder = await Forwarder.deploy();
-    //await forwarder.deployed();
-    //console.log("Biconomy Forwarder deployed at : ",forwarder.address);
-    //await forwarder.registerDomainSeparator("TRUSTED FORWARDER","1");
+    const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
+    const forwarder = await Forwarder.deploy();
+    await forwarder.deployed();
+    console.log("Biconomy Forwarder deployed at : ",forwarder.address);
+    await forwarder.registerDomainSeparator("TRUSTED FORWARDER","1");
 
     const MockFeeManager = await hre.ethers.getContractFactory("MockFeeManager");
-    const mockFeeManager = await MockFeeManager.deploy(12000);
+    const mockFeeManager = await MockFeeManager.deploy(10000);
     await mockFeeManager.deployed();
     console.log("Fee Manager deployed at ",mockFeeManager.address);
 
     const ERC20FeeProxy = await hre.ethers.getContractFactory("ERC20FeeProxy");
-    const erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), "0x2876f96B2a8368748D035552f4a1551E011812c4", "0x46a7Aa64578F40F34CdC63c96E5340B6be1f7bba");
+    const erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
     await erc20FeeProxy.deployed();
     console.log("Fee Proxy deployed at ",erc20FeeProxy.address);
 

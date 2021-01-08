@@ -1,41 +1,30 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-//to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
-
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./BiconomyForwarder.sol";
+import "./ERC20ForwarderStorage.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IFeeManager.sol";
-import "./ERC20ForwardRequestCompatible.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "hardhat/console.sol";
+import "./BiconomyForwarder.sol";
+
 
 /**
- * @title ERC20 Fee Proxy
+ * @title ERC20 Forwarder
  *
  * @notice A contract for dApps to coordinate meta transactions paid for with ERC20 transfers
  *
- * @dev Inherits the ERC20ForwarderRequest struct via the contract of same name - essential for compatibility with The BiconomyForwarder
- * @dev Contract owner can set the feeManager contract & the feeReceiver address
- * @dev Tx Flow : call BiconomyForwarder to handle forwarding, call _transferHandler() to charge fee after
+ * @dev Inherits the ERC20ForwarderRequest struct from Storage contract - essential for compatibility with The BiconomyForwarder
+ * @dev Tx Flow : calls BiconomyForwarder to handle forwarding, call _transferHandler() to charge fee after
  *
  */
-contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
-
-    using SafeMath for uint256;
-    using SafeMath for uint128;
-    mapping(address=>uint256) public transferHandlerGas;
-    mapping(address=>bool) public safeTransferRequired;
-    address public feeReceiver;
-    address public oracleAggregator;
-    address public feeManager;
-    address payable public forwarder;
-    uint128 public baseGas=21000;
-    uint128 public gasRefund=19200;
-
-    /**
+ contract ERC20Forwarder is ERC20ForwarderStorage {
+     using SafeMath for uint256;
+     using SafeMath for uint128;
+     bool internal initialized;
+      
+     /**
      * @dev sets contract variables
      *
      * @param _feeReceiver : address that will receive fees charged in ERC20 tokens
@@ -43,20 +32,40 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * @param _forwarder : the address of the BiconomyForwarder contract
      *
      */
-    constructor(address _feeReceiver,address _feeManager,address payable _forwarder) public {
+       function initialize(
+       address _feeReceiver,
+       address _feeManager,
+       address payable _forwarder
+       ) public {
+        
+        require(!initialized, "ERC20 Forwarder: contract is already initialized");
+        require(
+            _feeReceiver != address(0),
+            "ERC20Forwarder: new fee receiver is the zero address"
+        );
+        require(
+            _feeManager != address(0),
+            "ERC20Forwarder: new fee manager is the zero address"
+        );
+        require(
+            _forwarder != address(0),
+            "ERC20Forwarder: new forwarder is the zero address"
+        );
         feeReceiver = _feeReceiver;
         feeManager = _feeManager;
         forwarder = _forwarder;
-    }
-
+       }
+       
+    
     function setOracleAggregator(address oa) external onlyOwner{
         oracleAggregator = oa;
     }
 
+
     function setBaseGas(uint128 gas) external onlyOwner{
         baseGas = gas;
     }
-
+    
     function setGasRefund(uint128 refund) external onlyOwner{
         gasRefund = refund;
     }
@@ -67,14 +76,16 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     function setFeeReceiver(address _feeReceiver) external onlyOwner{
         feeReceiver = _feeReceiver;
     }
-
+    
+    
     /**
      * @dev enable dApps to change the contract that manages fee collection logic
      * @param _feeManager : the address of the contract that controls the charging of fees */
     function setFeeManager(address _feeManager) external onlyOwner{
         feeManager = _feeManager;
     }
-
+    
+    
     /**
      * @dev change amount of excess gas charged for _transferHandler
      * NOT INTENTED TO BE CALLED : may need to be called if :
@@ -90,8 +101,9 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
     function setSafeTransferRequired(address token, bool _safeTransferRequired) external onlyOwner{
         safeTransferRequired[token] = _safeTransferRequired;
     }
-
-    /**
+    
+       
+       /**
      * @dev calls the getNonce function of the BiconomyForwarder
      * @param from : the user address
      * @param batchId : the key of the user's batch being queried
@@ -103,8 +115,9 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         uint256 nonce = BiconomyForwarder(forwarder).getNonce(from,batchId);
         return nonce;
     }
-
-    /**
+    
+    
+     /**
      * @dev
      * - Keeps track of gas consumed
      * - Calls BiconomyForwarder.executeEIP712 method using arguments given
@@ -129,7 +142,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
     }
 
      /**
@@ -163,6 +175,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
     }
 
+
     /**
      * @dev
      * - Keeps track of gas consumed
@@ -186,7 +199,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 postGas = gasleft();
             uint256 charge = _transferHandler(req,initialGas.sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
     }
 
 
@@ -219,6 +231,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
     }
 
+
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
     event FeeCharged(address indexed from, uint256 indexed charge, address indexed token);
 
@@ -232,7 +245,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
-        uint gasleft0 = gasleft();
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
         charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token]).add(baseGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
@@ -246,9 +258,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         else{
             SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
         }
-        uint gasUsed = gasleft0 - gasleft();
-        console.log(gasUsed);
     }
-
-}
-
+       
+ }
