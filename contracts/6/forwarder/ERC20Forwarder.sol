@@ -140,7 +140,8 @@ import "./BiconomyForwarder.sol";
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
-            uint256 charge = _transferHandler(req,initialGas.sub(postGas));
+            uint256 transferHandlerGas = transferHandlerGas[req.token];
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
     }
 
@@ -170,11 +171,10 @@ import "./BiconomyForwarder.sol";
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
-            uint256 charge = _transferHandler(req,initialGas.sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
+            uint256 transferHandlerGas = transferHandlerGas[req.token];
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
     }
-
 
     /**
      * @dev
@@ -197,7 +197,8 @@ import "./BiconomyForwarder.sol";
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);
             uint256 postGas = gasleft();
-            uint256 charge = _transferHandler(req,initialGas.sub(postGas));
+            uint256 transferHandlerGas = transferHandlerGas[req.token];
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
     }
 
@@ -226,11 +227,10 @@ import "./BiconomyForwarder.sol";
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);
             uint256 postGas = gasleft();
-            uint256 charge = _transferHandler(req,initialGas.sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
+            uint256 transferHandlerGas = transferHandlerGas[req.token];
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
     }
-
 
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
     event FeeCharged(address indexed from, uint256 indexed charge, address indexed token);
@@ -245,9 +245,10 @@ import "./BiconomyForwarder.sol";
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
+        uint gasleft0 = gasleft();
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
-        charge = req.tokenGasPrice.mul(executionGas.add(transferHandlerGas[req.token]).add(baseGas)).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
+        charge = req.tokenGasPrice.mul(executionGas).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
         if (!safeTransferRequired[req.token]){
             
             require(IERC20(req.token).transferFrom(
