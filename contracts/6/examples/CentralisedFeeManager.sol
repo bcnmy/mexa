@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev owners can remove fee multiplier settings, and instead have a given query return it's parent value
  * @dev hierarchy of fee multipliers : default --> token --> tokenUser 
  * 
- * @dev owners can ban tokens
+ * @dev owners can allow tokens
  *
  */
 contract CentralisedFeeManager is IFeeManager,Ownable{
@@ -30,7 +30,7 @@ contract CentralisedFeeManager is IFeeManager,Ownable{
 
     mapping(address => mapping(address => bool)) tokenUserExempt;
 
-    mapping(address => bool) bannedTokens;
+    mapping(address => bool) allowedTokens;
 
     mapping(address => address) tokenPriceFeed;
 
@@ -90,11 +90,11 @@ contract CentralisedFeeManager is IFeeManager,Ownable{
     }
 
     function getTokenAllowed(address token) external override view returns (bool allowed){
-        allowed = !bannedTokens[token];
+        allowed = allowedTokens[token];
     }
 
-    function setTokenBan(address token, bool banned) external onlyOwner{
-        bannedTokens[token] = banned;
+    function setTokenAllowed(address token, bool allowed) external onlyOwner{
+        allowedTokens[token] = allowed;
     }
 
     function getPriceFeedAddress(address token) external view returns (address priceFeed){

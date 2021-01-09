@@ -479,7 +479,7 @@ it("transfer handler gas amount added correctly to total gas charged", async fun
 });
 
 it("Reverts requests which use non-permitted tokens", async function(){
-  await mockFeeManager.setTokenBan(testnetDai.address,true);
+  await mockFeeManager.setTokenAllowed(testnetDai.address,false);
   const req = await testRecipient.populateTransaction.nada();
   req.from = await accounts[1].getAddress();
   req.batchNonce = 0;
