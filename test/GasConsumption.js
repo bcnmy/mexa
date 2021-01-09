@@ -557,6 +557,38 @@ describe("Gas Consumption", function(){
           }*/
       });
 
+      it("DAI EIP712 with gas refund", async function(){
+        await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
+        for(i=0;i<5;i++){
+            const req = await testRecipient.populateTransaction.nada(); // nada or really heavy transaction in test recipient
+            console.log(req.gasLimit.toString());
+            req.from = await accounts[1].getAddress();
+            req.batchNonce = i;
+            req.batchId = 0;
+            req.txGas = (req.gasLimit).toNumber();
+            req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+            req.deadline = 0;
+            let gasTokens = 1;
+            delete req.gasPrice;
+            delete req.gasLimit;
+            delete req.chainId;
+            req.token = realDai.address;
+            const dataToSign = {
+                types: {
+                    EIP712Domain: domainType,
+                    ERC20ForwardRequest: erc20ForwardRequest
+                  },
+                  domain: domainData,
+                  primaryType: "ERC20ForwardRequest",
+                  message: req
+                };
+            const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
+            const tx = await erc20FeeProxy.executeEIP712WithGasTokens(req,domainSeparator,sig,gasTokens);
+            const receipt = await tx.wait();
+            console.log("Fee Proxy with Dai nonce="+req.batchNonce+" gas used :"+receipt.gasUsed.toString())
+          }
+      });
+
       it("DAI EIP712", async function(){
         await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("10").toString()});
         for(i=0;i<5;i++){
