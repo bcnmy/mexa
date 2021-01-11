@@ -51,6 +51,7 @@ import "./BiconomyForwarder.sol";
             _forwarder != address(0),
             "ERC20Forwarder: new forwarder is the zero address"
         );
+        initialized = true;
         feeReceiver = _feeReceiver;
         feeManager = _feeManager;
         forwarder = _forwarder;
