@@ -88,8 +88,12 @@ describe("Gas Consumption", function(){
         //deploy fee multiplier with a factor of 1.5x
         //deploy fee manager with a factor of 1.5x
         const MockFeeManager = await ethers.getContractFactory("MockFeeManager");
-        mockFeeManager = await MockFeeManager.deploy(15000);
+        mockFeeManager = await MockFeeManager.deploy(10000);
         await mockFeeManager.deployed();
+
+        await mockFeeManager.setTokenAllowed(realDai.address,true);
+        await mockFeeManager.setTokenAllowed(USDC.address,true);
+        await mockFeeManager.setTokenAllowed(USDT.address,true);
   
         //deploy and fill up faucet
         const Faucet = await ethers.getContractFactory("mockFaucet");
