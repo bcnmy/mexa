@@ -162,7 +162,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
+            console.log("ERC20FeeProxy.executeEIP712 with gas tokens gas usage : ",initialGas-gasleft());
     }
 
     /**
@@ -220,7 +220,7 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
+            console.log("ERC20FeeProxy.executePersonalSign with gas tokens gas usage : ",initialGas-gasleft());
     }
 
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
