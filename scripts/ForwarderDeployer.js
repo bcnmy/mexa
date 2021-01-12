@@ -1,5 +1,7 @@
 
-
+//todo
+//rename to biconomy forwarder and fee proxy (erc20 forwarder) deployer
+//Kovan
 async function main() {
     let daiEthPriceFeedAddress = "0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541";
     let daiAddress = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa";
@@ -22,40 +24,73 @@ async function main() {
     await forwarder.registerDomainSeparator("TRUSTED FORWARDER","1");
 
     const MockFeeManager = await hre.ethers.getContractFactory("MockFeeManager");
-    const mockFeeManager = await MockFeeManager.deploy(10000);
+    const mockFeeManager = await MockFeeManager.deploy(11000);
     await mockFeeManager.deployed();
     console.log("Fee Manager deployed at ",mockFeeManager.address);
+
+
+    //allow tokens
+    let tx,receipt;
+    tx = await mockFeeManager.setTokenAllowed(daiAddress,true);
+    receipt = await tx.wait(confirmations = 2);
+
+    tx = await mockFeeManager.setTokenAllowed(usdcAddress,true);
+    receipt = await tx.wait(confirmations = 2);
+
+    tx = await mockFeeManager.setTokenAllowed(usdtAddress,true);
+    receipt = await tx.wait(confirmations = 2);
 
     const ERC20FeeProxy = await hre.ethers.getContractFactory("ERC20FeeProxy");
     const erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
     await erc20FeeProxy.deployed();
     console.log("Fee Proxy deployed at ",erc20FeeProxy.address);
 
-    //let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
-    //oracleAggregator = await OracleAggregator.deploy();
-    //await oracleAggregator.deployed();
-    //console.log("Oracle Aggregator deployed at ",oracleAggregator.address);
+    let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
+    oracleAggregator = await OracleAggregator.deploy();
+    await oracleAggregator.deployed();
+    console.log("Oracle Aggregator deployed at ",oracleAggregator.address);
 
-    //priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface",daiEthPriceFeedAddress);
-    //let priceFeedTxDai = await priceFeedDai.populateTransaction.latestAnswer();
-    //await oracleAggregator.setTokenOracle(daiAddress,daiEthPriceFeedAddress,18,priceFeedTxDai.data,true);
+    priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface",daiEthPriceFeedAddress);
+    let priceFeedTxDai = await priceFeedDai.populateTransaction.latestAnswer();
+    tx = await oracleAggregator.setTokenOracle(daiAddress,daiEthPriceFeedAddress,daiDecimals,priceFeedTxDai.data,true);
+    receipt = await tx.wait(confirmations = 2);
     
-    //console.log('dai support added');
-    //console.log('dai address' + daiAddress);
+    console.log('dai support added');
+    console.log('dai address' + daiAddress);
 
-    //priceFeedUsdt = await hre.ethers.getContractAt("AggregatorInterface",usdtEthPriceFeedAddress);
-    //let priceFeedTxUsdt = await priceFeedUsdt.populateTransaction.latestAnswer();
-    //await oracleAggregator.setTokenOracle(usdtAddress,usdtEthPriceFeedAddress,6,priceFeedTxUsdt.data,true);
-    //console.log('usdt support added');
-    //console.log('usdt address' + usdtAddress);
+    priceFeedUsdt = await hre.ethers.getContractAt("AggregatorInterface",usdtEthPriceFeedAddress);
+    let priceFeedTxUsdt = await priceFeedUsdt.populateTransaction.latestAnswer();
+    tx = await oracleAggregator.setTokenOracle(usdtAddress,usdtEthPriceFeedAddress,usdtDecimals,priceFeedTxUsdt.data,true);
+    receipt = await tx.wait(confirmations = 2);
 
-    //priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface",usdcEthPriceFeedAddress);
-    //let priceFeedTxUsdc = await priceFeedUsdc.populateTransaction.latestAnswer();
-    //await oracleAggregator.setTokenOracle(usdcAddress,usdcEthPriceFeedAddress,18,priceFeedTxUsdc.data,true);
-    //console.log('usdc support added');
-    //console.log('usdc address' + usdcAddress);
+    console.log('usdt support added');
+    console.log('usdt address' + usdtAddress);
 
-    await erc20FeeProxy.setOracleAggregator("0x6d04923945026711e42ebEA03C616e4E6BbF406e");
+    priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface",usdcEthPriceFeedAddress);
+    let priceFeedTxUsdc = await priceFeedUsdc.populateTransaction.latestAnswer();
+    tx = await oracleAggregator.setTokenOracle(usdcAddress,usdcEthPriceFeedAddress,usdcDecimals,priceFeedTxUsdc.data,true);
+    receipt = await tx.wait(confirmations = 2);
+
+    console.log('usdc support added');
+    console.log('usdc address' + usdcAddress);
+
+    tx = await erc20FeeProxy.setOracleAggregator(oracleAggregator.address);
+    receipt = await tx.wait(confirmations = 2);
+
+    //set transfer handler gas
+    tx = await erc20FeeProxy.setTransferHandlerGas(daiAddress,37605); //values to be tuned further
+    receipt = await tx.wait(confirmations = 2);
+
+    tx = await erc20FeeProxy.setTransferHandlerGas(usdtAddress,41672);
+    receipt = await tx.wait(confirmations = 2);
+
+    tx = await erc20FeeProxy.setTransferHandlerGas(usdcAddress,42944);
+    receipt = await tx.wait(confirmations = 2);
+
+
+    //set safe transfer required
+    await erc20FeeProxy.setSafeTransferRequired(usdtAddress,true);
+
 }
 
 main()
