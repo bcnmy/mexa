@@ -60,10 +60,15 @@ module.exports = {
     kovan:{
       //url:`https://kovan.infura.io/v3/${infuraKey}`,
       url:"https://eth-kovan.alchemyapi.io/v2/DvW1I4OgMAVXJIw3zzfWHnQz1Lpeki9I",
-      accounts:walletUtils.makeKeyList(num=5),
+      accounts:walletUtils.makeKeyList(),
       chainId:42,
       gas: 1250000,
       gasMultiplier:2
+    },
+    maticMumbai: {
+      url:"https://rpc-mumbai.matic.today",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 80001
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/d126f392798444609246423b06116c77`,
@@ -87,13 +92,13 @@ module.exports = {
     maticBetaMainnet: {
       url:`https://betav2.matic.network`,
       accounts:walletUtils.makeKeyList(),
-      network_id: 16110,       // Matic's test network id
+      chainId: 16110,       // Matic's test network id
       gas: 7000000
     },
     maticTestV3: {
       url:`https://testnetv3.matic.network`,
       accounts:walletUtils.makeKeyList(),
-      network_id: 15001
+      chainId: 15001
     }
   }
 };
