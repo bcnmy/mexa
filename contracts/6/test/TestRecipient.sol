@@ -1,7 +1,7 @@
 pragma solidity ^0.6.8;
 
 import "@opengsn/gsn/contracts/BaseRelayRecipient.sol";
-import "hardhat/console.sol";
+
 
 contract TestRecipient is BaseRelayRecipient{
 

@@ -246,7 +246,6 @@ import "./BiconomyForwarder.sol";
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
-        uint gasleft0 = gasleft();
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
         charge = req.tokenGasPrice.mul(executionGas).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);

@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IFeeManager.sol";
 import "./ERC20ForwardRequestCompatible.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "hardhat/console.sol";
 
 /**
  * @title ERC20 Fee Proxy
@@ -130,7 +129,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executeEIP712 gas usage : ",initialGas-gasleft());
     }
 
      /**
@@ -162,7 +160,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executeEIP712 with gas tokens gas usage : ",initialGas-gasleft());
     }
 
     /**
@@ -189,7 +186,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executePersonalSign gas usage : ",initialGas-gasleft());
     }
 
 
@@ -220,7 +216,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
-            console.log("ERC20FeeProxy.executePersonalSign with gas tokens gas usage : ",initialGas-gasleft());
     }
 
     // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
@@ -236,7 +231,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
     function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
-        uint gasleft0 = gasleft();
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
         charge = req.tokenGasPrice.mul(executionGas).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);
@@ -250,8 +244,6 @@ contract ERC20FeeProxy is ERC20ForwardRequestTypes,Ownable{
         else{
             SafeERC20.safeTransferFrom(IERC20(req.token), req.from,feeReceiver,charge);
         }
-        uint gasUsed = gasleft0 - gasleft();
-        console.log(gasUsed);
     }
 
 }
