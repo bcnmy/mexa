@@ -15,38 +15,54 @@ async function main() {
     let usdcAddress = "0xA5d2a43d94B6a26054506D18ea44E4749f727721";
     let usdcDecimals = 18;
 
+    let owner = "0x221CadcAC35E18eCc89d1C3d8aF88613b9d7518b";
+
     const accounts = await hre.ethers.getSigners();
     
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
-    const forwarder = await Forwarder.deploy();
+    const forwarder = await Forwarder.deploy(owner);
     await forwarder.deployed();
     console.log("Biconomy Forwarder deployed at : ",forwarder.address);
-    await forwarder.registerDomainSeparator("TRUSTED FORWARDER","1");
+    await forwarder.registerDomainSeparator("Biconomy Forwarder","1");
 
-    const MockFeeManager = await hre.ethers.getContractFactory("MockFeeManager");
-    const mockFeeManager = await MockFeeManager.deploy(11000);
-    await mockFeeManager.deployed();
-    console.log("Fee Manager deployed at ",mockFeeManager.address);
+    const CentralisedFeeManager = await hre.ethers.getContractFactory("CentralisedFeeManager");
+    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner,11000);
+    await centralisedFeeManager.deployed();
+    console.log("Fee Manager deployed at ",centralisedFeeManager.address);
 
 
     //allow tokens
     let tx,receipt;
-    tx = await mockFeeManager.setTokenAllowed(daiAddress,true);
+    tx = await centralisedFeeManager.setTokenAllowed(daiAddress,true);
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await mockFeeManager.setTokenAllowed(usdcAddress,true);
+    tx = await centralisedFeeManager.setTokenAllowed(usdcAddress,true);
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await mockFeeManager.setTokenAllowed(usdtAddress,true);
+    tx = await centralisedFeeManager.setTokenAllowed(usdtAddress,true);
     receipt = await tx.wait(confirmations = 2);
 
-    const ERC20FeeProxy = await hre.ethers.getContractFactory("ERC20FeeProxy");
-    const erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
-    await erc20FeeProxy.deployed();
-    console.log("Fee Proxy deployed at ",erc20FeeProxy.address);
+
+    //deplot logic contract
+    const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20Forwarder");
+    const erc20Forwarder = await ERC20Forwarder.deploy(owner);
+    await erc20Forwarder.deployed();
+
+    tx = await erc20Forwarder.initialize(await accounts[0].getAddress(), centralisedFeeManager.address, forwarder.address);
+    receipt = await tx.wait(confirmations = 2);
+    console.log("ERC20 forwarder (logic contract) deployed at ",erc20Forwarder.address);
+
+    //deploy proxy contract
+    //todo reminder to change ercFeeProxy to erc20ForwarderProxy / erc20Forwarder(direct)
+    const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
+    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address,owner);
+    await erc20ForwarderProxy.deployed();
+
+    console.log("ERC20 forwarder proxy deployed at ",erc20ForwarderProxy.address);
+
 
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
-    oracleAggregator = await OracleAggregator.deploy();
+    oracleAggregator = await OracleAggregator.deploy(owner);
     await oracleAggregator.deployed();
     console.log("Oracle Aggregator deployed at ",oracleAggregator.address);
 
