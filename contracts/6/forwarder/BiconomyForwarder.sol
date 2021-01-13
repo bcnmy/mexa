@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC20ForwardRequestCompatible.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libs/Ownable.sol";
 
 /**
  *
@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev - maintains a list of verified domain seperators
  *
  */
-contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
+contract BiconomyForwarder is ERC20ForwardRequestTypes{
     using ECDSA for bytes32;
 
     mapping(bytes32 => bool) public domains;
@@ -30,6 +30,12 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
 
     mapping(address => mapping(uint256 => uint256)) nonces;
+
+    constructor(
+        address _owner
+    ) public Ownable(_owner){
+        require(_owner != address(0), "Owner Address cannot be 0");
+    }
 
     /**
      * @dev registers domain seperators, maintaining that all domain seperators used for EIP712 forward requests use...
@@ -59,7 +65,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
 
     event DomainRegistered(bytes32 indexed domainSeparator, bytes domainValue);
 
-    // solhint-disable-next-line no-empty-blocks
+    /* solhint-disable-next-line no-empty-blocks */
     receive() external payable {}
 
 
@@ -106,13 +112,11 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     )
     external payable
     returns (bool success, bytes memory ret) {
-        //uint gas0 = gasleft();
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
-        // solhint-disable-next-line avoid-low-level-calls
+        /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         if ( address(this).balance>0 ) {
-            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
     }
@@ -141,13 +145,11 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     function executePersonalSign(ERC20ForwardRequest memory req,bytes calldata sig)
     external payable
     returns(bool success, bytes memory ret){
-        //uint gas0 = gasleft();
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
-        // solhint-disable-next-line avoid-low-level-calls
+        /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         if ( address(this).balance>0 ) {
-            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
     }
