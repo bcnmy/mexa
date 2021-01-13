@@ -1,7 +1,7 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libs/Ownable.sol";
 import "./ERC20ForwarderStorage.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -10,19 +10,29 @@ import "../interfaces/IFeeManager.sol";
 import "./BiconomyForwarder.sol";
 
 
+
+
 /**
  * @title ERC20 Forwarder
  *
  * @notice A contract for dApps to coordinate meta transactions paid for with ERC20 transfers
- *
- * @dev Inherits the ERC20ForwarderRequest struct from Storage contract - essential for compatibility with The BiconomyForwarder
+ * @notice This contract is upgradeable and using using unstructured proxy pattern.
+ *         https://blog.openzeppelin.com/proxy-patterns/
+ *         Users always interact with Proxy contract (storage layer) - ERC20ForwarderProxy.sol
+ * @dev Inherits the ERC20ForwarderRequest struct from Storage contract (using same storage contract inherited by Proxy to avoid storage collisions) - essential for compatibility with The BiconomyForwarder
  * @dev Tx Flow : calls BiconomyForwarder to handle forwarding, call _transferHandler() to charge fee after
  *
  */
- contract ERC20Forwarder is ERC20ForwarderStorage {
+ contract ERC20Forwarder is ERC20ForwarderStorage,Ownable{
      using SafeMath for uint256;
      using SafeMath for uint128;
      bool internal initialized;
+
+    constructor(
+        address _owner
+    ) public Ownable(_owner){
+        require(_owner != address(0), "Owner Address cannot be 0");
+    }
       
      /**
      * @dev sets contract variables
@@ -65,11 +75,25 @@ import "./BiconomyForwarder.sol";
 
     function setBaseGas(uint128 gas) external onlyOwner{
         baseGas = gas;
+        emit BaseGasChanged(baseGas,msg.sender);
     }
     
     function setGasRefund(uint128 refund) external onlyOwner{
         gasRefund = refund;
+        emit GasRefundChanged(gasRefund,msg.sender);
     }
+
+    /* Designed to enable the community to track change in storage variable baseGas which is used for charge calcuations 
+       Unlikely to change */
+    event BaseGasChanged(uint128 newBaseGas, address indexed actor);
+
+    /* Designed to enable the community to track change in storage variable transfer handler gas for particular ERC20 token which is used for charge calculations
+       Only likely to change to offset the charged fee */ 
+    event TransferHandlerGasChanged(address indexed tokenAddress, address indexed actor, uint256 indexed newGas);
+
+    /* Designed to enable the community to track chang in refundGas which is used to benefit users when gas tokens are burned
+       Likely to change in the event of offsetting Biconomy's cost OR when new gas tokens are used */
+    event GasRefundChanged(uint128 newGasRefund, address indexed actor);
 
     /**
      * @dev enable dApps to change fee receiver addresses, e.g. for rotating keys/security purposes
@@ -97,6 +121,7 @@ import "./BiconomyForwarder.sol";
      /// @param _transferHandlerGas : max amount of gas the function _transferHandler is expected to use
     function setTransferHandlerGas(address token, uint256 _transferHandlerGas) external onlyOwner{
         transferHandlerGas[token] = _transferHandlerGas;
+        emit TransferHandlerGasChanged(token,msg.sender,_transferHandlerGas);
     }
 
     function setSafeTransferRequired(address token, bool _safeTransferRequired) external onlyOwner{
@@ -233,7 +258,7 @@ import "./BiconomyForwarder.sol";
             emit FeeCharged(req.from,charge,req.token);
     }
 
-    // Designed to enable linking to BiconomyForwarder events in external services such as The Graph
+    // Designed to enable capturing token fees charged during the execution
     event FeeCharged(address indexed from, uint256 indexed charge, address indexed token);
 
     /**
