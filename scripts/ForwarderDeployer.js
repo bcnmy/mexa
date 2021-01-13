@@ -90,22 +90,22 @@ async function main() {
     console.log('usdc support added');
     console.log('usdc address' + usdcAddress);
 
-    tx = await erc20FeeProxy.setOracleAggregator(oracleAggregator.address);
+    tx = await erc20Forwarder.setOracleAggregator(oracleAggregator.address);
     receipt = await tx.wait(confirmations = 2);
 
     //set transfer handler gas
-    tx = await erc20FeeProxy.setTransferHandlerGas(daiAddress,37605); //values to be tuned further
+    tx = await erc20Forwarder.setTransferHandlerGas(daiAddress,37605); //values to be tuned further
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await erc20FeeProxy.setTransferHandlerGas(usdtAddress,41672);
+    tx = await erc20Forwarder.setTransferHandlerGas(usdtAddress,41672);
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await erc20FeeProxy.setTransferHandlerGas(usdcAddress,42944);
+    tx = await erc20Forwarder.setTransferHandlerGas(usdcAddress,42944);
     receipt = await tx.wait(confirmations = 2);
 
 
     //set safe transfer required
-    await erc20FeeProxy.setSafeTransferRequired(usdtAddress,true);
+    await erc20Forwarder.setSafeTransferRequired(usdtAddress,true);
 
 }
 
