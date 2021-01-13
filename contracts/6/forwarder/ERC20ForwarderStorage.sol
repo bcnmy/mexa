@@ -1,7 +1,6 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC20ForwardRequestCompatible.sol";
 
 /**
@@ -15,7 +14,7 @@ import "./ERC20ForwardRequestCompatible.sol";
  *
  */
 
-contract ERC20ForwarderStorage is ERC20ForwardRequestTypes,Ownable {
+contract ERC20ForwarderStorage is ERC20ForwardRequestTypes{
     mapping(address=>uint256) public transferHandlerGas;
     mapping(address=>bool) public safeTransferRequired;
     address public feeReceiver;
