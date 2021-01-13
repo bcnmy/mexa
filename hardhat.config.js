@@ -39,7 +39,7 @@ module.exports = {
       {
         version: "0.6.9",
         settings:{
-          optimizer: { enabled: true, runs: 10000 }
+          optimizer: { enabled: true, runs: 200 }
         }
       }
     ]
@@ -59,7 +59,7 @@ module.exports = {
     },
     kovan:{
       //url:`https://kovan.infura.io/v3/${infuraKey}`,
-      url:"https://eth-kovan.alchemyapi.io/v2/DvW1I4OgMAVXJIw3zzfWHnQz1Lpeki9I",
+      url:`https://eth-kovan.alchemyapi.io/v2/${alchemyKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId:42,
       gas: 1250000,
@@ -71,7 +71,7 @@ module.exports = {
       chainId: 80001
     },
     rinkeby: {
-      url: `https://rinkeby.infura.io/v3/d126f392798444609246423b06116c77`,
+      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
       accounts: walletUtils.makeKeyList(),
       chainId:4,
       gas: 1250000,
@@ -89,16 +89,5 @@ module.exports = {
       chainId:8995,
       gas: 7000000
     },
-    maticBetaMainnet: {
-      url:`https://betav2.matic.network`,
-      accounts:walletUtils.makeKeyList(),
-      chainId: 16110,       // Matic's test network id
-      gas: 7000000
-    },
-    maticTestV3: {
-      url:`https://testnetv3.matic.network`,
-      accounts:walletUtils.makeKeyList(),
-      chainId: 15001
-    }
   }
 };
