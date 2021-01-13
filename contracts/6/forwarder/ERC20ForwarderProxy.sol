@@ -118,7 +118,7 @@ contract UpgradeabilityProxy is Proxy {
 
   /**
    * @dev Storage slot with the address of the current implementation.
-   * This is the keccak-256 hash of "org.zeppelinos.proxy.implementation", and is
+   * This is the keccak-256 hash of "io.biconomy.ercfeeproxy.implementation", and is
    * validated in the constructor.
    */
   bytes32 private constant IMPLEMENTATION_SLOT = 0x0b63f4b9f11e5ae2112641c92ed865d24a316fbdf51bbd102721d37df8b1f8e7;
@@ -189,7 +189,7 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
 
   /**
    * @dev Storage slot with the admin of the contract.
-   * This is the keccak-256 hash of "org.zeppelinos.proxy.admin", and is
+   * This is the keccak-256 hash of "io.biconomy.ercfeeproxy.admin", and is
    * validated in the constructor.
    */
   bytes32 private constant ADMIN_SLOT = 0x71d39ddb6ef9c6ab43d46265ce63a4cf0419f6c2e28ab0aa6a80f50f7d56dd54;
@@ -212,10 +212,10 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
    * It sets the `msg.sender` as the proxy administrator.
    * @param _implementation address of the initial implementation.
    */
-  constructor(address _implementation) UpgradeabilityProxy(_implementation) public {
+  constructor(address _implementation, address _admin) UpgradeabilityProxy(_implementation) public {
     assert(ADMIN_SLOT == keccak256("io.biconomy.ercfeeproxy.admin"));
 
-    _setAdmin(msg.sender);
+    _setAdmin(_admin);
   }
 
   /**
@@ -306,12 +306,6 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
  * @dev This contract proxies ERC20Forwarder calls and enables ERC20Forwarder upgrades
 */ 
 contract ERC20ForwarderProxy is AdminUpgradeabilityProxy,ERC20ForwarderStorage  {
-    constructor(address _implementation, address _admin) public AdminUpgradeabilityProxy(_implementation) {
-        _setAdmin(_admin);
+    constructor(address _implementation, address _admin) public AdminUpgradeabilityProxy(_implementation, _admin) {
     }
 }
-
-
-
-
-
