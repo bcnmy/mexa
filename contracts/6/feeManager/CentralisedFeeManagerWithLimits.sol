@@ -18,7 +18,7 @@ import "../libs/Ownable.sol";
  * @dev owners can allow tokens
  *
  */
-contract CentralisedFeeManagerWithLimits is IFeeManager{
+contract CentralisedFeeManagerWithLimits is IFeeManager,Ownable{
     
     uint16 bp;
 

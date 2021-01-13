@@ -1,7 +1,7 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libs/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract OracleAggregator is Ownable{
@@ -12,6 +12,12 @@ contract OracleAggregator is Ownable{
     mapping(address => address) tokenOracleCallAddress;
     mapping(address => bytes) tokenOracleCallData;
     mapping(address => bool) tokenOracleDataSigned;
+
+    constructor(
+        address _owner
+    ) public Ownable(_owner){
+        require(_owner != address(0), "Owner Address cannot be 0");
+    }
 
     function setTokenOracle(address token, address callAddress, uint8 decimals, bytes memory callData, bool signed) external onlyOwner{
         tokenOracleCallAddress[token] = callAddress;
