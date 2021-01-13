@@ -1,7 +1,7 @@
 pragma solidity ^0.6.8;
 
 import "../interfaces/IFeeManager.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libs/Ownable.sol";
 
 
 /**
@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev owners can allow tokens
  *
  */
-contract CentralisedFeeManager is IFeeManager,Ownable{
+contract CentralisedFeeManager is IFeeManager{
     
     uint16 bp;
 
@@ -34,7 +34,8 @@ contract CentralisedFeeManager is IFeeManager,Ownable{
 
     mapping(address => address) tokenPriceFeed;
 
-    constructor(uint16 _bp) public{
+    constructor(address _owner, uint16 _bp) public Ownable(_owner){
+        require(_owner != address(0), "Owner Address cannot be 0");
         bp = _bp;
     }
 
