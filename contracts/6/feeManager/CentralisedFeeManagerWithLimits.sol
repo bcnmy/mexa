@@ -1,7 +1,7 @@
 pragma solidity ^0.6.8;
 
 import "../interfaces/IFeeManager.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libs/Ownable.sol";
 
 
 /**
@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev owners can remove fee multiplier settings, and instead have a given query return it's parent value
  * @dev hierarchy of fee multipliers : default --> token --> tokenUser 
  * 
- * @dev owners can ban tokens
+ * @dev owners can allow tokens
  *
  */
 contract CentralisedFeeManagerWithLimits is IFeeManager,Ownable{
@@ -28,11 +28,12 @@ contract CentralisedFeeManagerWithLimits is IFeeManager,Ownable{
 
     mapping(address => mapping(address => uint16)) tokenUserBP;
 
-    mapping(address => bool) bannedTokens;
+    mapping(address => bool) allowedTokens;
 
     mapping(address => address) tokenPriceFeed;
 
-    constructor(uint16 _bp, uint16 _MINBP) public{
+    constructor(address _owner, uint16 _bp, uint16 _MINBP) public Ownable(_owner){
+        require(_owner != address(0), "Owner Address cannot be 0");
         bp = _bp;
         MINBP = _MINBP;
     }
@@ -80,11 +81,11 @@ contract CentralisedFeeManagerWithLimits is IFeeManager,Ownable{
     }
 
     function getTokenAllowed(address token) external override view returns (bool allowed){
-        allowed = !bannedTokens[token];
+        allowed = allowedTokens[token];
     }
 
-    function setTokenBan(address token, bool banned) external onlyOwner{
-        bannedTokens[token] = banned;
+    function setTokenAllowed(address token, bool allowed) external onlyOwner{
+        allowedTokens[token] = allowed;
     }
 
     function getPriceFeedAddress(address token) external view returns (address priceFeed){

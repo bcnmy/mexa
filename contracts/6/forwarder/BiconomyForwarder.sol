@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./ERC20ForwardRequestCompatible.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../libs/Ownable.sol";
 
 /**
  *
@@ -20,18 +20,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev - maintains a list of verified domain seperators
  *
  */
-contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
+contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
     using ECDSA for bytes32;
 
     mapping(bytes32 => bool) public domains;
 
     string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 
-    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes32 dataHash)"));
-
-    mapping(address => uint256) public highestBatchId;
+    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
 
     mapping(address => mapping(uint256 => uint256)) nonces;
+
+    constructor(
+        address _owner
+    ) public Ownable(_owner){
+        require(_owner != address(0), "Owner Address cannot be 0");
+    }
 
     /**
      * @dev registers domain seperators, maintaining that all domain seperators used for EIP712 forward requests use...
@@ -61,7 +65,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
 
     event DomainRegistered(bytes32 indexed domainSeparator, bytes domainValue);
 
-    // solhint-disable-next-line no-empty-blocks
+    /* solhint-disable-next-line no-empty-blocks */
     receive() external payable {}
 
 
@@ -110,14 +114,11 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     returns (bool success, bytes memory ret) {
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
-
-        // solhint-disable-next-line avoid-low-level-calls
+        /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         if ( address(this).balance>0 ) {
-            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
-        emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
     }
 
     /**
@@ -146,29 +147,12 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
     returns(bool success, bytes memory ret){
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
-
-        // solhint-disable-next-line avoid-low-level-calls
+        /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         if ( address(this).balance>0 ) {
-            //can't fail: req.from signed (off-chain) the request, so it must be an EOA...
             payable(req.from).transfer(address(this).balance);
         }
-        emit ForwardedTx(req.from,req.batchId,req.batchNonce,success,ret,msg.sender,req.token,req.txGas,req.tokenGasPrice,req.data);
     }
-
-    // Designed to enable linking to FeeProxy events in external services such as The Graph
-    event ForwardedTx(
-        address indexed from,
-        uint256 indexed batchId,
-        uint256 indexed batchNonce,
-        bool success,
-        bytes returnData,
-        address feeProxy,
-        address token,
-        uint256 txGas,
-        uint256 tokenGasPrice,
-        bytes data
-    );
 
     /**
      * @dev Increments the nonce of given user/batch pair
@@ -177,9 +161,6 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes, Ownable{
      * @param req : request that was executed
      */
     function _updateNonce(ERC20ForwardRequest memory req) internal {
-        if(highestBatchId[req.from]<req.batchId){
-            highestBatchId[req.from] = req.batchId;
-        }
         nonces[req.from][req.batchId]++;
     }
 
