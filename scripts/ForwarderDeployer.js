@@ -43,7 +43,7 @@ async function main() {
     receipt = await tx.wait(confirmations = 2);
 
 
-    //deplot logic contract
+    //deploy logic contract
     const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20Forwarder");
     const erc20Forwarder = await ERC20Forwarder.deploy(owner);
     await erc20Forwarder.deployed();
