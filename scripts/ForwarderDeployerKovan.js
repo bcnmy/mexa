@@ -1,7 +1,7 @@
 
 //todo
-//rename to biconomy forwarder and fee proxy (erc20 forwarder) deployer
-//Kovan
+//seperate biconomy forwarder and erc20 forwarder deployments
+//make modular 
 async function main() {
     let daiEthPriceFeedAddress = "0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541";
     let daiAddress = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa";
