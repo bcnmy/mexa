@@ -15,8 +15,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     address private constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
+    uint256 public baseGas;
+    
     ExecutorManager executorManager;
     uint256 public adminFee;
+    mapping (address => uint256) public tokenTransferOverhead;
 
     mapping ( address => bool ) public supportedToken;    // tokenAddress => active_status
     mapping ( address => uint256 ) public tokenCap;    // tokenAddress => cap
@@ -51,6 +54,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         supportedToken[NATIVE] = true;
         trustedForwarder = _trustedForwarder;
         adminFee = _adminFee;
+        baseGas = 21000;
     }
 
     function getAdminFee() public view returns (uint256 ) {
@@ -140,7 +144,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit Deposit(_msgSender(), tokenAddress, receiver, amount);
     }
 
-    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 gasFees ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
+    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
+        uint256 initialGas = gasleft();
         require(tokenCap[tokenAddress] == 0 || tokenCap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
         require(receiver != address(0), "Bad receiver address");
 
@@ -157,7 +162,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         processedHash[hashSendTransaction] = true;
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
-        uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFees));
+        uint256 gasUsed = initialGas - gasleft();
+
+        uint256 gasFeeInToken = gasUsed.add(tokenTransferOverhead[tokenAddress]).add(baseGas).mul(tokenGasPrice);
+
+        uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance > amountToTransfer, "Not Enough Balance");
