@@ -9,14 +9,11 @@ This repo contains the stuff that makes Biconomy tick, plus some cool resources 
 <h3><a href="https://github.com/bcnmy/mexa/blob/master/contracts/5/BasicMetaTransaction.sol">BasicMetaTransaction</a></h3>
 Inherit this in your contract and replace msg.sender with msgSender() and you're good to go! 💪 This implementation is designed to work with eth_sign instead of EIP712 - due to it's wider support.
 
-<h3>ERC20 Forwarder System : PAY GAS IN DAI ON KOVAN (Mainnet soon!)</h3>
-<code>Biconomy Forwarder : 0xBFA21CD2F21a8E581E77942B2831B378d2378E69</code><br>
-<code>Fee Manager : 0x3392C78399E01A4041Ff71Dff0a080B093584012</code><br>
-<code>Fee Proxy : 0x78122426ee7a6D35f15c4095b4Aa72A2A6418202</code><br>
-<code>Oracle Aggregator : 0x025d39AA202A552487ac9282dC343773cb60bbB5</code><br>
-<code>Dai : 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa</code><br>
-<code>ERC20 Transfer Handler : 0x4AB0652B1049607F9E51E61144767d1C978950d0</code><br>
-More info coming soon
+<h3>ERC20 Forwarder System : PAY GAS IN ERC20 TOKENS</h3>
+Using Biconomy Forward module, you can let your users pay the gas fee in ERC20 tokens and let your users save ETH and providing a seamless transaction experience.
+<br/>
+
+Forward contracts can be found <a href="https://github.com/bcnmy/mexa/tree/master/contracts/6/forwarder">here</a>
 
 <h2>👨‍💻 Working On Mexa</h2>
 <h3>Providing Seed Phrase</h3>
@@ -30,6 +27,10 @@ To keep testing and deployment consistent, we use a seed phrase to generate the 
 
 Run Unit Tests : 
 <code>npx hardhat test</code><br>
+
+<h3>✔️ Running Test Coverage </h3>
+ <code>npx hardhat coverage --solcoverjs ./.solcover.js</code><br/>
+ Note: Some tests are skipped while running coverage as per hardhat <a href="https://hardhat.org/plugins/solidity-coverage.html">documentation </a>
 
 <h3>📡 Deploying Contracts</h3>
 
