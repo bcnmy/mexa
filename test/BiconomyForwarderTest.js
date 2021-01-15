@@ -42,7 +42,7 @@ describe("Biconomy Forwarder", function(){
         await testnetDai.deployed();
 
         const Forwarder = await ethers.getContractFactory("BiconomyForwarder");
-        forwarder = await Forwarder.deploy(owner);
+        forwarder = await Forwarder.deploy(await accounts[0].getAddress());
         await forwarder.deployed();
 
         const TestRecipient = await ethers.getContractFactory("TestRecipient");
