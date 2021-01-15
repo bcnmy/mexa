@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
 describe("Oracle Aggregrator", function(){
 
@@ -7,10 +8,12 @@ describe("Oracle Aggregrator", function(){
     let decimals = 18;
     let oracleAggregator;
     let priceFeed;
+    let accounts;
 
     before(async function(){
+        accounts = await ethers.getSigners();
         let OracleAggregator = await ethers.getContractFactory("OracleAggregator");
-        oracleAggregator = await OracleAggregator.deploy();
+        oracleAggregator = await OracleAggregator.deploy(await accounts[0].getAddress());
         await oracleAggregator.deployed();
         priceFeed = await ethers.getContractAt("AggregatorInterface",daiEthPriceFeedAddress);
         let priceFeedTx = await priceFeed.populateTransaction.latestAnswer();

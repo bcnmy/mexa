@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
+require("solidity-coverage");
 //require('solidity-coverage');
 const walletUtils = require("./walletUtils");
 

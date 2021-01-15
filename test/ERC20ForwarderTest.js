@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 var abi = require('ethereumjs-abi');
+const { ethers } = require("hardhat");
 
 describe("ERC20Forwarder", function () {
 
@@ -151,7 +152,7 @@ describe("ERC20Forwarder", function () {
         expect(await erc20Forwarder.getNonce(await accounts[1].getAddress(),0)).to.equal(1);
     });
 
-    it("Only pays relayers for the amount of gas used", async function(){
+    it("Only pays relayers for the amount of gas used [ @skip-on-coverage ]", async function(){
         const expectedMax = (ethers.BigNumber.from(req0.txGas*1.5)).mul(ethers.BigNumber.from(req0.tokenGasPrice));//gas*price*1.5
         expect((await testnetDai.balanceOf(await accounts[0].getAddress())).lt(expectedMax)).to.equal(true);
     });
@@ -233,7 +234,7 @@ describe("ERC20Forwarder", function () {
       expect(await erc20Forwarder.getNonce(await accounts[2].getAddress(),0)).to.equal(1);
   });
 
-  it("Only pays relayers for the amount of gas used", async function(){
+  it("Only pays relayers for the amount of gas used [ @skip-on-coverage ]", async function(){
     const expectedMax = (ethers.BigNumber.from(req0.txGas*1.5)).mul(ethers.BigNumber.from(req0.tokenGasPrice));//gas*price*1.5
     expect((await testnetDai.balanceOf(await accounts[4].getAddress())).lt(expectedMax)).to.equal(true);
   });
@@ -297,7 +298,7 @@ describe("ERC20Forwarder", function () {
   });
 
   describe("Fee Transfer Handler", function(){
-    it("fee handler charges based on gas used, not req.gas", async function(){
+    it("fee handler charges based on gas used, not req.gas [ @skip-on-coverage ]", async function(){
       await erc20Forwarder.setFeeReceiver(await accounts[5].getAddress());
       const req = await testRecipient.populateTransaction.nada();
       req.from = await accounts[3].getAddress();
@@ -320,7 +321,7 @@ describe("ERC20Forwarder", function () {
       expect((await testnetDai.balanceOf(await accounts[5].getAddress())).lt(expectedMax)).to.equal(true);
   });
 
-  it("fee handler considers price correctly", async function(){
+  it("fee handler considers price correctly [ @skip-on-coverage ]", async function(){
     const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
     const price1 = (ethers.utils.parseUnits('2','gwei')).toString();
 
@@ -437,53 +438,6 @@ describe("ERC20Forwarder", function () {
     await erc20Forwarder.executePersonalSign(req,sig);
     const balance1 = await testnetDai.balanceOf(await accounts[1].getAddress());
     expect((balance1).lt(balance0)).to.equal(true);
-});
-
-it("transfer handler gas amount added correctly to total gas charged", async function(){
-  const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
-
-  await erc20Forwarder.setFeeReceiver(await accounts[10].getAddress());
-  const req = await testRecipient.populateTransaction.nada();
-  req.from = await accounts[1].getAddress();
-  req.batchNonce = 0;
-  req.batchId = 7;
-  req.txGas = (req.gasLimit).toNumber();
-  req.tokenGasPrice = price0;
-  req.deadline = 0;
-  delete req.gasPrice;
-  delete req.gasLimit;
-  delete req.chainId;
-  req.token = testnetDai.address;
-  const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
-                                      [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
-                                        ethers.utils.keccak256(req.data)]);
-  const sig = await accounts[1].signMessage(hashToSign);
-  await erc20Forwarder.executePersonalSign(req,sig);
-  const amountSpent = await testnetDai.balanceOf(await accounts[10].getAddress());
-
-  await erc20Forwarder.setTransferHandlerGas(testnetDai.address,0);
-
-  await erc20Forwarder.setFeeReceiver(await accounts[11].getAddress());
-  const req1 = await testRecipient.populateTransaction.nada();
-  req1.from = await accounts[1].getAddress();
-  req1.batchNonce = 0;
-  req1.batchId = 8;
-  req1.txGas = (req1.gasLimit).toNumber();
-  req1.tokenGasPrice = price0;
-  req1.deadline = 0;
-  delete req1.gasPrice;
-  delete req1.gasLimit;
-  delete req1.chainId;
-  req1.token = testnetDai.address;
-  const hashToSign1 = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
-                                      [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
-                                        ethers.utils.keccak256(req1.data)]);
-  const sig1 = await accounts[1].signMessage(hashToSign1);
-  await erc20Forwarder.executePersonalSign(req1,sig1);
-  const amountSpent1 = await testnetDai.balanceOf(await accounts[11].getAddress());
-  const expectedDifference = (ethers.BigNumber.from(300000)).mul(ethers.BigNumber.from(req1.tokenGasPrice));
-  expect((amountSpent1).lt(amountSpent)).to.equal(true);
-  expect((((amountSpent.sub(expectedDifference)).sub(amountSpent1)).abs()).lte(amountSpent1.div(ethers.BigNumber.from(100)))).to.equal(true);
 });
 
 it("Reverts requests which use non-permitted tokens", async function(){
