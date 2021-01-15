@@ -1,13 +1,13 @@
 const { expect } = require("chai");
 var abi = require('ethereumjs-abi');
 
-describe("ERC20FeeProxy", function () {
+describe("ERC20Forwarder", function () {
 
     let accounts;
     let forwarder;
     let testRecipient;
     let domainData;
-    let erc20FeeProxy;
+    let erc20Forwarder;
     let testnetDai;
     let mockFeeManager;
     let domainSeparator;
@@ -64,7 +64,7 @@ describe("ERC20FeeProxy", function () {
       
 
       const Forwarder = await ethers.getContractFactory("BiconomyForwarder");
-      forwarder = await Forwarder.deploy();
+      forwarder = await Forwarder.deploy(await accounts[0].getAddress());
       await forwarder.deployed();
 
       const TestRecipient = await ethers.getContractFactory("TestRecipient");
@@ -97,34 +97,42 @@ describe("ERC20FeeProxy", function () {
       await faucet.deployed();
       await accounts[0].sendTransaction({value:ethers.utils.parseEther("100"),to:faucet.address});
 
-      const ERC20FeeProxy = await ethers.getContractFactory("ERC20FeeProxy");
-      erc20FeeProxy = await ERC20FeeProxy.deploy(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
-      await erc20FeeProxy.deployed();
+      const ERC20Forwarder = await ethers.getContractFactory("ERC20Forwarder");
+      erc20Forwarder = await ERC20Forwarder.deploy(await accounts[0].getAddress());
+      await erc20Forwarder.deployed();
+      await erc20Forwarder.initialize(await accounts[0].getAddress(), mockFeeManager.address, forwarder.address);
 
-      await erc20FeeProxy.setSafeTransferRequired(USDT.address,true);
+      await erc20Forwarder.setSafeTransferRequired(USDT.address,true);
 
       await testnetDai.mint(await accounts[1].getAddress(), ethers.utils.parseEther("1000"));
       await testnetDai.mint(await accounts[2].getAddress(), ethers.utils.parseEther("1000"));
       await testnetDai.mint(await accounts[3].getAddress(), ethers.utils.parseEther("1000"));
-      await testnetDai.connect(accounts[1]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
-      await testnetDai.connect(accounts[2]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
-      await testnetDai.connect(accounts[3]).approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
-      await realDai.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
-      await USDC.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
-      await GUSD.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
-      await USDT.approve(erc20FeeProxy.address,ethers.utils.parseEther("1000"));
+      await testnetDai.connect(accounts[1]).approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+      await testnetDai.connect(accounts[2]).approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+      await testnetDai.connect(accounts[3]).approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+      await realDai.approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+      await USDC.approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+      await GUSD.approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+      await USDT.approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
+
+      await mockFeeManager.setTokenAllowed(realDai.address,true);
+      await mockFeeManager.setTokenAllowed(USDC.address,true);
+      await mockFeeManager.setTokenAllowed(USDT.address,true);
+      await mockFeeManager.setTokenAllowed(GUSD.address,true);
+      await mockFeeManager.setTokenAllowed(testnetDai.address,true);
 
     });
 
     describe("Personal Sign", function(){
 
       it("executes call successfully", async function(){
+        //await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("1").toString()});
         const req = await testRecipient.populateTransaction.nada();
         req.from = await accounts[1].getAddress();
         req.batchNonce = 0;
         req.batchId = 0;
         req.txGas = (req.gasLimit).toNumber();
-        req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+        req.tokenGasPrice = (ethers.utils.parseUnits('200','gwei')).toString();
         req.deadline = 0;
         delete req.gasPrice;
         delete req.gasLimit;
@@ -134,13 +142,13 @@ describe("ERC20FeeProxy", function () {
                                             [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                              ethers.utils.keccak256(req.data)]);
         const sig = await accounts[1].signMessage(hashToSign);
-        await erc20FeeProxy.executePersonalSign(req,sig);
+        await erc20Forwarder.executePersonalSign(req,sig);
         //expect(await testRecipient.callsMade(req.from)).to.equal(1);
         req0=req;
     });
 
     it("Updates nonces", async function(){
-        expect(await erc20FeeProxy.getNonce(await accounts[1].getAddress(),0)).to.equal(1);
+        expect(await erc20Forwarder.getNonce(await accounts[1].getAddress(),0)).to.equal(1);
     });
 
     it("Only pays relayers for the amount of gas used", async function(){
@@ -164,7 +172,7 @@ describe("ERC20FeeProxy", function () {
                                           [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                               ethers.utils.keccak256(req.data)]);
       const sig = await accounts[1].signMessage(hashToSign);
-      await expect(erc20FeeProxy.executePersonalSign(req,sig)).to.be.revertedWith();
+      await expect(erc20Forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
     });
 
     it("Fails when signer invalid", async function(){
@@ -183,7 +191,7 @@ describe("ERC20FeeProxy", function () {
                                           [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                               ethers.utils.keccak256(req.data)]);
       const sig = await accounts[0].signMessage(hashToSign);
-      await expect(erc20FeeProxy.executePersonalSign(req,sig)).to.be.revertedWith();
+      await expect(erc20Forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
     });
 
     });
@@ -191,13 +199,13 @@ describe("ERC20FeeProxy", function () {
   describe("EIP712", function(){
 
     it("executes call successfully", async function(){
-      await erc20FeeProxy.setFeeReceiver(await accounts[4].getAddress());
+      await erc20Forwarder.setFeeReceiver(await accounts[4].getAddress());
       const req = await testRecipient.populateTransaction.nada();
       req.from = await accounts[2].getAddress();
       req.batchNonce = 0;
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
-      req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+      req.tokenGasPrice = (ethers.utils.parseUnits('20','gwei')).toString();
       req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
@@ -216,13 +224,13 @@ describe("ERC20FeeProxy", function () {
             message: req
           };
       const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
-      await erc20FeeProxy.executeEIP712(req,domainSeparator,sig);
+      await erc20Forwarder.executeEIP712(req,domainSeparator,sig);
       //expect(await testRecipient.callsMade(req.from)).to.equal(1);
       req0=req;
   });
 
   it("Updates nonces", async function(){
-      expect(await erc20FeeProxy.getNonce(await accounts[2].getAddress(),0)).to.equal(1);
+      expect(await erc20Forwarder.getNonce(await accounts[2].getAddress(),0)).to.equal(1);
   });
 
   it("Only pays relayers for the amount of gas used", async function(){
@@ -255,7 +263,7 @@ describe("ERC20FeeProxy", function () {
             message: req
           };
       const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);;
-      await expect(erc20FeeProxy.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
+      await expect(erc20Forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
   });
 
   it("Fails when signer invalid", async function(){
@@ -283,14 +291,14 @@ describe("ERC20FeeProxy", function () {
           message: req
         };
     const sig = await ethers.provider.send("eth_signTypedData",[await accounts[0].getAddress(),dataToSign]);
-    await expect(erc20FeeProxy.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
+    await expect(erc20Forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
   });
 
   });
 
   describe("Fee Transfer Handler", function(){
     it("fee handler charges based on gas used, not req.gas", async function(){
-      await erc20FeeProxy.setFeeReceiver(await accounts[5].getAddress());
+      await erc20Forwarder.setFeeReceiver(await accounts[5].getAddress());
       const req = await testRecipient.populateTransaction.nada();
       req.from = await accounts[3].getAddress();
       req.batchNonce = 0;
@@ -306,7 +314,7 @@ describe("ERC20FeeProxy", function () {
                                           [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                             ethers.utils.keccak256(req.data)]);
       const sig = await accounts[3].signMessage(hashToSign);
-      await erc20FeeProxy.executePersonalSign(req,sig);
+      await erc20Forwarder.executePersonalSign(req,sig);
       //expect(await testRecipient.callsMade(req.from)).to.equal(1);
       const expectedMax = (ethers.BigNumber.from(req.txGas*1.5)).mul(ethers.BigNumber.from(req.tokenGasPrice));//gas*price*1.5
       expect((await testnetDai.balanceOf(await accounts[5].getAddress())).lt(expectedMax)).to.equal(true);
@@ -316,7 +324,7 @@ describe("ERC20FeeProxy", function () {
     const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
     const price1 = (ethers.utils.parseUnits('2','gwei')).toString();
 
-    await erc20FeeProxy.setFeeReceiver(await accounts[6].getAddress());
+    await erc20Forwarder.setFeeReceiver(await accounts[6].getAddress());
     const req = await testRecipient.populateTransaction.nada();
     req.from = await accounts[1].getAddress();
     req.batchNonce = 0;
@@ -332,10 +340,10 @@ describe("ERC20FeeProxy", function () {
                                         [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
-    await erc20FeeProxy.executePersonalSign(req,sig);
+    await erc20Forwarder.executePersonalSign(req,sig);
     const amountSpent = await testnetDai.balanceOf(await accounts[6].getAddress());
 
-    await erc20FeeProxy.setFeeReceiver(await accounts[7].getAddress());
+    await erc20Forwarder.setFeeReceiver(await accounts[7].getAddress());
     const req1 = await testRecipient.populateTransaction.nada();
     req1.from = await accounts[1].getAddress();
     req1.batchNonce = 0;
@@ -351,7 +359,7 @@ describe("ERC20FeeProxy", function () {
                                         [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
                                           ethers.utils.keccak256(req1.data)]);
     const sig1 = await accounts[1].signMessage(hashToSign1);
-    await erc20FeeProxy.executePersonalSign(req1,sig1);
+    await erc20Forwarder.executePersonalSign(req1,sig1);
     const amountSpent1 = await testnetDai.balanceOf(await accounts[7].getAddress());
     const expectedMax1 = (ethers.BigNumber.from(req1.txGas*1.5)).mul(ethers.BigNumber.from(req1.tokenGasPrice));//gas*price*1.5
 
@@ -363,7 +371,7 @@ describe("ERC20FeeProxy", function () {
 
     const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
 
-    await erc20FeeProxy.setFeeReceiver(await accounts[8].getAddress());
+    await erc20Forwarder.setFeeReceiver(await accounts[8].getAddress());
     const req = await testRecipient.populateTransaction.nada();
     req.from = await accounts[1].getAddress();
     req.batchNonce = 0;
@@ -379,10 +387,10 @@ describe("ERC20FeeProxy", function () {
                                         [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
-    await erc20FeeProxy.executePersonalSign(req,sig);
+    await erc20Forwarder.executePersonalSign(req,sig);
     const amountSpent = await testnetDai.balanceOf(await accounts[8].getAddress());
 
-    await erc20FeeProxy.setFeeReceiver(await accounts[9].getAddress());
+    await erc20Forwarder.setFeeReceiver(await accounts[9].getAddress());
     await mockFeeManager.setFeeMultiplier(30000);
     const req1 = await testRecipient.populateTransaction.nada();
     req1.from = await accounts[1].getAddress();
@@ -399,7 +407,7 @@ describe("ERC20FeeProxy", function () {
                                         [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
                                           ethers.utils.keccak256(req1.data)]);
     const sig1 = await accounts[1].signMessage(hashToSign1);
-    await erc20FeeProxy.executePersonalSign(req1,sig1);
+    await erc20Forwarder.executePersonalSign(req1,sig1);
     const amountSpent1 = await testnetDai.balanceOf(await accounts[9].getAddress());
     const expectedMax1 = (ethers.BigNumber.from(req1.txGas*3)).mul(ethers.BigNumber.from(req1.tokenGasPrice));//gas*price*3
     expect((amountSpent1).lt(expectedMax1)).to.equal(true);
@@ -409,7 +417,7 @@ describe("ERC20FeeProxy", function () {
   it("transfers from correct address", async function(){
     const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
 
-    await erc20FeeProxy.setFeeReceiver(await accounts[5].getAddress());
+    await erc20Forwarder.setFeeReceiver(await accounts[5].getAddress());
     const req = await testRecipient.populateTransaction.nada();
     req.from = await accounts[1].getAddress();
     req.batchNonce = 0;
@@ -426,7 +434,7 @@ describe("ERC20FeeProxy", function () {
                                           ethers.utils.keccak256(req.data)]);
     const sig = await accounts[1].signMessage(hashToSign);
     const balance0 = await testnetDai.balanceOf(await accounts[1].getAddress());
-    await erc20FeeProxy.executePersonalSign(req,sig);
+    await erc20Forwarder.executePersonalSign(req,sig);
     const balance1 = await testnetDai.balanceOf(await accounts[1].getAddress());
     expect((balance1).lt(balance0)).to.equal(true);
 });
@@ -434,7 +442,7 @@ describe("ERC20FeeProxy", function () {
 it("transfer handler gas amount added correctly to total gas charged", async function(){
   const price0 = (ethers.utils.parseUnits('1','gwei')).toString();
 
-  await erc20FeeProxy.setFeeReceiver(await accounts[10].getAddress());
+  await erc20Forwarder.setFeeReceiver(await accounts[10].getAddress());
   const req = await testRecipient.populateTransaction.nada();
   req.from = await accounts[1].getAddress();
   req.batchNonce = 0;
@@ -450,12 +458,12 @@ it("transfer handler gas amount added correctly to total gas charged", async fun
                                       [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                         ethers.utils.keccak256(req.data)]);
   const sig = await accounts[1].signMessage(hashToSign);
-  await erc20FeeProxy.executePersonalSign(req,sig);
+  await erc20Forwarder.executePersonalSign(req,sig);
   const amountSpent = await testnetDai.balanceOf(await accounts[10].getAddress());
 
-  await erc20FeeProxy.setTransferHandlerGas(0);
+  await erc20Forwarder.setTransferHandlerGas(testnetDai.address,0);
 
-  await erc20FeeProxy.setFeeReceiver(await accounts[11].getAddress());
+  await erc20Forwarder.setFeeReceiver(await accounts[11].getAddress());
   const req1 = await testRecipient.populateTransaction.nada();
   req1.from = await accounts[1].getAddress();
   req1.batchNonce = 0;
@@ -471,7 +479,7 @@ it("transfer handler gas amount added correctly to total gas charged", async fun
                                       [req1.from,req1.to,req1.token,req1.txGas,req1.tokenGasPrice,req1.batchId,req1.batchNonce,req1.deadline,
                                         ethers.utils.keccak256(req1.data)]);
   const sig1 = await accounts[1].signMessage(hashToSign1);
-  await erc20FeeProxy.executePersonalSign(req1,sig1);
+  await erc20Forwarder.executePersonalSign(req1,sig1);
   const amountSpent1 = await testnetDai.balanceOf(await accounts[11].getAddress());
   const expectedDifference = (ethers.BigNumber.from(300000)).mul(ethers.BigNumber.from(req1.tokenGasPrice));
   expect((amountSpent1).lt(amountSpent)).to.equal(true);
@@ -495,7 +503,7 @@ it("Reverts requests which use non-permitted tokens", async function(){
                                       [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                           ethers.utils.keccak256(req.data)]);
   const sig = await accounts[1].signMessage(hashToSign);
-  await expect(erc20FeeProxy.executePersonalSign(req,sig)).to.be.revertedWith();
+  await expect(erc20Forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
 });
     //transfer handler gas amount added correctly to total gas charged
     //transfers from correct token - validated implicitly from the other tests working
@@ -523,7 +531,7 @@ describe("Token specific tests ", function(){
                                             [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
                                              ethers.utils.keccak256(req.data)]);
         const sig = await accounts[0].signMessage(hashToSign);
-        await erc20FeeProxy.executePersonalSign(req,sig);
+        await erc20Forwarder.executePersonalSign(req,sig);
         //expect(await testRecipient.callsMade(req.from)).to.equal(1);
       req0=req;
   })
