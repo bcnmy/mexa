@@ -35,12 +35,14 @@ describe("Biconomy Forwarder", function(){
 
         accounts = await ethers.getSigners();
 
+        const owner = await accounts[0].getAddress();
+
         const TestnetDai = await ethers.getContractFactory("TestnetDAI");
         testnetDai = await TestnetDai.deploy();
         await testnetDai.deployed();
 
         const Forwarder = await ethers.getContractFactory("BiconomyForwarder");
-        forwarder = await Forwarder.deploy();
+        forwarder = await Forwarder.deploy(owner);
         await forwarder.deployed();
 
         const TestRecipient = await ethers.getContractFactory("TestRecipient");
@@ -157,26 +159,6 @@ describe("Biconomy Forwarder", function(){
                                                     ethers.utils.keccak256(req.data)]);
             const sig = await accounts[0].signMessage(hashToSign);
             await expect(forwarder.executePersonalSign(req,sig)).to.be.revertedWith();
-        });
-
-        it("Updates HighestBatchId", async function(){
-            const req = await testRecipient.populateTransaction.nada();
-            req.from = await accounts[1].getAddress();
-            req.batchNonce = 0;
-            req.batchId = 1;
-            req.txGas = (req.gasLimit).toNumber();
-            req.tokenGasPrice = 0;
-            req.deadline = 0;
-            delete req.gasPrice;
-            delete req.gasLimit;
-            delete req.chainId;
-            req.token = testnetDai.address;
-            const hashToSign = abi.soliditySHA3(['address','address','address','uint256','uint256','uint256','uint256','uint256','bytes32'],
-                                                [req.from,req.to,req.token,req.txGas,req.tokenGasPrice,req.batchId,req.batchNonce,req.deadline,
-                                                    ethers.utils.keccak256(req.data)]);
-            const sig = await accounts[1].signMessage(hashToSign);
-            await forwarder.executePersonalSign(req,sig);
-            expect(await forwarder.highestBatchId(await accounts[1].getAddress())).to.equal(1);
         });
 
         it("External verify function validates compliant requests/signatures as correct", async function(){
@@ -375,35 +357,6 @@ describe("Biconomy Forwarder", function(){
                 };
             const sig = await ethers.provider.send("eth_signTypedData",[await accounts[3].getAddress(),dataToSign]);
             await expect(forwarder.executeEIP712(req,domainSeparator,sig)).to.be.revertedWith();
-        });
-
-        it("Updates HighestBatchId", async function(){
-            const req = await testRecipient.populateTransaction.nada();
-            req.from = await accounts[2].getAddress();
-            req.batchNonce = 0;
-            req.batchId = 1;
-            req.txGas = (req.gasLimit).toNumber();
-            req.tokenGasPrice = 0;
-            req.deadline = 0;
-            delete req.gasPrice;
-            delete req.gasLimit;
-            delete req.chainId;
-            req.token = testnetDai.address;
-            // const erc20fr = Object.assign({}, req);;
-            // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
-            // delete erc20fr.data;
-            const dataToSign = {
-                types: {
-                    EIP712Domain: domainType,
-                    ERC20ForwardRequest: erc20ForwardRequest
-                  },
-                  domain: domainData,
-                  primaryType: "ERC20ForwardRequest",
-                  message: req
-                };
-            const sig = await ethers.provider.send("eth_signTypedData",[req.from,dataToSign]);
-            await forwarder.executeEIP712(req,domainSeparator,sig);
-            expect(await forwarder.highestBatchId(req.from)).to.equal(1);
         });
 
         it("External verify function validates compliant requests/signatures as correct", async function(){
