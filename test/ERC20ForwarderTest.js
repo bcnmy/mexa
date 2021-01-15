@@ -115,17 +115,24 @@ describe("ERC20Forwarder", function () {
       await GUSD.approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
       await USDT.approve(erc20Forwarder.address,ethers.utils.parseEther("1000"));
 
+      await mockFeeManager.setTokenAllowed(realDai.address,true);
+      await mockFeeManager.setTokenAllowed(USDC.address,true);
+      await mockFeeManager.setTokenAllowed(USDT.address,true);
+      await mockFeeManager.setTokenAllowed(GUSD.address,true);
+      await mockFeeManager.setTokenAllowed(testnetDai.address,true);
+
     });
 
     describe("Personal Sign", function(){
 
       it("executes call successfully", async function(){
+        //await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("1").toString()});
         const req = await testRecipient.populateTransaction.nada();
         req.from = await accounts[1].getAddress();
         req.batchNonce = 0;
         req.batchId = 0;
         req.txGas = (req.gasLimit).toNumber();
-        req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+        req.tokenGasPrice = (ethers.utils.parseUnits('200','gwei')).toString();
         req.deadline = 0;
         delete req.gasPrice;
         delete req.gasLimit;
@@ -198,7 +205,7 @@ describe("ERC20Forwarder", function () {
       req.batchNonce = 0;
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
-      req.tokenGasPrice = (ethers.utils.parseUnits('20000','gwei')).toString();
+      req.tokenGasPrice = (ethers.utils.parseUnits('20','gwei')).toString();
       req.deadline = 0;
       delete req.gasPrice;
       delete req.gasLimit;
@@ -454,7 +461,7 @@ it("transfer handler gas amount added correctly to total gas charged", async fun
   await erc20Forwarder.executePersonalSign(req,sig);
   const amountSpent = await testnetDai.balanceOf(await accounts[10].getAddress());
 
-  await erc20Forwarder.setTransferHandlerGas(0);
+  await erc20Forwarder.setTransferHandlerGas(testnetDai.address,0);
 
   await erc20Forwarder.setFeeReceiver(await accounts[11].getAddress());
   const req1 = await testRecipient.populateTransaction.nada();
