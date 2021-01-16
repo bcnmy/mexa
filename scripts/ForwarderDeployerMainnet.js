@@ -49,8 +49,6 @@ async function main() {
     const erc20Forwarder = await ERC20Forwarder.deploy(owner);
     await erc20Forwarder.deployed();
 
-    tx = await erc20Forwarder.initialize(await accounts[0].getAddress(), centralisedFeeManager.address, forwarder.address);
-    receipt = await tx.wait(confirmations = 2);
     console.log("ERC20 forwarder (logic contract) deployed at ",erc20Forwarder.address);
 
     //deploy proxy contract
@@ -60,6 +58,13 @@ async function main() {
     await erc20ForwarderProxy.deployed();
 
     console.log("ERC20 forwarder proxy deployed at ",erc20ForwarderProxy.address);
+
+
+    let forwarderProxy = await ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder",erc20ForwarderProxy.address);
+
+    tx = await forwarderProxy.initialize(await accounts[0].getAddress(), centralisedFeeManager.address, forwarder.address);
+    receipt = await tx.wait(confirmations = 2);
+
 
 
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
