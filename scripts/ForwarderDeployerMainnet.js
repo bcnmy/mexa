@@ -54,17 +54,15 @@ async function main() {
     //deploy proxy contract
     //todo reminder to change ercFeeProxy to erc20ForwarderProxy / erc20Forwarder(direct)
     const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
-    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address,owner);
+    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address,"0x4Dd4078Fb19B08048B6843Ba5A27e726B72230E7",owner);
     await erc20ForwarderProxy.deployed();
 
     console.log("ERC20 forwarder proxy deployed at ",erc20ForwarderProxy.address);
 
+    let forwarderProxy = await hre.ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder",erc20ForwarderProxy.address);
 
-    let forwarderProxy = await ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder",erc20ForwarderProxy.address);
-
-    tx = await forwarderProxy.initialize(await accounts[0].getAddress(), centralisedFeeManager.address, forwarder.address);
+    tx = await forwarderProxy.initialize(owner, centralisedFeeManager.address, forwarder.address);
     receipt = await tx.wait(confirmations = 2);
-
 
 
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
@@ -87,7 +85,7 @@ async function main() {
 
     console.log('usdt support added');
     console.log('usdt address' + usdtAddress);
-
+    
     priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface",usdcEthPriceFeedAddress);
     let priceFeedTxUsdc = await priceFeedUsdc.populateTransaction.latestAnswer();
     tx = await oracleAggregator.setTokenOracle(usdcAddress,usdcEthPriceFeedAddress,usdcDecimals,priceFeedTxUsdc.data,true);
@@ -96,22 +94,23 @@ async function main() {
     console.log('usdc support added');
     console.log('usdc address' + usdcAddress);
 
-    tx = await erc20Forwarder.setOracleAggregator(oracleAggregator.address);
+    tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
     receipt = await tx.wait(confirmations = 2);
 
     //set transfer handler gas
-    tx = await erc20Forwarder.setTransferHandlerGas(daiAddress,37605); //values to be tuned further
+    tx = await forwarderProxy.setTransferHandlerGas(daiAddress,37605); //values to be tuned further
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await erc20Forwarder.setTransferHandlerGas(usdtAddress,41672);
+    tx = await forwarderProxy.setTransferHandlerGas(usdtAddress,41672);
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await erc20Forwarder.setTransferHandlerGas(usdcAddress,42944);
+    tx = await forwarderProxy.setTransferHandlerGas(usdcAddress,42944);
     receipt = await tx.wait(confirmations = 2);
 
 
     //set safe transfer required
-    await erc20Forwarder.setSafeTransferRequired(usdtAddress,true);
+    await forwarderProxy.setSafeTransferRequired(usdtAddress,true);
+
 
 }
 
