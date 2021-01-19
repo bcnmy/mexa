@@ -83,6 +83,11 @@ import "./BiconomyForwarder.sol";
         emit GasRefundChanged(gasRefund,msg.sender);
     }
 
+    function setGasTokenForwarderBaseGas(uint128 gas) external onlyOwner{
+        gasTokenForwarderBaseGas = gas;
+        emit GasTokenForwarderBaseGasChanged(gasTokenForwarderBaseGas,msg.sender);
+    }
+
     /* Designed to enable the community to track change in storage variable baseGas which is used for charge calcuations 
        Unlikely to change */
     event BaseGasChanged(uint128 newBaseGas, address indexed actor);
@@ -91,9 +96,13 @@ import "./BiconomyForwarder.sol";
        Only likely to change to offset the charged fee */ 
     event TransferHandlerGasChanged(address indexed tokenAddress, address indexed actor, uint256 indexed newGas);
 
-    /* Designed to enable the community to track chang in refundGas which is used to benefit users when gas tokens are burned
+    /* Designed to enable the community to track change in refundGas which is used to benefit users when gas tokens are burned
        Likely to change in the event of offsetting Biconomy's cost OR when new gas tokens are used */
     event GasRefundChanged(uint128 newGasRefund, address indexed actor);
+
+    /* Designed to enable the community to track change in gas token forwarder base gas which is Biconomy's cost when gas tokens are burned for refund
+       Likely to change in the event of offsetting Biconomy's cost OR when new gas token forwarder is used */
+    event GasTokenForwarderBaseGasChanged(uint128 newGasTokenForwarderBaseGas, address indexed actor);
 
     /**
      * @dev enable dApps to change fee receiver addresses, e.g. for rotating keys/security purposes
@@ -198,7 +207,7 @@ import "./BiconomyForwarder.sol";
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
-            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(gasTokenForwarderBaseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
     }
 
@@ -254,7 +263,7 @@ import "./BiconomyForwarder.sol";
             (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
-            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(gasTokenForwarderBaseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
     }
 
