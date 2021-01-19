@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
+require("solidity-coverage");
 //require('solidity-coverage');
 const walletUtils = require("./walletUtils");
 
@@ -24,6 +25,9 @@ const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 // defaultNetwork, networks, solc, and paths.
 // Go to https://buidler.dev/config/ to learn more
 module.exports = {
+  mocha: {
+    timeout: 500000
+  },
   solidity: {
     compilers: [
       {
@@ -47,17 +51,31 @@ module.exports = {
     },
     hardhat:{
       allowUnlimitedContractSize:false,
-      accounts:walletUtils.localWallet("1000000000000000000000",num=20),
+      gas: 6000000,
+      accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
-        //url:`https://mainnet.infura.io/v3/${infuraKey}`
-        url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+      //   url:`https://mainnet.infura.io/v3/${infuraKey}`
+      url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{
-      url:`https://kovan.infura.io/v3/${infuraKey}`,
+      //url:`https://kovan.infura.io/v3/${infuraKey}`,
+      url:`https://eth-kovan.alchemyapi.io/v2/${alchemyKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId:42,
-      gas: 12500000,
+      gas: 1250000,
+      gasMultiplier:2
+    },
+    maticMumbai: {
+      url:"https://rpc-mumbai.matic.today",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 80001
+    },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
+      accounts: walletUtils.makeKeyList(),
+      chainId:4,
+      gas: 1250000,
       gasMultiplier:2
     },
     ropsten:{

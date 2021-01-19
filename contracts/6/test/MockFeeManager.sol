@@ -7,7 +7,7 @@ contract MockFeeManager is IFeeManager,Ownable{
     
     uint16 bp;
 
-    mapping(address => bool) bannedTokens;
+    mapping(address => bool) public tokenAllowed;
 
     constructor(uint16 _bp) public{
         bp = _bp;
@@ -21,12 +21,12 @@ contract MockFeeManager is IFeeManager,Ownable{
         bp = basisPoints;
     }
 
-    function setTokenBan(address token, bool banned) external onlyOwner{
-        bannedTokens[token] = banned;
+    function setTokenAllowed(address token,bool allowed) external onlyOwner{
+        tokenAllowed[token] = allowed;
     }
 
     function getTokenAllowed(address token) external override view returns (bool allowed){
-        allowed = !bannedTokens[token];
+        allowed = tokenAllowed[token];
     }
 
     function getPriceFeedAddress(address token) external view returns (address priceFeed){

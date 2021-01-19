@@ -1,5 +1,3 @@
-const bre = require("@nomiclabs/buidler");
-
 async function main() {
     const accounts = await ethers.getSigners();
     const data = await Promise.all(accounts.map(account => account.getAddress()))
