@@ -54,8 +54,8 @@ module.exports = {
       gas: 6000000,
       accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
-      //   url:`https://mainnet.infura.io/v3/${infuraKey}`
-      url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+        url:`https://mainnet.infura.io/v3/${infuraKey}`
+      // url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{
@@ -84,10 +84,11 @@ module.exports = {
       chainId:3,
       gas: 6400000
     },
-    maticMumbai: {
-      url:`https://rpc-mumbai.matic.today`,
+    goerli:{
+      url:`https://goerli.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
-      network_id: 80001
+      chainId:5,
+      gas: 6400000
     }
   }
 };

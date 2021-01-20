@@ -32,7 +32,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
-
+    event Gas(uint256 indexed, uint256 indexed);
+    
     // MODIFIERS
     modifier onlyExecutorOrOwner() {
         require(executorManager.getExecutorStatus(_msgSender()) || _msgSender() == owner(),
@@ -111,8 +112,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     function addTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
 
-        IERC20 erc20 = IERC20(tokenAddress);
-        
         liquidityProvider[tokenAddress][_msgSender()] = liquidityProvider[tokenAddress][_msgSender()].add(amount);
         tokenBalance[tokenAddress] = tokenBalance[tokenAddress].add(amount);
         
@@ -137,8 +136,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
-        IERC20 erc20 = IERC20(tokenAddress);
-
         SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(),address(this),amount);
 
         emit Deposit(_msgSender(), tokenAddress, receiver, amount);
@@ -162,10 +159,9 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         processedHash[hashSendTransaction] = true;
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
-        uint256 gasUsed = initialGas - gasleft();
+        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokenTransferOverhead[tokenAddress]).add(baseGas);
 
-        uint256 gasFeeInToken = gasUsed.add(tokenTransferOverhead[tokenAddress]).add(baseGas).mul(tokenGasPrice);
-
+        uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
         uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
 
         if (tokenAddress == NATIVE) {
@@ -179,4 +175,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         emit AssetSent(tokenAddress, amountToTransfer, receiver);
     }
+
+    receive() external payable { }
 }
