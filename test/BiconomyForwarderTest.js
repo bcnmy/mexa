@@ -15,7 +15,7 @@ describe("Biconomy Forwarder", function(){
     let domainType = [
         { name: "name", type: "string" },
         { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
+        { name: "salt", type: "uint256" },
         { name: "verifyingContract", type: "address" }
       ];
 
@@ -52,16 +52,16 @@ describe("Biconomy Forwarder", function(){
         domainData = {
             name : "TestRecipient",
             version : "1",
-            chainId : 31337,
+            salt : 31337,
             verifyingContract : forwarder.address
           };
 
         await forwarder.registerDomainSeparator("TestRecipient","1");
         domainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
                           encode(['bytes32','bytes32','bytes32','uint256','address'],
-                                 [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                                 [ethers.utils.id("EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"),
                                  ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
-                                 domainData.chainId,domainData.verifyingContract]));
+                                 domainData.salt,domainData.verifyingContract]));
 
         //deploy fee manager with a factor of 1.2x
         const MockFeeManager = await ethers.getContractFactory("MockFeeManager");
@@ -479,48 +479,48 @@ describe("Biconomy Forwarder", function(){
     //         const exampleDomain = {
     //             name : "BiconomyForwarder",
     //             version : "1",
-    //             chainId : 31337,
+    //             salt : 31337,
     //             verifyingContract : forwarder.address
     //           };
 
     //         await forwarder.registerDomainSeparator("BiconomyForwarder","1");
     //         const exampleDomainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
     //                           encode(['bytes32','bytes32','bytes32','uint256','address'],
-    //                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+    //                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"),
     //                                  ethers.utils.id(exampleDomain.name),ethers.utils.id(exampleDomain.version),
-    //                                  exampleDomain.chainId,exampleDomain.verifyingContract]));
+    //                                  exampleDomain.salt,exampleDomain.verifyingContract]));
     //         expect(await forwarder.domains(exampleDomainSeparator)).to.equal(true);
     //     });
     //     it("Domain separators are invalid when address is altered", async function(){
     //         const exampleDomain = {
     //             name : "BiconomyForwarder",
     //             version : "1",
-    //             chainId : 31337,
+    //             salt : 31337,
     //             verifyingContract : testnetDai.address
     //           };
 
     //         await forwarder.registerDomainSeparator("BiconomyForwarder","1");
     //         const exampleDomainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
     //                           encode(['bytes32','bytes32','bytes32','uint256','address'],
-    //                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+    //                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"),
     //                                  ethers.utils.id(exampleDomain.name),ethers.utils.id(exampleDomain.version),
-    //                                  exampleDomain.chainId,exampleDomain.verifyingContract]));
+    //                                  exampleDomain.salt,exampleDomain.verifyingContract]));
     //         expect(await forwarder.domains(exampleDomainSeparator)).to.equal(false);
     //     });
     //     it("Domain separators are invalid when chainId is altered", async function(){
     //         const exampleDomain = {
     //             name : "BiconomyForwarder",
     //             version : "1",
-    //             chainId : 69,
+    //             salt : 69,
     //             verifyingContract : forwarder.address
     //           };
 
     //         await forwarder.registerDomainSeparator("BiconomyForwarder","1");
     //         const exampleDomainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
     //                           encode(['bytes32','bytes32','bytes32','uint256','address'],
-    //                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+    //                                  [ethers.utils.id("EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"),
     //                                  ethers.utils.id(exampleDomain.name),ethers.utils.id(exampleDomain.version),
-    //                                  exampleDomain.chainId,exampleDomain.verifyingContract]));
+    //                                  exampleDomain.salt,exampleDomain.verifyingContract]));
     //         expect(await forwarder.domains(exampleDomainSeparator)).to.equal(false);
     //     });
     });

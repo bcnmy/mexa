@@ -22,7 +22,7 @@ describe("Gas Consumption Kovan", function(){
     let domainType = [
         { name: "name", type: "string" },
         { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
+        { name: "salt", type: "uint256" },
         { name: "verifyingContract", type: "address" }
       ];
 
@@ -73,16 +73,16 @@ describe("Gas Consumption Kovan", function(){
         domainData = {
             name : "TestRecipient",
             version : "1",
-            chainId : 42,
+            salt : 42,
             verifyingContract : forwarder.address
           };
   
         await (await forwarder.registerDomainSeparator("TestRecipient","1")).wait(confirmations=2);
         domainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
                           encode(['bytes32','bytes32','bytes32','uint256','address'],
-                                 [ethers.utils.id("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                                 [ethers.utils.id("EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"),
                                  ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
-                                 domainData.chainId,domainData.verifyingContract]));
+                                 domainData.salt,domainData.verifyingContract]));
   
         //deploy fee multiplier with a factor of 1.5x
         //deploy fee manager with a factor of 1.5x

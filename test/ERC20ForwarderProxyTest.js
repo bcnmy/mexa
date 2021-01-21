@@ -25,7 +25,7 @@ describe("ERC20ForwarderProxy", function () {
   let domainType = [
     { name: "name", type: "string" },
     { name: "version", type: "string" },
-    { name: "chainId", type: "uint256" },
+    { name: "salt", type: "uint256" },
     { name: "verifyingContract", type: "address" },
   ];
 
@@ -90,7 +90,7 @@ describe("ERC20ForwarderProxy", function () {
     domainData = {
       name: "TestRecipient",
       version: "1",
-      chainId: 31337,
+      salt: 31337,
       verifyingContract: forwarder.address,
     };
 
@@ -100,11 +100,11 @@ describe("ERC20ForwarderProxy", function () {
         ["bytes32", "bytes32", "bytes32", "uint256", "address"],
         [
           ethers.utils.id(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"
           ),
           ethers.utils.id(domainData.name),
           ethers.utils.id(domainData.version),
-          domainData.chainId,
+          domainData.salt,
           domainData.verifyingContract,
         ]
       )
