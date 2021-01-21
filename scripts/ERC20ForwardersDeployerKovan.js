@@ -8,7 +8,7 @@ async function main() {
     let daiDecimals = 18;
 
     let usdtEthPriceFeedAddress ="0x0bF499444525a23E7Bb61997539725cA2e928138";
-    let usdtAddress = "0x8486E3592CC23F27Ea430aDAD031Cf8ABD978756";
+    let usdtAddress = "0x7816604Da30cFb779Cd0F113E748238033710bAa";
     let usdtDecimals = 6;
 
     let usdcEthPriceFeedAddress = "0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838";
@@ -26,7 +26,7 @@ async function main() {
     await forwarder.registerDomainSeparator("Biconomy Forwarder","1");
 
     const CentralisedFeeManager = await hre.ethers.getContractFactory("CentralisedFeeManager");
-    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner,11000);
+    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner,10000);
     await centralisedFeeManager.deployed();
     console.log("Fee Manager deployed at ",centralisedFeeManager.address);
 
