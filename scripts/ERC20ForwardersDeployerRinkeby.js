@@ -16,7 +16,7 @@ async function main() {
     let usdcAddress = "0x580D4Db44263b648a941ffD5fD2700501BC5AA21"; //make faucet available 
     let usdcDecimals = 18;
 
-    let owner = "0x221CadcAC35E18eCc89d1C3d8aF88613b9d7518b";
+    let owner = "0xEbdC114433f8119c1367e23A90CBbC7E2D11efBf";
 
     const accounts = await hre.ethers.getSigners();
     
@@ -51,7 +51,7 @@ async function main() {
      //deploy proxy contract
      //todo reminder to change ercFeeProxy to erc20ForwarderProxy / erc20Forwarder(direct)
      const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
-     const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address,"0x4Dd4078Fb19B08048B6843Ba5A27e726B72230E7",owner);
+     const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address,"0x256144a60f34288F7b03D345F8Cb256C502e0f2C",owner);
      await erc20ForwarderProxy.deployed();
  
      console.log("ERC20 forwarder proxy deployed at ",erc20ForwarderProxy.address);
@@ -98,7 +98,7 @@ async function main() {
      tx = await forwarderProxy.setTransferHandlerGas(usdcAddress,42944);
      receipt = await tx.wait(confirmations = 2);
  
-
+    console.log("DEPLOYMENT FINISHED");
 }
 
 main()

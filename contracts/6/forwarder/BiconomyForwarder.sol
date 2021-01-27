@@ -116,6 +116,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        if(!success) {
+            revert("Forwarded call to destination did not succeed");
+        }
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -149,6 +152,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        if(!success) {
+            revert("Forwarded call to destination did not succeed");
+        }
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
