@@ -27,7 +27,7 @@ async function main() {
     await forwarder.registerDomainSeparator("Biconomy Forwarder","1");
 
     const CentralisedFeeManager = await hre.ethers.getContractFactory("CentralisedFeeManager");
-    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner,11000);
+    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner,10000);
     await centralisedFeeManager.deployed();
     console.log("Fee Manager deployed at ",centralisedFeeManager.address);
 
@@ -88,15 +88,12 @@ async function main() {
      tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
      receipt = await tx.wait(confirmations = 2);
  
-     //set transfer handler gas
-     tx = await forwarderProxy.setTransferHandlerGas(daiAddress,37605); //values to be tuned further
-     receipt = await tx.wait(confirmations = 2);
- 
-     tx = await forwarderProxy.setTransferHandlerGas(usdtAddress,41672);
-     receipt = await tx.wait(confirmations = 2);
- 
-     tx = await forwarderProxy.setTransferHandlerGas(usdcAddress,42944);
-     receipt = await tx.wait(confirmations = 2);
+    //set transfer handler gas
+    tx = await forwarderProxy.setTransferHandlerGas(daiAddress,41591); //values to be tuned further
+    receipt = await tx.wait(confirmations = 2);
+
+    tx = await forwarderProxy.setTransferHandlerGas(usdcAddress,46930);
+    receipt = await tx.wait(confirmations = 2);
  
 
 }

@@ -97,13 +97,13 @@ async function main() {
     receipt = await tx.wait(confirmations = 2);
 
     //set transfer handler gas
-    tx = await forwarderProxy.setTransferHandlerGas(daiAddress,41591); //values to be tuned further
+    tx = await forwarderProxy.setTransferHandlerGas(daiAddress,39631); //values to be tuned further
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await forwarderProxy.setTransferHandlerGas(usdtAddress,44379);
+    tx = await forwarderProxy.setTransferHandlerGas(usdtAddress,42425);
     receipt = await tx.wait(confirmations = 2);
 
-    tx = await forwarderProxy.setTransferHandlerGas(usdcAddress,46930);
+    tx = await forwarderProxy.setTransferHandlerGas(usdcAddress,44970);
     receipt = await tx.wait(confirmations = 2);
 
 
