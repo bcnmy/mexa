@@ -33,10 +33,10 @@ async function main() {
     // Allow tokens
     let tx, receipt;
     tx = await centralisedFeeManager.setTokenAllowed(daiAddress, true);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
     tx = await centralisedFeeManager.setTokenAllowed(usdcAddress, true);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
   
     // Deploy logic contract
@@ -57,7 +57,7 @@ async function main() {
     let forwarderProxy = await hre.ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder", erc20ForwarderProxy.address);
   
     tx = await forwarderProxy.initialize(owner, centralisedFeeManager.address, forwarder.address);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
   
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
@@ -68,7 +68,7 @@ async function main() {
     priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface", daiEthPriceFeedAddress);
     let priceFeedTxDai = await priceFeedDai.populateTransaction.latestAnswer();
     tx = await oracleAggregator.setTokenOracle(daiAddress, daiEthPriceFeedAddress, daiDecimals, priceFeedTxDai.data, true);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
     console.log('✅ DAI support added');
     console.log(`✅ DAI address : ${daiAddress}`);
@@ -77,23 +77,23 @@ async function main() {
     priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress);
     let priceFeedTxUsdc = await priceFeedUsdc.populateTransaction.latestAnswer();
     tx = await oracleAggregator.setTokenOracle(usdcAddress, usdcEthPriceFeedAddress, usdcDecimals, priceFeedTxUsdc.data, true);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
     console.log('✅ USDC support added');
     console.log(`✅ USDC address : ${usdcAddress}`);
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
     console.log(`✅ Oracle aggregator added`);
   
     //set transfer handler gas
     tx = await forwarderProxy.setTransferHandlerGas(daiAddress, DaiTransferHandlerGas); //values to be tuned further
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
     console.log(`✅ DAI transfer handler gas ${DaiTransferHandlerGas} added`)
     tx = await forwarderProxy.setTransferHandlerGas(usdcAddress, USDCTransferHandlerGas);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait(confirmations = 1);
   
     console.log(`✅ USDC transfer handler gas ${USDCTransferHandlerGas} added`)
   

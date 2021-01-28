@@ -73,6 +73,11 @@ import "./BiconomyForwarder.sol";
     }
 
 
+    function setTrustedForwarder(address _forwarder) external onlyOwner {
+        forwarder = _forwarder;
+        emit TrustedForwarderChanged(forwarder, msg.sender);
+    }
+
     function setBaseGas(uint128 gas) external onlyOwner{
         baseGas = gas;
         emit BaseGasChanged(baseGas,msg.sender);
@@ -87,6 +92,13 @@ import "./BiconomyForwarder.sol";
         gasTokenForwarderBaseGas = gas;
         emit GasTokenForwarderBaseGasChanged(gasTokenForwarderBaseGas,msg.sender);
     }
+
+    /**
+     * Designed to enable the community to track change in storage variable forwarder which is used
+     * as a trusted forwarder contract where signature verifiction and replay attack prevention schemes are
+     * deployed.
+     */
+    event TrustedForwarderChanged(address indexed newForwarderAddress, address indexed actor);
 
     /* Designed to enable the community to track change in storage variable baseGas which is used for charge calcuations 
        Unlikely to change */
