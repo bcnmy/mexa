@@ -98,14 +98,7 @@ async function main() {
     console.log(`✅ USDT address : ${usdcAddress}`);
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
-    receipt = await tx.wait(priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress);
-    let priceFeedTxUsdc = await priceFeedUsdc.populateTransaction.latestAnswer();
-    tx = await oracleAggregator.setTokenOracle(usdcAddress, usdcEthPriceFeedAddress, usdcDecimals, priceFeedTxUsdc.data, true);
-    receipt = await tx.wait(confirmations = 2);
-  
-    console.log('✅ USDC support added');
-    console.log(`✅ USDC address : ${usdcAddress}`);confirmations = 2);
-  
+    receipt = await tx.wait(priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress));  
     console.log(`✅ Oracle aggregator added`);
   
     //set transfer handler gas
