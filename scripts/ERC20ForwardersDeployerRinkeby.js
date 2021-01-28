@@ -1,19 +1,21 @@
+/**
+ * Check the owner and ERC20ForwarderProxyAdmin values before running the script.
+ */
 async function main() {
   try {
 
-    let daiEthPriceFeedAddress = "0x74825DbC8BF76CC4e9494d0ecB210f676Efa001D";
-    let daiAddress = "0xc7ad46e0b8a400bb3c915120d284aafba8fc4735"; // uniswap rinkeby DAI
-    let daiDecimals = 18;
+    const daiEthPriceFeedAddress = "0x74825DbC8BF76CC4e9494d0ecB210f676Efa001D";
+    const daiAddress = "0xc7ad46e0b8a400bb3c915120d284aafba8fc4735"; // uniswap rinkeby DAI
+    const daiDecimals = 18;
     const DaiTransferHandlerGas = 41591;
     const USDCTransferHandlerGas = 46930;
-  
-    let usdcEthPriceFeedAddress = "0xdCA36F27cbC4E38aE16C4E9f99D39b42337F6dcf";
-    let usdcAddress = "0x580D4Db44263b648a941ffD5fD2700501BC5AA21"; //make faucet available 
-    let usdcDecimals = 18;
-  
-    let owner = "0xEbdC114433f8119c1367e23A90CBbC7E2D11efBf";
-  
-    const accounts = await hre.ethers.getSigners();
+    
+    const usdcEthPriceFeedAddress = "0xdCA36F27cbC4E38aE16C4E9f99D39b42337F6dcf";
+    const usdcAddress = "0x580D4Db44263b648a941ffD5fD2700501BC5AA21"; //make faucet available 
+    const usdcDecimals = 18;
+    
+    const owner = "0xEbdC114433f8119c1367e23A90CBbC7E2D11efBf";
+    const ERC20ForwarderProxyAdmin = "0x256144a60f34288F7b03D345F8Cb256C502e0f2C";
   
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
     const forwarder = await Forwarder.deploy(owner);
@@ -47,7 +49,7 @@ async function main() {
     // Deploy proxy contract
     // TODO reminder to change ercFeeProxy to erc20ForwarderProxy / erc20Forwarder(direct)
     const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
-    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, "0x256144a60f34288F7b03D345F8Cb256C502e0f2C", owner);
+    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, ERC20ForwarderProxyAdmin, owner);
     await erc20ForwarderProxy.deployed();
   
     console.log("✅ ERC20 Forwarder proxy deployed at : ", erc20ForwarderProxy.address);
@@ -69,7 +71,7 @@ async function main() {
     receipt = await tx.wait(confirmations = 2);
   
     console.log('✅ DAI support added');
-    console.log('✅ DAI address : ' + daiAddress);
+    console.log(`✅ DAI address : ${daiAddress}`);
    
     // USDT not supported
     priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress);
@@ -78,7 +80,7 @@ async function main() {
     receipt = await tx.wait(confirmations = 2);
   
     console.log('✅ USDC support added');
-    console.log('✅ USDC address : ' + usdcAddress);
+    console.log(`✅ USDC address : ${usdcAddress}`);
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
     receipt = await tx.wait(confirmations = 2);
