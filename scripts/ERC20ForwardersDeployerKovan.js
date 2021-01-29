@@ -7,20 +7,23 @@ async function main() {
     const daiEthPriceFeedAddress = "0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541";
     const daiAddress = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa"; // uniswap kovan DAI
     const daiDecimals = 18;
+
     const DaiTransferHandlerGas = 39631;
     const USDCTransferHandlerGas = 44970;
     const USDTransferHandlerGas = 42425;
     
     const usdcEthPriceFeedAddress = "0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838";
-    const usdcAddress = "0xA5d2a43d94B6a26054506D18ea44E4749f727721"; //make faucet available 
+    const usdcAddress = "0x6043fD7126e4229d6FcaC388c9E1C8d333CCb8fA"; //make faucet available 
     const usdcDecimals = 18;
 
     const usdtEthPriceFeedAddress = "0x0bF499444525a23E7Bb61997539725cA2e928138";
-    const usdtAddress = "0x7816604Da30cFb779Cd0F113E748238033710bAa"; //make faucet available 
+    const usdtAddress = "0x8e1084f3599ba90991C3b2f9e25D920738C1496D"; //with faucet
     const usdtDecimals = 6;
     
     const owner = "0x221CadcAC35E18eCc89d1C3d8aF88613b9d7518b";
-    const ERC20ForwarderProxyAdmin = "0x4Dd4078Fb19B08048B6843Ba5A27e726B72230E7";
+    const newOwner = "0xEbdC114433f8119c1367e23A90CBbC7E2D11efBf";
+    const ERC20ForwarderProxyAdmin = "0xAD8b61F17c6a53d159baFC67082aC8d0a86e712F";
+    const feeReceiver = "0x12349D54Aa10cc5b158D8B5575e11e88cb5Dee09";
   
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
     const forwarder = await Forwarder.deploy(owner);
@@ -46,7 +49,10 @@ async function main() {
     tx = await centralisedFeeManager.setTokenAllowed(usdtAddress, true);
     receipt = await tx.wait(confirmations = 2);
   
-  
+    tx = await centralisedFeeManager.transferOwnership(newOwner);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Fee Manager ownership transferred to ${newOwner}`);
+
     // Deploy logic contract
     const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20Forwarder");
     const erc20Forwarder = await ERC20Forwarder.deploy(owner);
@@ -64,7 +70,7 @@ async function main() {
   
     let forwarderProxy = await hre.ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder", erc20ForwarderProxy.address);
   
-    tx = await forwarderProxy.initialize(owner, centralisedFeeManager.address, forwarder.address);
+    tx = await forwarderProxy.initialize(feeReceiver, centralisedFeeManager.address, forwarder.address);
     receipt = await tx.wait(confirmations = 2);
   
   
@@ -95,7 +101,7 @@ async function main() {
     receipt = await tx.wait(confirmations = 2);
   
     console.log('✅ USDT support added');
-    console.log(`✅ USDT address : ${usdcAddress}`);
+    console.log(`✅ USDT address : ${usdtAddress}`);
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
     receipt = await tx.wait(priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress));  
@@ -105,18 +111,37 @@ async function main() {
     tx = await forwarderProxy.setTransferHandlerGas(daiAddress, DaiTransferHandlerGas); //values to be tuned further
     receipt = await tx.wait(confirmations = 2);
   
-    console.log(`✅ DAI transfer handler gas ${DaiTransferHandlerGas} added`)
-
+    console.log(`✅ DAI transfer handler gas ${DaiTransferHandlerGas} added`);
     tx = await forwarderProxy.setTransferHandlerGas(usdcAddress, USDCTransferHandlerGas);
     receipt = await tx.wait(confirmations = 2);
   
-    console.log(`✅ USDC transfer handler gas ${USDCTransferHandlerGas} added`)
+    console.log(`✅ USDC transfer handler gas ${USDCTransferHandlerGas} added`);
 
     tx = await forwarderProxy.setTransferHandlerGas(usdtAddress, USDTransferHandlerGas);
     receipt = await tx.wait(confirmations = 2);
   
-    console.log(`✅ USDT transfer handler gas ${USDTransferHandlerGas} added`)
+    console.log(`✅ USDT transfer handler gas ${USDTransferHandlerGas} added`);
+
+    tx = await forwarderProxy.setSafeTransferRequired(usdtAddress,true);
+    receipt = await tx.wait(confirmations = 2);
+    console.log(`✅ USDT is marked for safe transfer`);
   
+    tx = await forwarderProxy.transferOwnership(newOwner);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Forwarder Proxy ownership transferred to ${newOwner}`);
+
+    tx = await erc20Forwarder.transferOwnership(newOwner);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Forwarder ownership transferred to ${newOwner}`);
+
+    tx = await oracleAggregator.transferOwnership(newOwner);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Oracle Aggregator ownership transferred to ${newOwner}`);
+
+    tx = await forwarder.transferOwnership(newOwner);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Biconomy Forwarder ownership transferred to ${newOwner}`);
+
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
     
   } catch(error) {
