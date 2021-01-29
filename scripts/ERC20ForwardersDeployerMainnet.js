@@ -107,17 +107,21 @@ async function main() {
     tx = await forwarderProxy.setTransferHandlerGas(daiAddress, DaiTransferHandlerGas); //values to be tuned further
     receipt = await tx.wait(confirmations = 2);
   
-    console.log(`✅ DAI transfer handler gas ${DaiTransferHandlerGas} added`)
+    console.log(`✅ DAI transfer handler gas ${DaiTransferHandlerGas} added`);
 
     tx = await forwarderProxy.setTransferHandlerGas(usdcAddress, USDCTransferHandlerGas);
     receipt = await tx.wait(confirmations = 2);
   
-    console.log(`✅ USDC transfer handler gas ${USDCTransferHandlerGas} added`)
+    console.log(`✅ USDC transfer handler gas ${USDCTransferHandlerGas} added`);
 
     tx = await forwarderProxy.setTransferHandlerGas(usdtAddress, USDTransferHandlerGas);
     receipt = await tx.wait(confirmations = 2);
   
-    console.log(`✅ USDT transfer handler gas ${USDTransferHandlerGas} added`)
+    console.log(`✅ USDT transfer handler gas ${USDTransferHandlerGas} added`);
+
+    tx = await forwarderProxy.setSafeTransferRequired(usdtAddress,true);
+    receipt = await tx.wait(confirmations = 2);
+    console.log(`✅ USDT is marked for safe transfer`);
   
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
     
