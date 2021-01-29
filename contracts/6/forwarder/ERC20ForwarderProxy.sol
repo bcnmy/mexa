@@ -3,6 +3,7 @@ pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "./ERC20ForwarderStorage.sol";
+import "../libs/Ownable.sol";
 
 /**
  * @title Proxy
@@ -305,7 +306,7 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
  * @title ERC20ForwarderProxy
  * @dev This contract proxies ERC20Forwarder calls and enables ERC20Forwarder upgrades
 */ 
-contract ERC20ForwarderProxy is AdminUpgradeabilityProxy,ERC20ForwarderStorage  {
-    constructor(address _implementation, address _admin) public AdminUpgradeabilityProxy(_implementation, _admin) {
+contract ERC20ForwarderProxy is AdminUpgradeabilityProxy,ERC20ForwarderStorage,Ownable  {
+    constructor(address _implementation, address _admin, address _owner) public AdminUpgradeabilityProxy(_implementation, _admin) Ownable(_owner) {
     }
 }

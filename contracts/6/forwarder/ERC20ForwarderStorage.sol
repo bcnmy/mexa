@@ -21,6 +21,10 @@ contract ERC20ForwarderStorage is ERC20ForwardRequestTypes{
     address public oracleAggregator;
     address public feeManager;
     address payable public forwarder;
+    //transaction base gas
     uint128 public baseGas=21000;
-    uint128 public gasRefund=19200;
+    /*gas refund given for each burned CHI token. This value is calcuated from 24000*80% (24000 is EVM gas refund for each burned CHI token) - 6150 (Biconomy's gas overhead for burning each CHI token)   */
+    uint128 public gasRefund=13050; 
+    //gas token forwarder base gas 
+    uint128 public gasTokenForwarderBaseGas = 32330;
 }

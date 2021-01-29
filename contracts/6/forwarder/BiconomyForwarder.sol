@@ -25,7 +25,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
 
     mapping(bytes32 => bool) public domains;
 
-    string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
+    string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)";
 
     bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
 
@@ -116,6 +116,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        if(!success) {
+            revert("Forwarded call to destination did not succeed");
+        }
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -149,6 +152,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        if(!success) {
+            revert("Forwarded call to destination did not succeed");
+        }
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }

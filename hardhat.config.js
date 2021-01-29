@@ -66,6 +66,12 @@ module.exports = {
       gas: 1250000,
       gasMultiplier:2
     },
+    goerli:{
+      url:`https://goerli.infura.io/v3/${infuraKey}`,
+      accounts:walletUtils.makeKeyList(),
+      chainId:5,
+      gas: 6400000
+    },
     maticMumbai: {
       url:"https://rpc-mumbai.matic.today",
       accounts:walletUtils.makeKeyList(),
