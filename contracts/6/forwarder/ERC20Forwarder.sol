@@ -73,7 +73,7 @@ import "./BiconomyForwarder.sol";
     }
 
 
-    function setTrustedForwarder(address _forwarder) external onlyOwner {
+    function setTrustedForwarder(address payable _forwarder) external onlyOwner {
         forwarder = _forwarder;
         emit TrustedForwarderChanged(forwarder, msg.sender);
     }
