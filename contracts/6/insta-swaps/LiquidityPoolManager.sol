@@ -29,7 +29,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     event AssetSent(address indexed asset, uint256 indexed amount, address indexed target);
     event Received(address indexed from, uint256 indexed amount);
-    event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
+    event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, string trackingId, uint256 amount);
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
     event GasUsed(uint256 indexed, uint256 indexed);
@@ -81,7 +81,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         trustedForwarder = forwarderAddress;
     }
 
-    function setTokenTransferOverhead( address tokenAddress, uint256 gasOverhead ) public tokenChecks(tokenAddress) onlyOwner {
+    function setTokenTransferOverhead( address tokenAddress, uint256 gasOverhead ) public onlyOwner {
         tokenTransferOverhead[tokenAddress] = gasOverhead;
     }
 
@@ -135,14 +135,21 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), amount);
     }
 
-    function deposit( address tokenAddress, address receiver, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
+    function depositErc20( address tokenAddress, address receiver, uint256 amount, string trackingId ) public tokenChecks(tokenAddress) whenNotPaused {
         require(tokenCap[tokenAddress] == 0 || tokenCap[tokenAddress] >= amount,"Deposit amount exceeds allowed Cap limit");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
-        // deposits[tokenAddress] = deposits[tokenAddress].add(amount);
 
         SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(), address(this),amount);
-        emit Deposit(_msgSender(), tokenAddress, receiver, amount);
+        emit Deposit(_msgSender(), tokenAddress, receiver, trackingId, amount);
+    }
+
+    function depositEth( address receiver, string trackingId ) public whenNotPaused payable {
+        require(tokenCap[NATIVE] == 0 || tokenCap[NATIVE] >= msg.value, "Deposit amount exceeds allowed Cap limit");
+        require(receiver != address(0), "Receiver address cannot be 0");
+        require(msg.value > 0, "amount should be greater then 0");
+
+        emit Deposit(msg.sender, tokenAddress, receiver, trackingId, msg.value);
     }
 
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
@@ -183,7 +190,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function withdrawErc20(address tokenAddress) public onlyOwner whenNotPaused {
-        uint256 profitEarned = IERC20(tokenAddress).balanceOf(address(this)).sub(tokenLiquidity[tokenAddress]);
+        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this))).sub(tokenLiquidity[tokenAddress]);
         require(profitEarned > 0, "Profit earned is 0");
         SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), profitEarned);
 
@@ -193,7 +200,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     function withdrawEth(uint256 amount) public onlyOwner whenNotPaused {
         uint256 profitEarned = (address(this).balance).sub(tokenLiquidity[NATIVE]);
         require(profitEarned > 0, "Profit earned is 0");
-        require((msg.sender).send(amount), "Native Transfer Failed");
+        require((msg.sender).send(profitEarned), "Native Transfer Failed");
         
         emit fundsWithdraw(address(this), msg.sender, profitEarned);
     }
