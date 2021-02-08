@@ -150,9 +150,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
         Address.functionCall(req.to,req.data);
-        // could also use functionCallWithValue 
-        /* solhint-disable-next-line avoid-low-level-calls */
-        
+        // could also use functionCallWithValue  
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
