@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./ERC20ForwardRequestCompatible.sol";
 import "../libs/Ownable.sol";
 
@@ -115,10 +116,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
-        (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
-        if(!success) {
-            revert("Forwarded call to destination did not succeed");
-        }
+        Address.functionCall(req.to,req.data);
+        
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -150,11 +149,10 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
     returns(bool success, bytes memory ret){
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
+        Address.functionCall(req.to,req.data);
+        // could also use functionCallWithValue 
         /* solhint-disable-next-line avoid-low-level-calls */
-        (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
-        if(!success) {
-            revert("Forwarded call to destination did not succeed");
-        }
+        
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
