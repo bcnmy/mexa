@@ -14,7 +14,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     using SafeMath for uint256;
 
     address private constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
     uint256 public baseGas;
     
     ExecutorManager executorManager;
@@ -36,8 +35,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event fundsWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
     
     // MODIFIERS
-    modifier onlyExecutorOrOwner() {
-        require(executorManager.getExecutorStatus(_msgSender()) || _msgSender() == owner(),
+    modifier onlyExecutor() {
+        require(executorManager.getExecutorStatus(_msgSender()),
             "You are not allowed to perform this operation"
         );
         _;
@@ -50,11 +49,9 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         _;
     }
 
-    constructor(address _executorManagerAddress, address owner, address _trustedForwarder, uint256 _adminFee, uint256 nativeTokenCap) public Ownable(owner) Pausable(owner) {
+    constructor(address _executorManagerAddress, address owner, address _trustedForwarder, uint256 _adminFee) public Ownable(owner) Pausable(owner) {
         require(_executorManagerAddress != address(0), "ExecutorManager Contract Address cannot be 0");
-        executorManager = ExecutorManager(_executorManagerAddress); 
-        supportedToken[NATIVE] = true;
-        tokenCap[NATIVE] = nativeTokenCap;
+        executorManager = ExecutorManager(_executorManagerAddress);
         trustedForwarder = _trustedForwarder;
         adminFee = _adminFee;
         baseGas = 21000;
@@ -77,7 +74,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         return address(executorManager);
     }
 
-    function changeTrustedForwarder( address forwarderAddress ) public onlyOwner {
+    function setTrustedForwarder( address forwarderAddress ) public onlyOwner {
         require(forwarderAddress != address(0), "Forwarder Address cannot be 0");
         trustedForwarder = forwarderAddress;
     }
@@ -153,7 +150,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit Deposit(msg.sender, NATIVE, receiver, trackingId, msg.value);
     }
 
-    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutorOrOwner tokenChecks(tokenAddress) whenNotPaused {
+    function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutor tokenChecks(tokenAddress) whenNotPaused {
         uint256 initialGas = gasleft();
         require(tokenCap[tokenAddress] != 0 && tokenCap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
         require(receiver != address(0), "Bad receiver address");
@@ -198,7 +195,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit fundsWithdraw(tokenAddress, _msgSender(),  profitEarned);
     }
 
-    function withdrawNative(uint256 amount) public onlyOwner whenNotPaused {
+    function withdrawNative() public onlyOwner whenNotPaused {
         uint256 profitEarned = (address(this).balance).sub(tokenLiquidity[NATIVE]);
         require(profitEarned > 0, "Profit earned is 0");
         require((msg.sender).send(profitEarned), "Native Transfer Failed");
