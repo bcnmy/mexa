@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "./ERC20ForwardRequestCompatible.sol";
 import "../libs/Ownable.sol";
 
@@ -116,8 +115,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
-        Address.functionCall(req.to,req.data);
-        
+         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -149,8 +148,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
     returns(bool success, bytes memory ret){
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
-        Address.functionCall(req.to,req.data);
-        // could also use functionCallWithValue  
+        (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
+         
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -241,6 +241,25 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
             keccak256(req.data)
         )));
         require(digest.recover(sig) == req.from, "signature mismatch");
+    }
+
+     function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
+        if (success) {
+            return returndata;
+        } else {
+            // Look for revert reason and bubble it up if present
+            if (returndata.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(errorMessage);
+            }
+        }
     }
 
 }
