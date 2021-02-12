@@ -90,7 +90,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function removeSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
-        require(tokenAddress != NATIVE, "Native currency can't be removed");
+        // require(tokenAddress != NATIVE, "Native currency can't be removed");
         supportedToken[tokenAddress] = false;
     }
 

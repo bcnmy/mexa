@@ -36,7 +36,7 @@ describe("Liquidity Pool Manager", function(){
         USDT = await ethers.getContractAt("contracts/5/token/erc20/IERC20.sol:IERC20","0xdac17f958d2ee523a2206206994597c13d831ec7");
         totalsupply = await USDT.totalSupply();
         
-        await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,USDT.address], await accounts[0].getAddress(), "1000000000000000000000000",{value:ethers.utils.parseEther("1000").toString()});
+        await uniswapRouter.swapExactETHForTokens(0, [WETHAddress, USDT.address], await accounts[0].getAddress(), "1000000000000000000000000",{value:ethers.utils.parseEther("1000").toString()});
         tokenAddress = USDT.address;
     });
 
