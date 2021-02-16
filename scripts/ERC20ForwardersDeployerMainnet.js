@@ -169,6 +169,9 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
+    console.log(`Total gas used in deployment is : ${totalGasUsed}`);
+    let ethSpent = totalGasUsed * gasPrices.fastGasPriceInWei;
+    console.log(`Total Ether(in wei) spent in deployment is : ${ethSpent}`);
     
   } catch(error) {
     console.log("❌ DEPLOYMENT FAILED ❌")

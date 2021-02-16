@@ -37,7 +37,7 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
-    console.log(`total Gas used in deployment is : ${totalGasUsed}`);
+    console.log(`Total gas used in deployment is : ${totalGasUsed}`);
   }
   catch(error) {
     console.log("❌ DEPLOYMENT FAILED ❌")
