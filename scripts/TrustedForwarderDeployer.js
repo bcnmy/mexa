@@ -1,7 +1,7 @@
-
-//todo
-//seperate biconomy forwarder and erc20 forwarder deployments
-//make modular 
+const {estimateGasPrice} = require("./gas-price/get-gas-price");
+/**
+ * Check the owner value before running the script.
+ */
 async function main() {
   try {
   
@@ -12,7 +12,9 @@ async function main() {
     const accounts = await hre.ethers.getSigners();
     let tx, receipt;
     let totalGasUsed = 0;
-    var options = { gasPrice: 17000000000, gasLimit: 10000000};
+
+    var gasPrices = await estimateGasPrice();
+    var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000};
     
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
     const forwarder = await Forwarder.deploy(owner,options);
@@ -20,22 +22,22 @@ async function main() {
     receipt = await forwarder.deployTransaction.wait(confirmations = 2);
 
     console.log("✅ Biconomy Forwarder deployed at : ",forwarder.address);
-    console.log(`gas used : ${receipt.gasUsed.toNumber()}`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     tx = await forwarder.registerDomainSeparator("Biconomy Forwarder","1");
     receipt = await tx.wait(confirmations = 2);
-    console.log(`gas used : ${receipt.gasUsed.toNumber()}`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     tx = await forwarder.transferOwnership(newOwner);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Biconomy Forwarder ownership transferred to ${newOwner}`);
-    console.log(`gas used : ${receipt.gasUsed.toNumber()}`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
-    console.log(`total gas used in deployment is : ${totalGasUsed}`);
+    console.log(`total Gas used in deployment is : ${totalGasUsed}`);
   }
   catch(error) {
     console.log("❌ DEPLOYMENT FAILED ❌")

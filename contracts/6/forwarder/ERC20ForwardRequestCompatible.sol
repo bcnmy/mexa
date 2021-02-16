@@ -37,5 +37,16 @@ contract ERC20ForwardRequestTypes{
         bytes32 r; 
         bytes32 s; 
     }
+
+    //temp
+    /*struct PermitEIP2612Request {
+        address owner; 
+        address spender;  
+        uint256 value;
+        uint256 deadline;
+        uint8 v;
+        bytes32 r; 
+        bytes32 s; 
+    }*/
     
 }
