@@ -1,19 +1,14 @@
-pragma solidity ^0.5.13;
+pragma solidity 0.5.13;
 import "./libs/Ownable.sol";
 
-contract RelayerManager is Ownable(msg.sender) {
+contract RelayerManager is Ownable {
     address[] internal relayers;
     mapping(address => bool) internal relayerStatus;
 
     event RelayerAdded(address relayer, address owner);
 
-    // MODIFIERS
-    modifier onlyRelayer() {
-        require(
-            relayerStatus[msg.sender],
-            "You are not allowed to perform this operation"
-        );
-        _;
+    constructor(address owner) public Ownable(owner) {
+        // Empty constructor to pass owner as parameter during deployment
     }
 
     function getRelayerStatus(address relayer)
