@@ -17,6 +17,11 @@ contract TestRecipient is BaseRelayRecipient{
     }
 
     function nada() external {
+
+    }
+
+     function nadaRevert() external {
+        require(1 == 2,"custom force revert");
     }
 
     function versionRecipient() external virtual override view returns (string memory){return "1";}
