@@ -28,7 +28,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     event AssetSent(address indexed asset, uint256 indexed amount, address indexed target);
     event Received(address indexed from, uint256 indexed amount);
-    event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, string trackingId, uint256 amount);
+    event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 toChainId, uint256 amount);
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
     event GasUsed(uint256 indexed, uint256 indexed);
@@ -133,21 +133,21 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), amount);
     }
 
-    function depositErc20( address tokenAddress, address receiver, uint256 amount, string memory trackingId ) public tokenChecks(tokenAddress) whenNotPaused {
+    function depositErc20( address tokenAddress, address receiver, uint256 amount, uint256 toChainId ) public tokenChecks(tokenAddress) whenNotPaused {
         require(tokenCap[tokenAddress] != 0 && tokenCap[tokenAddress] >= amount,"Deposit amount exceeds allowed Cap limit");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
         SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(), address(this),amount);
-        emit Deposit(_msgSender(), tokenAddress, receiver, trackingId, amount);
+        emit Deposit(_msgSender(), tokenAddress, receiver, toChainId, amount);
     }
 
-    function depositNative( address receiver, string memory trackingId ) public whenNotPaused payable {
+    function depositNative( address receiver, uint256 toChainId ) public whenNotPaused payable {
         require(tokenCap[NATIVE] != 0 && tokenCap[NATIVE] >= msg.value, "Deposit amount exceeds allowed Cap limit");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(msg.value > 0, "amount should be greater then 0");
 
-        emit Deposit(msg.sender, NATIVE, receiver, trackingId, msg.value);
+        emit Deposit(msg.sender, NATIVE, receiver, toChainId, msg.value);
     }
 
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutor tokenChecks(tokenAddress) whenNotPaused {
