@@ -9,7 +9,7 @@ describe("Test Recipient", function(){
     let domainType = [
         { name: "name", type: "string" },
         { name: "version", type: "string" },
-        { name: "salt", type: "uint256" },
+        { name: "chainId", type: "uint256" },
         { name: "verifyingContract", type: "address" }
       ];
 
