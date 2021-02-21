@@ -471,8 +471,8 @@ describe("ERC20Forwarder", function () {
         req,
         domainSeparator,
         sig,
-        gasTokens,
-        permitOptions
+        permitOptions,
+        gasTokens
       );
       expect(await testnetDai.nonces(userAddress)).to.equal(1);
     });
@@ -561,8 +561,8 @@ describe("ERC20Forwarder", function () {
         req,
         domainSeparator,
         sig,
-        gasTokens,
-        permitOptions
+        permitOptions,
+        gasTokens
       );
       expect(await testnetUsdc.nonces(userAddress)).to.equal(2);
     });

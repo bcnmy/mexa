@@ -311,8 +311,8 @@ import "../interfaces/IERC20Permit.sol";
         ERC20ForwardRequest memory req,
         bytes32 domainSeparator,
         bytes calldata sig,
-        uint256 gasTokensBurned,
-        PermitRequest memory permitOptions
+        PermitRequest memory permitOptions,
+        uint256 gasTokensBurned
         )
         external payable
         returns (bool success, bytes memory ret){
@@ -346,8 +346,8 @@ import "../interfaces/IERC20Permit.sol";
         ERC20ForwardRequest memory req,
         bytes32 domainSeparator,
         bytes calldata sig,
-        uint256 gasTokensBurned,
-        PermitRequest memory permitOptions
+        PermitRequest memory permitOptions,
+        uint256 gasTokensBurned
         )
         external payable
         returns (bool success, bytes memory ret){
