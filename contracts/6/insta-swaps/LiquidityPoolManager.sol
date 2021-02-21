@@ -21,7 +21,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     mapping (address => uint256) public tokenTransferOverhead;
 
     mapping ( address => bool ) public supportedToken;    // tokenAddress => active_status
-    mapping ( address => uint256 ) public tokenCap;    // tokenAddress => cap
+    mapping ( address => uint256 ) public tokenMinCap;    // tokenAddress => minWithdrawalCap
+    mapping ( address => uint256 ) public tokenMaxCap;    // tokenAddress => maxWithdrawalCap
     mapping ( address => uint256) public tokenLiquidity;
     mapping ( address => mapping ( address => uint256) ) public liquidityProvider; // tokenAddress => LPaddress => amount
     mapping ( bytes32 => bool ) public processedHash;
@@ -83,10 +84,12 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         tokenTransferOverhead[tokenAddress] = gasOverhead;
     }
 
-    function addSupportedToken( address tokenAddress, uint256 capLimit ) public onlyOwner {
-        require(tokenAddress != address(0), "Token address cannot be 0");        
+    function addSupportedToken( address tokenAddress, uint256 minCapLimit, uint256 maxCapLimit ) public onlyOwner {
+        require(tokenAddress != address(0), "Token address cannot be 0");  
+        require(maxCapLimit > minCapLimit, "maxCapLimit cannot be smaller than minCapLimit");        
         supportedToken[tokenAddress] = true;
-        tokenCap[tokenAddress] = capLimit;
+        tokenMinCap[tokenAddress] = minCapLimit;
+        tokenMaxCap[tokenAddress] = maxCapLimit;
     }
 
     function removeSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
@@ -94,8 +97,10 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         supportedToken[tokenAddress] = false;
     }
 
-    function updateTokenCap( address tokenAddress, uint256 capLimit ) public tokenChecks(tokenAddress) onlyOwner {
-        tokenCap[tokenAddress] = capLimit;
+    function updateTokenCap( address tokenAddress, uint256 minCapLimit, uint256 maxCapLimit ) public tokenChecks(tokenAddress) onlyOwner {
+        require(maxCapLimit > minCapLimit, "maxCapLimit cannot be smaller than minCapLimit");                
+        tokenMinCap[tokenAddress] = minCapLimit;        
+        tokenMaxCap[tokenAddress] = maxCapLimit;
     }
 
     function addNativeLiquidity() public payable whenNotPaused {
@@ -134,7 +139,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function depositErc20( address tokenAddress, address receiver, uint256 amount, uint256 toChainId ) public tokenChecks(tokenAddress) whenNotPaused {
-        require(tokenCap[tokenAddress] != 0 && tokenCap[tokenAddress] >= amount,"Deposit amount exceeds allowed Cap limit");
+        require(tokenMinCap[tokenAddress] <= amount && tokenMaxCap[tokenAddress] >= amount, "Deposit amount should be within allowed Cap limits");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
@@ -143,7 +148,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function depositNative( address receiver, uint256 toChainId ) public whenNotPaused payable {
-        require(tokenCap[NATIVE] != 0 && tokenCap[NATIVE] >= msg.value, "Deposit amount exceeds allowed Cap limit");
+        require(tokenMinCap[NATIVE] <= msg.value && tokenMaxCap[NATIVE] >= msg.value, "Deposit amount should be within allowed Cap limit");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(msg.value > 0, "amount should be greater then 0");
 
@@ -152,7 +157,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutor tokenChecks(tokenAddress) whenNotPaused {
         uint256 initialGas = gasleft();
-        require(tokenCap[tokenAddress] != 0 && tokenCap[tokenAddress] >= amount, "Withdraw amount exceeds allowed Cap limit");        
+        require(tokenMinCap[tokenAddress] <= amount && tokenMaxCap[tokenAddress] >= amount, "Withdraw amount should be within allowed Cap limits");
         require(receiver != address(0), "Bad receiver address");
 
         bytes32 hashSendTransaction = keccak256(
@@ -185,6 +190,19 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 gasEnd = gasleft();
         emit GasUsed(gasStart, gasEnd);
         emit AssetSent(tokenAddress, amountToTransfer, receiver);
+    }
+
+    function checkHashStatus(address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash) public view returns(bool){
+        bytes32 hashSendTransaction = keccak256(
+            abi.encode(
+                tokenAddress,
+                amount,
+                receiver,
+                keccak256(depositHash)
+            )
+        );
+
+        return processedHash[hashSendTransaction];
     }
 
     function withdrawErc20(address tokenAddress) public onlyOwner whenNotPaused {

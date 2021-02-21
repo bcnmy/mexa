@@ -95,6 +95,13 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId:5,
       gas: 6400000
+    },
+    binanceTest:{
+      url:`https://data-seed-prebsc-1-s1.binance.org:8545/`,
+      accounts:walletUtils.makeKeyList(),
+      chainId:97,
+      gas: 6400000
     }
+
   }
 };
