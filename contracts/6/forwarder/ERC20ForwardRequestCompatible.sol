@@ -25,5 +25,18 @@ contract ERC20ForwardRequestTypes{
         uint256 deadline; 
         bytes data;
     }
+
+     struct PermitRequest {
+        address holder; 
+        address spender;  
+        uint256 value;
+        uint256 nonce;
+        uint256 expiry;
+        bool allowed; 
+        uint8 v;
+        bytes32 r; 
+        bytes32 s; 
+    }
+
     
 }

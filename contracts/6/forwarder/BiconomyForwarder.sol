@@ -115,10 +115,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
-        (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
-        if(!success) {
-            revert("Forwarded call to destination did not succeed");
-        }
+         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -150,11 +148,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
     returns(bool success, bytes memory ret){
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
-        /* solhint-disable-next-line avoid-low-level-calls */
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
-        if(!success) {
-            revert("Forwarded call to destination did not succeed");
-        }
+        _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
+         
         if ( address(this).balance>0 ) {
             payable(req.from).transfer(address(this).balance);
         }
@@ -245,6 +241,25 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
             keccak256(req.data)
         )));
         require(digest.recover(sig) == req.from, "signature mismatch");
+    }
+
+     function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
+        if (success) {
+            return returndata;
+        } else {
+            // Look for revert reason and bubble it up if present
+            if (returndata.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(errorMessage);
+            }
+        }
     }
 
 }
