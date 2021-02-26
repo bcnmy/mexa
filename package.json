@@ -14,7 +14,7 @@
     "url": "git+https://github.com/bcnmy/mexa.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/bcnmy/mexa/issues"
   },
@@ -27,12 +27,14 @@
     "@openzeppelin/contracts": "^3.2.0",
     "centre-tokens": "git+https://github.com/centrehq/centre-tokens.git",
     "ethereum-waffle": "^3.1.2",
-    "hardhat": "^2.0.1",
+    "hardhat": "^2.0.3",
     "hardhat-gas-reporter": "^1.0.0",
     "solidity-coverage": "^0.7.14"
   },
   "dependencies": {
+    "@nomiclabs/buidler": "^1.4.8",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
-    "ethers": "^5.0.19"
+    "ethers": "^5.0.19",
+    "openzeppelin-solidity": "3.3.0"
   }
 }

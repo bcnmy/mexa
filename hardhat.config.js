@@ -72,8 +72,8 @@ module.exports = {
       gas: 6000000,
       accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
-      //   url:`https://mainnet.infura.io/v3/${infuraKey}`
-      url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+        url:`https://mainnet.infura.io/v3/${infuraKey}`
+      // url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{
@@ -108,11 +108,18 @@ module.exports = {
       chainId:3,
       gas: 6400000
     },
-    maticTest:{
-      url: `https://testnet2.matic.network`,
+    goerli:{
+      url:`https://goerli.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
-      chainId:8995,
-      gas: 7000000
+      chainId:5,
+      gas: 6400000
     },
+    binanceTest:{
+      url:`https://data-seed-prebsc-1-s1.binance.org:8545/`,
+      accounts:walletUtils.makeKeyList(),
+      chainId:97,
+      gas: 6400000
+    }
+
   }
 };
