@@ -14,6 +14,9 @@ pragma experimental ABIEncoderV2;
 */
 contract ERC20ForwardRequestTypes{
 
+/*allow the EVM to optimize for this, 
+ensure that you try to order your storage variables and struct members such that they can be packed tightly*/
+
     struct ERC20ForwardRequest {
         address from; 
         address to; 

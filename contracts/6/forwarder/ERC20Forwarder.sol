@@ -24,9 +24,8 @@ import "../interfaces/IERC20Permit.sol";
  * @dev Tx Flow : calls BiconomyForwarder to handle forwarding, call _transferHandler() to charge fee after
  *
  */
- contract ERC20Forwarder is ERC20ForwarderStorage,Ownable{
+ contract ERC20Forwarder is Ownable, ERC20ForwarderStorage{
      using SafeMath for uint256;
-     using SafeMath for uint128;
      bool internal initialized;
 
     constructor(
@@ -70,13 +69,44 @@ import "../interfaces/IERC20Permit.sol";
        
     
     function setOracleAggregator(address oa) external onlyOwner{
+        require(
+            oa != address(0),
+            "ERC20Forwarder: new oracle aggregator can not be a zero address"
+        );
         oracleAggregator = oa;
+        emit OracleAggregatorChanged(oracleAggregator, msg.sender);
     }
 
 
     function setTrustedForwarder(address payable _forwarder) external onlyOwner {
+        require(
+            _forwarder != address(0),
+            "ERC20Forwarder: new trusted forwarder can not be a zero address"
+        );
         forwarder = _forwarder;
         emit TrustedForwarderChanged(forwarder, msg.sender);
+    }
+
+    /**
+     * @dev enable dApps to change fee receiver addresses, e.g. for rotating keys/security purposes
+     * @param _feeReceiver : address that will receive fees charged in ERC20 tokens */
+    function setFeeReceiver(address _feeReceiver) external onlyOwner{
+        require(
+            _feeReceiver != address(0),
+            "ERC20Forwarder: new fee receiver can not be a zero address"
+        );
+        feeReceiver = _feeReceiver;
+    }
+
+    /**
+     * @dev enable dApps to change the contract that manages fee collection logic
+     * @param _feeManager : the address of the contract that controls the charging of fees */
+    function setFeeManager(address _feeManager) external onlyOwner{
+        require(
+            _feeManager != address(0),
+            "ERC20Forwarder: new fee manager can not be a zero address"
+        );
+        feeManager = _feeManager;
     }
 
     function setBaseGas(uint128 gas) external onlyOwner{
@@ -101,6 +131,12 @@ import "../interfaces/IERC20Permit.sol";
      */
     event TrustedForwarderChanged(address indexed newForwarderAddress, address indexed actor);
 
+    /**
+     * Designed to enable the community to track change in storage variable oracleAggregator which is used
+     * as a oracle aggregator contract where different feeds are aggregated
+     */
+    event OracleAggregatorChanged(address indexed newOracleAggregatorAddress, address indexed actor);
+
     /* Designed to enable the community to track change in storage variable baseGas which is used for charge calcuations 
        Unlikely to change */
     event BaseGasChanged(uint128 newBaseGas, address indexed actor);
@@ -116,23 +152,7 @@ import "../interfaces/IERC20Permit.sol";
     /* Designed to enable the community to track change in gas token forwarder base gas which is Biconomy's cost when gas tokens are burned for refund
        Likely to change in the event of offsetting Biconomy's cost OR when new gas token forwarder is used */
     event GasTokenForwarderBaseGasChanged(uint128 newGasTokenForwarderBaseGas, address indexed actor);
-
-    /**
-     * @dev enable dApps to change fee receiver addresses, e.g. for rotating keys/security purposes
-     * @param _feeReceiver : address that will receive fees charged in ERC20 tokens */
-    function setFeeReceiver(address _feeReceiver) external onlyOwner{
-        feeReceiver = _feeReceiver;
-    }
-    
-    
-    /**
-     * @dev enable dApps to change the contract that manages fee collection logic
-     * @param _feeManager : the address of the contract that controls the charging of fees */
-    function setFeeManager(address _feeManager) external onlyOwner{
-        feeManager = _feeManager;
-    }
-    
-    
+ 
     /**
      * @dev change amount of excess gas charged for _transferHandler
      * NOT INTENTED TO BE CALLED : may need to be called if :
@@ -142,11 +162,19 @@ import "../interfaces/IERC20Permit.sol";
      */
      /// @param _transferHandlerGas : max amount of gas the function _transferHandler is expected to use
     function setTransferHandlerGas(address token, uint256 _transferHandlerGas) external onlyOwner{
+        require(
+            token != address(0),
+            "token cannot be zero"
+       );
         transferHandlerGas[token] = _transferHandlerGas;
         emit TransferHandlerGasChanged(token,msg.sender,_transferHandlerGas);
     }
 
     function setSafeTransferRequired(address token, bool _safeTransferRequired) external onlyOwner{
+        require(
+            token != address(0),
+            "token cannot be zero"
+       );
         safeTransferRequired[token] = _safeTransferRequired;
     }
     
@@ -159,9 +187,8 @@ import "../interfaces/IERC20Permit.sol";
      */
     function getNonce(address from, uint256 batchId)
     external view
-    returns(uint256){
-        uint256 nonce = BiconomyForwarder(forwarder).getNonce(from,batchId);
-        return nonce;
+    returns(uint256 nonce){
+        nonce = BiconomyForwarder(forwarder).getNonce(from,batchId);
     }
     
     
@@ -183,7 +210,7 @@ import "../interfaces/IERC20Permit.sol";
         bytes32 domainSeparator,
         bytes calldata sig
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
@@ -214,7 +241,7 @@ import "../interfaces/IERC20Permit.sol";
         bytes calldata sig,
         PermitRequest memory permitOptions
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             //DAI permit
@@ -247,7 +274,7 @@ import "../interfaces/IERC20Permit.sol";
         bytes calldata sig,
         PermitRequest memory permitOptions
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             //USDC or any EIP2612 permit
@@ -280,7 +307,7 @@ import "../interfaces/IERC20Permit.sol";
         bytes calldata sig,
         uint256 gasTokensBurned
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
@@ -314,7 +341,7 @@ import "../interfaces/IERC20Permit.sol";
         PermitRequest memory permitOptions,
         uint256 gasTokensBurned
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
@@ -349,7 +376,7 @@ import "../interfaces/IERC20Permit.sol";
         PermitRequest memory permitOptions,
         uint256 gasTokensBurned
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
@@ -376,7 +403,7 @@ import "../interfaces/IERC20Permit.sol";
         ERC20ForwardRequest memory req,
         bytes calldata sig
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);
@@ -405,7 +432,7 @@ import "../interfaces/IERC20Permit.sol";
         bytes calldata sig,
         uint256 gasTokensBurned
         )
-        external payable
+        external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             (success,ret) = BiconomyForwarder(forwarder).executePersonalSign(req,sig);

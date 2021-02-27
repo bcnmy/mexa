@@ -1,7 +1,7 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-import "./ERC20ForwardRequestCompatible.sol";
+import "./ERC20ForwardRequestTypes.sol";
 
 /**
  * @title ERC20 Forward Storage

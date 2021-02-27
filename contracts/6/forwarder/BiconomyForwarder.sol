@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "./ERC20ForwardRequestCompatible.sol";
+import "./ERC20ForwardRequestTypes.sol";
 import "../libs/Ownable.sol";
 
 /**
@@ -25,6 +25,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
 
     mapping(bytes32 => bool) public domains;
 
+    uint256 chainId;
+
     string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)";
 
     bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
@@ -34,6 +36,11 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
     constructor(
         address _owner
     ) public Ownable(_owner){
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        chainId = id;
         require(_owner != address(0), "Owner Address cannot be 0");
     }
 
@@ -66,7 +73,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
     event DomainRegistered(bytes32 indexed domainSeparator, bytes domainValue);
 
     /* solhint-disable-next-line no-empty-blocks */
-    receive() external payable {}
+    receive() external payable {
+        revert("The forwarder contract will never deal with ethers");
+    }
 
 
     /**
@@ -110,16 +119,13 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         bytes32 domainSeparator,
         bytes calldata sig
     )
-    external payable
+    external 
     returns (bool success, bytes memory ret) {
         _verifySigEIP712(req,domainSeparator,sig);
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
          (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
-        if ( address(this).balance>0 ) {
-            payable(req.from).transfer(address(this).balance);
-        }
     }
 
     /**
@@ -144,16 +150,12 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
      * @return ret : any return data from the call
      */
     function executePersonalSign(ERC20ForwardRequest memory req,bytes calldata sig)
-    external payable
+    external 
     returns(bool success, bytes memory ret){
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
         _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
-         
-        if ( address(this).balance>0 ) {
-            payable(req.from).transfer(address(this).balance);
-        }
     }
 
     /**
@@ -183,9 +185,15 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         bytes memory sig)
     internal
     view
-    {
+    {   
+        uint256 id;
+        /* solhint-disable-next-line no-inline-assembly */
+        assembly {
+            id := chainid()
+        }
         require(req.deadline == 0 || now + 20 <= req.deadline, "request expired");
         require(domains[domainSeparator], "unregistered domain separator");
+        require(chainId == id, "potential replay attack on the fork");
         bytes32 digest =
             keccak256(abi.encodePacked(
                 "\x19\x01",
@@ -243,10 +251,15 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         require(digest.recover(sig) == req.from, "signature mismatch");
     }
 
-     function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
-        if (success) {
-            return returndata;
-        } else {
+    /**
+     * @dev verifies the call result and bubbles up revert reason for failed calls
+     *
+     * @param success : outcome of forwarded call
+     * @param returndata : returned data from the frowarded call
+     * @param errorMessage : fallback error message to show 
+     */
+     function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure {
+        if (!success) {
             // Look for revert reason and bubble it up if present
             if (returndata.length > 0) {
                 // The easiest way to bubble the revert reason is using memory via assembly

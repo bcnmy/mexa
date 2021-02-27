@@ -176,7 +176,7 @@ describe("Biconomy Forwarder", function () {
       ).to.equal(1);
     });
 
-    it("Transfers any funds received to the 'from address'", async function () {
+    /*it("Transfers any funds received to the 'from address'", async function () {
       const rwallet = ethers.Wallet.createRandom();
       const req = await faucet.populateTransaction.payUp(
         forwarder.address,
@@ -221,7 +221,7 @@ describe("Biconomy Forwarder", function () {
       expect((await ethers.provider.getBalance(req.from)).toString()).to.equal(
         ethers.utils.parseEther("1")
       );
-    });
+    });*/
 
     it("Fails when nonce invalid", async function () {
       const req = await testRecipient.populateTransaction.nada();
@@ -511,7 +511,7 @@ describe("Biconomy Forwarder", function () {
       ).to.equal(1);
     });
 
-    it("Transfers any funds received to the 'from address'", async function () {
+    /*it("Transfers any funds received to the 'from address'", async function () {
       const req = await faucet.populateTransaction.payUp(
         forwarder.address,
         ethers.utils.parseEther("1").toString()
@@ -549,7 +549,7 @@ describe("Biconomy Forwarder", function () {
       expect(
         (await ethers.provider.getBalance(req.from)).sub(preBalance).toString()
       ).to.equal(ethers.utils.parseEther("1"));
-    });
+    });*/
 
     it("Fails when nonce invalid", async function () {
       const req = await testRecipient.populateTransaction.nada();
