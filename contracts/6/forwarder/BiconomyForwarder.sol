@@ -72,12 +72,6 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
 
     event DomainRegistered(bytes32 indexed domainSeparator, bytes domainValue);
 
-    /* solhint-disable-next-line no-empty-blocks */
-    receive() external payable {
-        revert("The forwarder contract will never deal with the native currency");
-    }
-
-
     /**
      * @dev returns a value from the nonces 2d mapping
      * @param from : the user address
