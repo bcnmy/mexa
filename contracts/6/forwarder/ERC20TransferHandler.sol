@@ -1,10 +1,10 @@
-pragma solidity 0.6.9;
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 //to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@opengsn/gsn/contracts/BaseRelayRecipient.sol";
+import "../libs/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract ERC20TransferHandler is BaseRelayRecipient{

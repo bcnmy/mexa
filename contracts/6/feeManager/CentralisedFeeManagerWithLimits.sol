@@ -1,4 +1,4 @@
-pragma solidity 0.6.9;
+pragma solidity 0.7.6;
 
 import "../interfaces/IFeeManager.sol";
 import "../libs/Ownable.sol";

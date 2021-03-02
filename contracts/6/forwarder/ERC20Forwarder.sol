@@ -1,4 +1,4 @@
-pragma solidity 0.6.9;
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "../libs/Ownable.sol";
@@ -206,7 +206,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function executeEIP712(
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig
         )
@@ -236,10 +236,10 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function permitAndExecuteEIP712(
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
-        PermitRequest memory permitOptions
+        PermitRequest calldata permitOptions
         )
         external 
         returns (bool success, bytes memory ret){
@@ -269,10 +269,10 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function permitEIP2612AndExecuteEIP712(
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
-        PermitRequest memory permitOptions
+        PermitRequest calldata permitOptions
         )
         external 
         returns (bool success, bytes memory ret){
@@ -302,7 +302,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function executeEIP712WithGasTokens( 
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
         uint256 gasTokensBurned
@@ -335,10 +335,10 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function permitAndExecuteEIP712WithGasTokens( 
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
-        PermitRequest memory permitOptions,
+        PermitRequest calldata permitOptions,
         uint256 gasTokensBurned
         )
         external 
@@ -370,10 +370,10 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function permitEIP2612AndExecuteEIP712WithGasTokens( 
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
-        PermitRequest memory permitOptions,
+        PermitRequest calldata permitOptions,
         uint256 gasTokensBurned
         )
         external 
@@ -400,7 +400,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function executePersonalSign(
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes calldata sig
         )
         external 
@@ -428,7 +428,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return ret : any return data from the call
      */
     function executePersonalSignWithGasTokens(
-        ERC20ForwardRequest memory req,
+        ERC20ForwardRequest calldata req,
         bytes calldata sig,
         uint256 gasTokensBurned
         )
@@ -454,7 +454,7 @@ import "../interfaces/IERC20Permit.sol";
      * @param req : the request being forwarded
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
-    function _transferHandler(ERC20ForwardRequest memory req,uint256 executionGas) internal returns(uint256 charge){
+    function _transferHandler(ERC20ForwardRequest calldata req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
         charge = req.tokenGasPrice.mul(executionGas).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);

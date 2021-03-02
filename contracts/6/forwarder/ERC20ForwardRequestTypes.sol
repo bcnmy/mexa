@@ -1,4 +1,4 @@
-pragma solidity 0.6.9;
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 /* deadline can be removed : GSN reference https://github.com/opengsn/gsn/blob/master/contracts/forwarder/IForwarder.sol (Saves 250 more gas)*/
