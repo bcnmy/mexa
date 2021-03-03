@@ -1,6 +1,8 @@
 const { expect } = require("chai");
 var abi = require('ethereumjs-abi');
 
+const salt = ethers.BigNumber.from(31337);
+
 describe("Gas Consumption", function(){
 
     let accounts;
@@ -20,12 +22,23 @@ describe("Gas Consumption", function(){
     let USDT;
     let WETHAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
-    let domainType = [
-        { name: "name", type: "string" },
-        { name: "version", type: "string" },
-        { name: "salt", type: "uint256" },
-        { name: "verifyingContract", type: "address" }
-      ];
+    let domainType = [{
+      name: "name",
+      type: "string"
+    },
+    {
+      name: "version",
+      type: "string"
+    },
+    {
+      name: "verifyingContract",
+      type: "address"
+    },
+    {
+      name: "salt",
+      type: "bytes32"
+    }
+  ];
 
       let erc20ForwardRequest = [
         {name:'from',type:'address'},
@@ -72,18 +85,27 @@ describe("Gas Consumption", function(){
         await testRecipient.deployed();
   
         domainData = {
-            name : "TestRecipient",
-            version : "1",
-            salt : 31337,
-            verifyingContract : forwarder.address
-          };
-  
-        await forwarder.registerDomainSeparator("TestRecipient","1");
-        domainSeparator = ethers.utils.keccak256((ethers.utils.defaultAbiCoder).
-                          encode(['bytes32','bytes32','bytes32','uint256','address'],
-                                 [ethers.utils.id("EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"),
-                                 ethers.utils.id(domainData.name),ethers.utils.id(domainData.version),
-                                 domainData.salt,domainData.verifyingContract]));
+          name: "TestRecipient",
+          version: "1",
+          verifyingContract: forwarder.address,
+          salt: ethers.utils.hexZeroPad(salt.toHexString(), 32)
+        };
+
+        await forwarder.registerDomainSeparator("TestRecipient", "1");
+        domainSeparator = ethers.utils.keccak256(
+          ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "bytes32", "bytes32", "address", "bytes32"],
+            [
+              ethers.utils.id(
+                "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
+              ),
+              ethers.utils.id(domainData.name),
+              ethers.utils.id(domainData.version),
+              domainData.verifyingContract,
+              domainData.salt,
+            ]
+          )
+        );
   
         //deploy fee multiplier with a factor of 1.5x
         //deploy fee manager with a factor of 1.5x
