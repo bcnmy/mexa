@@ -14,8 +14,8 @@ describe("Biconomy Forwarder", function () {
   let domainType = [
     { name: "name", type: "string" },
     { name: "version", type: "string" },
-    { name: "salt", type: "uint256" },
     { name: "verifyingContract", type: "address" },
+    { name: "salt", type: "bytes32" }
   ];
 
   let erc20ForwardRequest = [
@@ -29,6 +29,8 @@ describe("Biconomy Forwarder", function () {
     { name: "deadline", type: "uint256" },
     { name: "data", type: "bytes" },
   ];
+
+  const salt = ethers.BigNumber.from(31337);
 
   before(async function () {
     accounts = await ethers.getSigners();
@@ -47,25 +49,27 @@ describe("Biconomy Forwarder", function () {
     testRecipient = await TestRecipient.deploy(forwarder.address);
     await testRecipient.deployed();
 
+    
+
     domainData = {
       name: "TestRecipient",
       version: "1",
-      salt: 31337,
       verifyingContract: forwarder.address,
+      salt: ethers.utils.hexZeroPad(salt.toHexString(), 32)
     };
 
     await forwarder.registerDomainSeparator("TestRecipient", "1");
     domainSeparator = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+        ["bytes32", "bytes32", "bytes32", "address", "bytes32"],
         [
           ethers.utils.id(
-            "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"
+            "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
           ),
           ethers.utils.id(domainData.name),
           ethers.utils.id(domainData.version),
-          domainData.salt,
           domainData.verifyingContract,
+          domainData.salt,
         ]
       )
     );
@@ -751,22 +755,22 @@ describe("Biconomy Forwarder", function () {
       const exampleDomain = {
         name: "BiconomyForwarder",
         version: "1",
-        salt: 31337,
         verifyingContract: forwarder.address,
+        salt: ethers.utils.hexZeroPad(salt.toHexString(), 32)
       };
 
       await forwarder.registerDomainSeparator("BiconomyForwarder", "1");
       const exampleDomainSeparator = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+          ["bytes32", "bytes32", "bytes32", "address", "bytes32"],
           [
             ethers.utils.id(
-              "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"
+              "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
             ),
             ethers.utils.id(exampleDomain.name),
             ethers.utils.id(exampleDomain.version),
-            exampleDomain.salt,
             exampleDomain.verifyingContract,
+            exampleDomain.salt,
           ]
         )
       );
@@ -776,47 +780,50 @@ describe("Biconomy Forwarder", function () {
       const exampleDomain = {
         name: "BiconomyForwarder",
         version: "1",
-        salt: 31337,
         verifyingContract: testnetDai.address,
+        salt: ethers.utils.hexZeroPad(salt.toHexString(), 32)
       };
 
       await forwarder.registerDomainSeparator("BiconomyForwarder", "1");
       const exampleDomainSeparator = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+          ["bytes32", "bytes32", "bytes32", "address", "bytes32"],
           [
             ethers.utils.id(
-              "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"
+              "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
             ),
             ethers.utils.id(exampleDomain.name),
             ethers.utils.id(exampleDomain.version),
-            exampleDomain.salt,
             exampleDomain.verifyingContract,
+            exampleDomain.salt,
           ]
         )
       );
       expect(await forwarder.domains(exampleDomainSeparator)).to.equal(false);
     });
     it("Domain separators are invalid when chainId is altered", async function () {
+
+      const invalidSalt = ethers.BigNumber.from(69);
+
       const exampleDomain = {
         name: "BiconomyForwarder",
         version: "1",
-        salt: 69,
         verifyingContract: forwarder.address,
+        salt: ethers.utils.hexZeroPad(invalidSalt.toHexString(), 32)
       };
 
       await forwarder.registerDomainSeparator("BiconomyForwarder", "1");
       const exampleDomainSeparator = ethers.utils.keccak256(
         ethers.utils.defaultAbiCoder.encode(
-          ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+          ["bytes32", "bytes32", "bytes32", "address", "bytes32"],
           [
             ethers.utils.id(
-              "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"
+              "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
             ),
             ethers.utils.id(exampleDomain.name),
             ethers.utils.id(exampleDomain.version),
-            exampleDomain.salt,
             exampleDomain.verifyingContract,
+            exampleDomain.salt,
           ]
         )
       );

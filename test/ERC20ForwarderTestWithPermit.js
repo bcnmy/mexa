@@ -2,6 +2,8 @@ const { expect } = require("chai");
 var abi = require("ethereumjs-abi");
 const { ethers } = require("hardhat");
 
+const salt = ethers.BigNumber.from(31337);
+
 describe("ERC20Forwarder", function () {
   let accounts;
   let forwarder;
@@ -24,8 +26,8 @@ describe("ERC20Forwarder", function () {
   let domainType = [
     { name: "name", type: "string" },
     { name: "version", type: "string" },
-    { name: "salt", type: "uint256" },
     { name: "verifyingContract", type: "address" },
+    { name: "salt", type: "bytes32" },
   ];
 
   let daiDomainType = [
@@ -143,22 +145,22 @@ describe("ERC20Forwarder", function () {
     domainData = {
       name: "TestRecipient",
       version: "1",
-      salt: 31337,
       verifyingContract: forwarder.address,
+      salt: ethers.utils.hexZeroPad(salt.toHexString(), 32)
     };
 
     await forwarder.registerDomainSeparator("TestRecipient", "1");
     domainSeparator = ethers.utils.keccak256(
       ethers.utils.defaultAbiCoder.encode(
-        ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+        ["bytes32", "bytes32", "bytes32", "address", "bytes32"],
         [
           ethers.utils.id(
-            "EIP712Domain(string name,string version,uint256 salt,address verifyingContract)"
+            "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)"
           ),
           ethers.utils.id(domainData.name),
           ethers.utils.id(domainData.version),
-          domainData.salt,
           domainData.verifyingContract,
+          domainData.salt,
         ]
       )
     );
