@@ -13,8 +13,18 @@ import "../interfaces/IERC20Extented.sol";
 contract FaucetManager is BaseRelayRecipient {
     using SafeMath for uint256;
     
-    uint256 private constant amount = 50;
+    uint256 private constant amount = 1000;
 
+    constructor(address _trustedForwarder) public {
+        require(_trustedForwarder != address(0), "TrustedForwarder Contract Address cannot be 0");
+        trustedForwarder = _trustedForwarder;
+    }
+
+    function setTrustedForwarder( address forwarderAddress ) public {
+        require(forwarderAddress != address(0), "Forwarder Address cannot be 0");
+        trustedForwarder = forwarderAddress;
+    }
+    
     function getTokens( address tokenAddress ) public {
         uint256 decimal = IERC20Extented(tokenAddress).decimals();
         
