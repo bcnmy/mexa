@@ -14,7 +14,7 @@ async function main() {
     let totalGasUsed = 0;
 
     var gasPrices = await estimateGasPrice();
-    var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000};
+    var options = { gasPrice: gasPrices.fastGasPriceInWei};
     
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
     const forwarder = await Forwarder.deploy(owner,options);
