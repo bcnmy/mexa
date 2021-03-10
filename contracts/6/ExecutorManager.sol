@@ -20,7 +20,9 @@ contract ExecutorManager is Ownable {
         _;
     }
 
-    constructor(address owner) public Ownable(owner) {}
+    constructor(address owner) public Ownable(owner) {
+        require( owner != address(0), "owner cannot be zero");
+    }
 
     function getExecutorStatus(address executor)
         public
@@ -35,7 +37,7 @@ contract ExecutorManager is Ownable {
     }
 
     //Register new Executors
-    function addExecutors(address[] memory executorArray) public onlyOwner {
+    function addExecutors(address[] calldata executorArray) external onlyOwner {
         for (uint256 i = 0; i < executorArray.length; i++) {
             addExecutor(executorArray[i]);
         }
@@ -50,7 +52,7 @@ contract ExecutorManager is Ownable {
     }
 
     //Remove registered Executors
-    function removeExecutors(address[] memory executorArray) public onlyOwner {
+    function removeExecutors(address[] calldata executorArray) external onlyOwner {
         for (uint256 i = 0; i < executorArray.length; i++) {
             removeExecutor(executorArray[i]);
         }
