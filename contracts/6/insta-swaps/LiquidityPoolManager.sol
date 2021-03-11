@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.9;
+pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@opengsn/gsn/contracts/BaseRelayRecipient.sol";
+import "../libs/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./ReentrancyGuard.sol";
 import "../libs/Pausable.sol";
@@ -16,15 +16,19 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     address private constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 public baseGas;
     
-    ExecutorManager executorManager;
+    ExecutorManager private executorManager;
     uint256 public adminFee;
-    mapping (address => uint256) public tokenTransferOverhead;
 
-    mapping ( address => bool ) public supportedToken;    // tokenAddress => active_status
-    mapping ( address => uint256 ) public tokenMinCap;    // tokenAddress => minWithdrawalCap
-    mapping ( address => uint256 ) public tokenMaxCap;    // tokenAddress => maxWithdrawalCap
-    mapping ( address => uint256) public tokenLiquidity;
-    mapping ( address => mapping ( address => uint256) ) public liquidityProvider; // tokenAddress => LPaddress => amount
+    struct TokenInfo {
+        uint256 transferOverhead;
+        bool supportedToken;
+        uint256 minCap;
+        uint256 maxCap;
+        uint256 liquidity;
+        mapping(address => uint256) liquidityProvider;
+    }
+
+    mapping(address => TokenInfo) public tokensInfo;
     mapping ( bytes32 => bool ) public processedHash;
 
     event AssetSent(address indexed asset, uint256 indexed amount, address indexed target);
@@ -32,7 +36,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 toChainId, uint256 amount);
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
-    event GasUsed(uint256 indexed, uint256 indexed);
     event fundsWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
     
     // MODIFIERS
@@ -45,13 +48,16 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     modifier tokenChecks(address tokenAddress){
         require(tokenAddress != address(0), "Token address cannot be 0");
-        require(supportedToken[tokenAddress], "Token not supported");
+        require(tokensInfo[tokenAddress].supportedToken, "Token not supported");
 
         _;
     }
 
     constructor(address _executorManagerAddress, address owner, address _trustedForwarder, uint256 _adminFee) public Ownable(owner) Pausable(owner) {
         require(_executorManagerAddress != address(0), "ExecutorManager Contract Address cannot be 0");
+        require(owner != address(0), "Owner Address cannot be 0");
+        require(_trustedForwarder != address(0), "TrustedForwarder Contract Address cannot be 0");
+        require(_adminFee != 0, "AdminFee cannot be 0");
         executorManager = ExecutorManager(_executorManagerAddress);
         trustedForwarder = _trustedForwarder;
         adminFee = _adminFee;
@@ -71,8 +77,17 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         return "1";
     }
 
+    function setBaseGas(uint128 gas) external onlyOwner{
+        baseGas = gas;
+    }
+
     function getExecutorManager() public view returns (address){
         return address(executorManager);
+    }
+
+    function setExecutorManager(address _executorManagerAddress) public onlyOwner {
+        require(_executorManagerAddress != address(0), "Executor Manager Address cannot be 0");
+        executorManager = ExecutorManager(_executorManagerAddress);
     }
 
     function setTrustedForwarder( address forwarderAddress ) public onlyOwner {
@@ -80,49 +95,53 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         trustedForwarder = forwarderAddress;
     }
 
-    function setTokenTransferOverhead( address tokenAddress, uint256 gasOverhead ) public onlyOwner {
-        tokenTransferOverhead[tokenAddress] = gasOverhead;
+    function setTokenTransferOverhead( address tokenAddress, uint256 gasOverhead ) public tokenChecks(tokenAddress) onlyOwner {
+        tokensInfo[tokenAddress].transferOverhead = gasOverhead;
     }
 
     function addSupportedToken( address tokenAddress, uint256 minCapLimit, uint256 maxCapLimit ) public onlyOwner {
         require(tokenAddress != address(0), "Token address cannot be 0");  
         require(maxCapLimit > minCapLimit, "maxCapLimit cannot be smaller than minCapLimit");        
-        supportedToken[tokenAddress] = true;
-        tokenMinCap[tokenAddress] = minCapLimit;
-        tokenMaxCap[tokenAddress] = maxCapLimit;
+        tokensInfo[tokenAddress].supportedToken = true;
+        tokensInfo[tokenAddress].minCap = minCapLimit;
+        tokensInfo[tokenAddress].maxCap = maxCapLimit;
     }
 
     function removeSupportedToken( address tokenAddress ) public tokenChecks(tokenAddress) onlyOwner {
-        // require(tokenAddress != NATIVE, "Native currency can't be removed");
-        supportedToken[tokenAddress] = false;
+        tokensInfo[tokenAddress].supportedToken = false;
     }
 
     function updateTokenCap( address tokenAddress, uint256 minCapLimit, uint256 maxCapLimit ) public tokenChecks(tokenAddress) onlyOwner {
         require(maxCapLimit > minCapLimit, "maxCapLimit cannot be smaller than minCapLimit");                
-        tokenMinCap[tokenAddress] = minCapLimit;        
-        tokenMaxCap[tokenAddress] = maxCapLimit;
+        tokensInfo[tokenAddress].minCap = minCapLimit;        
+        tokensInfo[tokenAddress].maxCap = maxCapLimit;
     }
 
     function addNativeLiquidity() public payable whenNotPaused {
         require(msg.value > 0, "amount should be greater then 0");
-        liquidityProvider[NATIVE][_msgSender()] = liquidityProvider[NATIVE][_msgSender()].add(msg.value);
-        tokenLiquidity[NATIVE] = tokenLiquidity[NATIVE].add(msg.value);
+        tokensInfo[NATIVE].liquidityProvider[_msgSender()] = tokensInfo[NATIVE].liquidityProvider[_msgSender()].add(msg.value);
+        tokensInfo[NATIVE].liquidity = tokensInfo[NATIVE].liquidity.add(msg.value);
+
+        emit LiquidityAdded(_msgSender(), NATIVE, address(this), msg.value);
     }
 
-    function removeNativeLiquidity(uint256 amount) public whenNotPaused {
-        require(liquidityProvider[NATIVE][_msgSender()] >= amount, "Not enough balance");
-        liquidityProvider[NATIVE][_msgSender()] = liquidityProvider[NATIVE][_msgSender()].sub(amount);
-        tokenLiquidity[NATIVE] = tokenLiquidity[NATIVE].sub(amount);
+    function removeNativeLiquidity(uint256 amount) public whenNotPaused nonReentrant {
+        require(amount != 0 , "Amount cannot be 0");
+        require(tokensInfo[NATIVE].liquidityProvider[_msgSender()] >= amount, "Not enough balance");
+        tokensInfo[NATIVE].liquidityProvider[_msgSender()] = tokensInfo[NATIVE].liquidityProvider[_msgSender()].sub(amount);
+        tokensInfo[NATIVE].liquidity = tokensInfo[NATIVE].liquidity.sub(amount);
         
-        require(_msgSender().send(amount), "Native Transfer Failed");
-        emit LiquidityRemoved( NATIVE, amount, msg.sender);
+        (bool success, ) = _msgSender().call{ value: amount }("");
+        require(success, "Native Transfer Failed");
+
+        emit LiquidityRemoved( NATIVE, amount, _msgSender());
     }
 
     function addTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
 
-        liquidityProvider[tokenAddress][_msgSender()] = liquidityProvider[tokenAddress][_msgSender()].add(amount);
-        tokenLiquidity[tokenAddress] = tokenLiquidity[tokenAddress].add(amount);
+        tokensInfo[tokenAddress].liquidityProvider[_msgSender()] = tokensInfo[tokenAddress].liquidityProvider[_msgSender()].add(amount);
+        tokensInfo[tokenAddress].liquidity = tokensInfo[tokenAddress].liquidity.add(amount);
         
         SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(), address(this), amount);
         emit LiquidityAdded(_msgSender(), tokenAddress, address(this), amount);
@@ -130,16 +149,18 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     function removeTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
-        require(liquidityProvider[tokenAddress][_msgSender()] >= amount, "Not enough balance");
+        require(tokensInfo[tokenAddress].liquidityProvider[_msgSender()] >= amount, "Not enough balance");
 
-        liquidityProvider[tokenAddress][_msgSender()] = liquidityProvider[tokenAddress][_msgSender()].sub(amount);
-        tokenLiquidity[tokenAddress] = tokenLiquidity[tokenAddress].sub(amount);
+        tokensInfo[tokenAddress].liquidityProvider[_msgSender()] = tokensInfo[tokenAddress].liquidityProvider[_msgSender()].sub(amount);
+        tokensInfo[tokenAddress].liquidity = tokensInfo[tokenAddress].liquidity.sub(amount);
 
         SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), amount);
+        emit LiquidityRemoved( tokenAddress, amount, _msgSender());
+
     }
 
     function depositErc20( address tokenAddress, address receiver, uint256 amount, uint256 toChainId ) public tokenChecks(tokenAddress) whenNotPaused {
-        require(tokenMinCap[tokenAddress] <= amount && tokenMaxCap[tokenAddress] >= amount, "Deposit amount should be within allowed Cap limits");
+        require(tokensInfo[tokenAddress].minCap <= amount && tokensInfo[tokenAddress].maxCap >= amount, "Deposit amount should be within allowed Cap limits");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
@@ -148,52 +169,43 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function depositNative( address receiver, uint256 toChainId ) public whenNotPaused payable {
-        require(tokenMinCap[NATIVE] <= msg.value && tokenMaxCap[NATIVE] >= msg.value, "Deposit amount should be within allowed Cap limit");
+        require(tokensInfo[NATIVE].minCap <= msg.value && tokensInfo[NATIVE].maxCap >= msg.value, "Deposit amount should be within allowed Cap limit");
         require(receiver != address(0), "Receiver address cannot be 0");
         require(msg.value > 0, "amount should be greater then 0");
 
-        emit Deposit(msg.sender, NATIVE, receiver, toChainId, msg.value);
+        emit Deposit(_msgSender(), NATIVE, receiver, toChainId, msg.value);
     }
 
     function sendFundsToUser( address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash, uint256 tokenGasPrice ) public nonReentrant onlyExecutor tokenChecks(tokenAddress) whenNotPaused {
         uint256 initialGas = gasleft();
-        require(tokenMinCap[tokenAddress] <= amount && tokenMaxCap[tokenAddress] >= amount, "Withdraw amount should be within allowed Cap limits");
+        require(tokensInfo[tokenAddress].minCap <= amount && tokensInfo[tokenAddress].maxCap >= amount, "Withdraw amount should be within allowed Cap limits");
         require(receiver != address(0), "Bad receiver address");
+        
+        (bytes32 hashSendTransaction, bool status) = checkHashStatus(tokenAddress, amount, receiver, depositHash);
 
-        bytes32 hashSendTransaction = keccak256(
-            abi.encode(
-                tokenAddress,
-                amount,
-                receiver,
-                keccak256(depositHash)
-            )
-        );
-
-        require(!processedHash[hashSendTransaction],"Already Processed");
+        require(!status, "Already Processed");
         processedHash[hashSendTransaction] = true;
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
-        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokenTransferOverhead[tokenAddress]).add(baseGas);
+        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokensInfo[tokenAddress].transferOverhead).add(baseGas);
 
-        uint256 gasStart = gasleft();
         uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
         uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
 
         if (tokenAddress == NATIVE) {
-            require(address(this).balance > amountToTransfer, "Not Enough Balance");
-            require(receiver.send(amountToTransfer), "Native Transfer Failed");
+            require(address(this).balance >= amountToTransfer, "Not Enough Balance");
+            (bool success, ) = receiver.call{ value: amount }("");
+            require(success, "Native Transfer Failed");
         } else {
-            require(IERC20(tokenAddress).balanceOf(address(this)) > amountToTransfer, "Not Enough Balance");
+            require(IERC20(tokenAddress).balanceOf(address(this)) >= amountToTransfer, "Not Enough Balance");
             SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, amountToTransfer);
         }
 
-        uint256 gasEnd = gasleft();
-        emit GasUsed(gasStart, gasEnd);
         emit AssetSent(tokenAddress, amountToTransfer, receiver);
     }
 
-    function checkHashStatus(address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash) public view returns(bool){
-        bytes32 hashSendTransaction = keccak256(
+    function checkHashStatus(address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash) public view returns(bytes32 hashSendTransaction, bool status){
+        hashSendTransaction = keccak256(
             abi.encode(
                 tokenAddress,
                 amount,
@@ -202,11 +214,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
             )
         );
 
-        return processedHash[hashSendTransaction];
+        status = processedHash[hashSendTransaction];
     }
 
     function withdrawErc20(address tokenAddress) public onlyOwner whenNotPaused {
-        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this))).sub(tokenLiquidity[tokenAddress]);
+        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this))).sub(tokensInfo[tokenAddress].liquidity);
         require(profitEarned > 0, "Profit earned is 0");
         SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), profitEarned);
 
@@ -214,12 +226,12 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function withdrawNative() public onlyOwner whenNotPaused {
-        uint256 profitEarned = (address(this).balance).sub(tokenLiquidity[NATIVE]);
+        uint256 profitEarned = (address(this).balance).sub(tokensInfo[NATIVE].liquidity);
         require(profitEarned > 0, "Profit earned is 0");
-        require((msg.sender).send(profitEarned), "Native Transfer Failed");
-        
-        emit fundsWithdraw(address(this), msg.sender, profitEarned);
-    }
 
-    receive() external payable { }
+        (bool success, ) = _msgSender().call{ value: profitEarned }("");
+        require(success, "Native Transfer Failed");
+        
+        emit fundsWithdraw(address(this), _msgSender(), profitEarned);
+    }
 }
