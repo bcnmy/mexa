@@ -6,26 +6,6 @@ describe("Test Recipient", function(){
     let accounts;
     let testRecipient;
     let forwarder;
-    let domainType = [
-        { name: "name", type: "string" },
-        { name: "version", type: "string" },
-        { name: "chainId", type: "uint256" },
-        { name: "verifyingContract", type: "address" }
-      ];
-
-    let erc20ForwardRequest = [
-        {name:'from',type:'address'},
-        {name:'to',type:'address'},
-        {name:'token',type:'address'},
-        {name:'txGas',type:'uint256'},
-        {name:'tokenGasPrice',type:'uint256'},
-        {name:'batchId',type:'uint256'},
-        {name:'batchNonce',type:'uint256'},
-        {name:'deadline',type:'uint256'},
-        {name:'dataHash',type:'bytes32'}
-    ];
-
-    
 
     before(async function(){
         accounts = await ethers.getSigners();

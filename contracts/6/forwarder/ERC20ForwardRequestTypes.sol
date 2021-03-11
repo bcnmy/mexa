@@ -1,4 +1,5 @@
-pragma solidity 0.6.9;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 /* deadline can be removed : GSN reference https://github.com/opengsn/gsn/blob/master/contracts/forwarder/IForwarder.sol (Saves 250 more gas)*/
@@ -13,6 +14,9 @@ pragma experimental ABIEncoderV2;
 * Fields are placed in type order, to minimise storage used when executing transactions.
 */
 contract ERC20ForwardRequestTypes{
+
+/*allow the EVM to optimize for this, 
+ensure that you try to order your storage variables and struct members such that they can be packed tightly*/
 
     struct ERC20ForwardRequest {
         address from; 

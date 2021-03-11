@@ -1,5 +1,5 @@
-
-pragma solidity 0.6.9;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 import "./ERC20ForwarderStorage.sol";
@@ -214,8 +214,11 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
    * @param _implementation address of the initial implementation.
    */
   constructor(address _implementation, address _admin) UpgradeabilityProxy(_implementation) public {
+    require(
+        _admin != address(0),
+        "admin address cannot be zero"
+       );
     assert(ADMIN_SLOT == keccak256("io.biconomy.ercfeeproxy.admin"));
-
     _setAdmin(_admin);
   }
 
@@ -263,12 +266,12 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
    * called, as described in
    * https://solidity.readthedocs.io/en/develop/abi-spec.html#function-selector-and-argument-encoding.
    */
-  function upgradeToAndCall(address newImplementation, bytes memory data) payable external ifAdmin {
+  function upgradeToAndCall(address newImplementation, bytes calldata data) payable external ifAdmin {
     _upgradeTo(newImplementation);
     bool success;
     bytes memory ret;
     (success,ret) = address(this).call{value : msg.value}(abi.encodePacked(data));
-    require(success);
+    require(success,"call to new implementation did not succeed");
   }
 
   /**
@@ -306,7 +309,11 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
  * @title ERC20ForwarderProxy
  * @dev This contract proxies ERC20Forwarder calls and enables ERC20Forwarder upgrades
 */ 
-contract ERC20ForwarderProxy is AdminUpgradeabilityProxy,ERC20ForwarderStorage,Ownable  {
+contract ERC20ForwarderProxy is AdminUpgradeabilityProxy, Ownable, ERC20ForwarderStorage  {
     constructor(address _implementation, address _admin, address _owner) public AdminUpgradeabilityProxy(_implementation, _admin) Ownable(_owner) {
+      require(
+         _owner != address(0),
+        "_owner cannot be zero"
+       );
     }
 }

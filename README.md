@@ -32,7 +32,16 @@ Refer our <a href="https://docs.biconomy.io" target="_blank">official documentat
 <h3>Providing Seed Phrase</h3>
 To keep testing and deployment consistent, we use a seed phrase to generate the accounts we use - when testing and deploying contracts. You need to add file with name <code>.secret</code> to the root folder and add the 12 word mnemonic phrase corresponding to your account which will be used to deploy the contracts.
 
- <h3>👷 Compiling Contracts</h3>
+<h3>Providing API Keys</h3>
+Both an <a href="https://www.alchemyapi.io/" target="_blank">Alchemy</a> and an <a href="https://infura.io/" target="_blank">Infura</a> API key will be needed to compile and test the contracts.
+
+<code>
+ # create necessary files
+ touch .infura .alchemy
+ # add keys to file
+</code>
+
+<h3>👷 Compiling Contracts</h3>
 
 <code>npx hardhat compile</code>
 
