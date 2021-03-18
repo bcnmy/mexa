@@ -245,9 +245,9 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
+            (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             //DAI permit
             IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
-            (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
@@ -278,9 +278,9 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
+            (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             //USDC or any EIP2612 permit
             IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
-            (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
@@ -345,8 +345,9 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
+            //DAI Permit
+            IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(gasTokenForwarderBaseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
@@ -380,8 +381,9 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
+            //EIP2612 Permit
+            IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(gasTokenForwarderBaseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
