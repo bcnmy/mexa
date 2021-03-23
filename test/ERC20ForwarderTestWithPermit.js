@@ -301,6 +301,178 @@ describe("ERC20Forwarder", function () {
       expect(await testnetDai.nonces(userAddress)).to.equal(1);
     });
 
+    it("permit and executes call successfully with DAI", async function () {
+      let permitOptions = {};
+      let daiDomainData = {
+        name: "Dai Stablecoin",
+        version: "1",
+        chainId: 31337,
+        verifyingContract: testnetDai.address,
+      };
+      const spender = erc20Forwarder.address;
+      const expiry = Math.floor(Date.now() / 1000 + 3600);
+      const allowed = true;
+      const userAddress = await accounts[2].getAddress();
+      const nonce = await testnetDai.nonces(userAddress);
+      console.log("nonce" + nonce);
+      const permitDataToSign = {
+        types: {
+          EIP712Domain: daiDomainType,
+          Permit: daiPermitType,
+        },
+        domain: daiDomainData,
+        primaryType: "Permit",
+        message: {
+          holder: userAddress,
+          spender: spender,
+          nonce: parseInt(nonce),
+          expiry: parseInt(expiry),
+          allowed: allowed,
+        },
+      };
+
+      const result = await ethers.provider.send("eth_signTypedData", [
+        userAddress,
+        permitDataToSign,
+      ]);
+      console.log("success:" + result);
+      const signature = result.substring(2);
+      const r = "0x" + signature.substring(0, 64);
+      const s = "0x" + signature.substring(64, 128);
+      const v = parseInt(signature.substring(128, 130), 16);
+
+      permitOptions.holder = userAddress;
+      permitOptions.spender = spender;
+      permitOptions.value = 0; //in case of DAI passing dummy value for the sake of struct (similar to token address in EIP2771)
+      permitOptions.nonce = parseInt(nonce.toString());
+      permitOptions.expiry = expiry;
+      permitOptions.allowed = allowed;
+      permitOptions.v = v;
+      permitOptions.r = r;
+      permitOptions.s = s;
+
+      await erc20Forwarder.setFeeReceiver(await accounts[4].getAddress());
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[2].getAddress();
+      req.batchNonce = 1;
+      req.batchId = 0;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = ethers.utils.parseUnits("20", "gwei").toString();
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+
+      const dataToSign = {
+        types: {
+          EIP712Domain: domainType,
+          ERC20ForwardRequest: erc20ForwardRequest,
+        },
+        domain: domainData,
+        primaryType: "ERC20ForwardRequest",
+        message: req,
+      };
+      const sig = await ethers.provider.send("eth_signTypedData", [
+        req.from,
+        dataToSign,
+      ]);
+      console.log("signature" + sig);
+      await erc20Forwarder.permitAndExecuteEIP712(
+        req,
+        domainSeparator,
+        sig,
+        permitOptions
+      );
+      expect(await testnetDai.nonces(userAddress)).to.equal(2);
+    });
+
+    it("permit and executes call successfully with DAI", async function () {
+      let permitOptions = {};
+      let daiDomainData = {
+        name: "Dai Stablecoin",
+        version: "1",
+        chainId: 31337,
+        verifyingContract: testnetDai.address,
+      };
+      const spender = erc20Forwarder.address;
+      const expiry = Math.floor(Date.now() / 1000 + 3600);
+      const allowed = true;
+      const userAddress = await accounts[2].getAddress();
+      const nonce = await testnetDai.nonces(userAddress);
+      console.log("nonce" + nonce);
+      const permitDataToSign = {
+        types: {
+          EIP712Domain: daiDomainType,
+          Permit: daiPermitType,
+        },
+        domain: daiDomainData,
+        primaryType: "Permit",
+        message: {
+          holder: userAddress,
+          spender: spender,
+          nonce: parseInt(nonce),
+          expiry: parseInt(expiry),
+          allowed: allowed,
+        },
+      };
+
+      const result = await ethers.provider.send("eth_signTypedData", [
+        userAddress,
+        permitDataToSign,
+      ]);
+      console.log("success:" + result);
+      const signature = result.substring(2);
+      const r = "0x" + signature.substring(0, 64);
+      const s = "0x" + signature.substring(64, 128);
+      const v = parseInt(signature.substring(128, 130), 16);
+
+      permitOptions.holder = userAddress;
+      permitOptions.spender = spender;
+      permitOptions.value = 0; //in case of DAI passing dummy value for the sake of struct (similar to token address in EIP2771)
+      permitOptions.nonce = parseInt(nonce.toString());
+      permitOptions.expiry = expiry;
+      permitOptions.allowed = allowed;
+      permitOptions.v = v;
+      permitOptions.r = r;
+      permitOptions.s = s;
+
+      await erc20Forwarder.setFeeReceiver(await accounts[4].getAddress());
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[2].getAddress();
+      req.batchNonce = 2;
+      req.batchId = 0;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = ethers.utils.parseUnits("20", "gwei").toString();
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+
+      const dataToSign = {
+        types: {
+          EIP712Domain: domainType,
+          ERC20ForwardRequest: erc20ForwardRequest,
+        },
+        domain: domainData,
+        primaryType: "ERC20ForwardRequest",
+        message: req,
+      };
+      const sig = await ethers.provider.send("eth_signTypedData", [
+        req.from,
+        dataToSign,
+      ]);
+      console.log("signature" + sig);
+      await erc20Forwarder.permitAndExecuteEIP712(
+        req,
+        domainSeparator,
+        sig,
+        permitOptions
+      );
+      expect(await testnetDai.nonces(userAddress)).to.equal(3);
+    });
+
     it("permit and executes call successfully with EIP2612 permit type tokens", async function () {
       //USDC
 
@@ -387,6 +559,182 @@ describe("ERC20Forwarder", function () {
         permitOptions
       );
       expect(await testnetUsdc.nonces(userAddress)).to.equal(1);
+    });
+
+    it("permit and executes call successfully with EIP2612 permit type tokens", async function () {
+      //USDC
+
+      let permitOptions = {};
+      let usdcDomainData = {
+        name: "USDC Coin",
+        version: "1",
+        chainId: 31337,
+        verifyingContract: testnetUsdc.address,
+      };
+      const spender = erc20Forwarder.address;
+      const expiry = Math.floor(Date.now() / 1000 + 3600);
+      const value = ethers.utils.parseEther("100").toString();
+      const allowed = true; //in case of EIP2612 passing dummy value for the sake of struct (similar to token address in EIP2771)
+      const userAddress = await accounts[0].getAddress();
+      const nonce = await testnetUsdc.nonces(userAddress);
+      const permitDataToSign = {
+        types: {
+          EIP712Domain: daiDomainType,
+          Permit: eip2612PermitType,
+        },
+        domain: usdcDomainData,
+        primaryType: "Permit",
+        message: {
+          owner: userAddress,
+          spender: spender,
+          nonce: parseInt(nonce),
+          value: value,
+          deadline: parseInt(expiry),
+        },
+      };
+
+      const result = await ethers.provider.send("eth_signTypedData", [
+        userAddress,
+        permitDataToSign,
+      ]);
+      console.log("success:" + result);
+      const signature = result.substring(2);
+      const r = "0x" + signature.substring(0, 64);
+      const s = "0x" + signature.substring(64, 128);
+      const v = parseInt(signature.substring(128, 130), 16);
+
+      permitOptions.holder = userAddress;
+      permitOptions.spender = spender;
+      permitOptions.value = value;
+      permitOptions.nonce = parseInt(nonce.toString());
+      permitOptions.expiry = expiry;
+      permitOptions.allowed = allowed;
+      permitOptions.v = v;
+      permitOptions.r = r;
+      permitOptions.s = s;
+
+      await erc20Forwarder.setFeeReceiver(await accounts[4].getAddress());
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[0].getAddress();
+      req.batchNonce = 1;
+      req.batchId = 15;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = ethers.utils.parseUnits("20", "gwei").toString();
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetUsdc.address;
+
+      const dataToSign = {
+        types: {
+          EIP712Domain: domainType,
+          ERC20ForwardRequest: erc20ForwardRequest,
+        },
+        domain: domainData,
+        primaryType: "ERC20ForwardRequest",
+        message: req,
+      };
+      const sig = await ethers.provider.send("eth_signTypedData", [
+        req.from,
+        dataToSign,
+      ]);
+      console.log("signature" + sig);
+      await erc20Forwarder.permitEIP2612AndExecuteEIP712(
+        req,
+        domainSeparator,
+        sig,
+        permitOptions
+      );
+      expect(await testnetUsdc.nonces(userAddress)).to.equal(2);
+    });
+
+    it("permit and executes call successfully with EIP2612 permit type tokens", async function () {
+      //USDC
+
+      let permitOptions = {};
+      let usdcDomainData = {
+        name: "USDC Coin",
+        version: "1",
+        chainId: 31337,
+        verifyingContract: testnetUsdc.address,
+      };
+      const spender = erc20Forwarder.address;
+      const expiry = Math.floor(Date.now() / 1000 + 3600);
+      const value = ethers.utils.parseEther("100").toString();
+      const allowed = true; //in case of EIP2612 passing dummy value for the sake of struct (similar to token address in EIP2771)
+      const userAddress = await accounts[0].getAddress();
+      const nonce = await testnetUsdc.nonces(userAddress);
+      const permitDataToSign = {
+        types: {
+          EIP712Domain: daiDomainType,
+          Permit: eip2612PermitType,
+        },
+        domain: usdcDomainData,
+        primaryType: "Permit",
+        message: {
+          owner: userAddress,
+          spender: spender,
+          nonce: parseInt(nonce),
+          value: value,
+          deadline: parseInt(expiry),
+        },
+      };
+
+      const result = await ethers.provider.send("eth_signTypedData", [
+        userAddress,
+        permitDataToSign,
+      ]);
+      console.log("success:" + result);
+      const signature = result.substring(2);
+      const r = "0x" + signature.substring(0, 64);
+      const s = "0x" + signature.substring(64, 128);
+      const v = parseInt(signature.substring(128, 130), 16);
+
+      permitOptions.holder = userAddress;
+      permitOptions.spender = spender;
+      permitOptions.value = value;
+      permitOptions.nonce = parseInt(nonce.toString());
+      permitOptions.expiry = expiry;
+      permitOptions.allowed = allowed;
+      permitOptions.v = v;
+      permitOptions.r = r;
+      permitOptions.s = s;
+
+      await erc20Forwarder.setFeeReceiver(await accounts[4].getAddress());
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[0].getAddress();
+      req.batchNonce = 2;
+      req.batchId = 15;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = ethers.utils.parseUnits("20", "gwei").toString();
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetUsdc.address;
+
+      const dataToSign = {
+        types: {
+          EIP712Domain: domainType,
+          ERC20ForwardRequest: erc20ForwardRequest,
+        },
+        domain: domainData,
+        primaryType: "ERC20ForwardRequest",
+        message: req,
+      };
+      const sig = await ethers.provider.send("eth_signTypedData", [
+        req.from,
+        dataToSign,
+      ]);
+      console.log("signature" + sig);
+      await erc20Forwarder.permitEIP2612AndExecuteEIP712(
+        req,
+        domainSeparator,
+        sig,
+        permitOptions
+      );
+      expect(await testnetUsdc.nonces(userAddress)).to.equal(3);
     });
   });
 
@@ -493,7 +841,7 @@ describe("ERC20Forwarder", function () {
       const expiry = Math.floor(Date.now() / 1000 + 3600);
       const value = ethers.utils.parseEther("100").toString();
       const allowed = true; //in case of EIP2612 passing dummy value for the sake of struct (similar to token address in EIP2771)
-      const userAddress = await accounts[0].getAddress();
+      const userAddress = await accounts[4].getAddress();
       const nonce = await testnetUsdc.nonces(userAddress);
       const permitDataToSign = {
         types: {
@@ -566,7 +914,7 @@ describe("ERC20Forwarder", function () {
         permitOptions,
         gasTokens
       );
-      expect(await testnetUsdc.nonces(userAddress)).to.equal(2);
+      expect(await testnetUsdc.nonces(userAddress)).to.equal(1);
     });
   });
 });
