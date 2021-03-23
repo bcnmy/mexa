@@ -36,7 +36,7 @@ function estimateGasPrice () {
 };
 
 function estimateGasPriceMatic () {
-  if (etherscanApi) {
+  if (maticGasStationApi) {
     let url = maticGasStationApi.split("?");
     url = url[0];
     console.log(`Getting gas price from Matic gas station for Matic Mainnet using URL ${url}`);
