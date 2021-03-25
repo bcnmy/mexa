@@ -19,6 +19,7 @@ task("accounts", "Prints the list of accounts", async () => {
 const fs = require('fs');
 const infuraKey = fs.readFileSync(".infura").toString().trim();
 const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
+const blockvigilKey = fs.readFileSync(".blockvigil").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -100,6 +101,11 @@ module.exports = {
       url:"https://rpc-mumbai.matic.today",
       accounts:walletUtils.makeKeyList(),
       chainId: 80001
+    },
+    maticMainnet: {
+      url:`https://rpc-mainnet.maticvigil.com/v1/${blockvigilKey}`,
+      accounts:walletUtils.makeKeyList(),
+      chainId: 137
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKey}`,

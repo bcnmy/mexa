@@ -14,6 +14,8 @@ async function main() {
     let totalGasUsed = 0;
 
     var gasPrices = await estimateGasPriceMatic();
+    if(gasPrices && gasPrices.fastGasPriceInWei)
+    {  
     var options = { gasPrice: gasPrices.fastGasPriceInWei};
     
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
@@ -31,13 +33,18 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     tx = await forwarder.transferOwnership(newOwner, options);
-    receipt = await tx.wait(confirmations = 1);
+    receipt = await tx.wait(confirmations = 2);
     console.log(`✅ Biconomy Forwarder ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
     console.log(`Total gas used in deployment is : ${totalGasUsed}`);
+    }
+    else
+    {
+      console.log("❌ DEPLOYMENT FAILED ❌ Unable to fetch gas prices from Matic Gas Station") 
+    }
   }
   catch(error) {
     console.log("❌ DEPLOYMENT FAILED ❌")
