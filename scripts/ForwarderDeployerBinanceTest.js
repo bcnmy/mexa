@@ -16,7 +16,7 @@ async function main() {
     let usdcAddress = "0xEc834Af061EFbdEB9ea15Ca78A586710585d9F36"; //deploy custom and make faucet available 
     let usdcDecimals = 18;
 
-    let owner = "0x221CadcAC35E18eCc89d1C3d8aF88613b9d7518b";
+    let owner = "0x9AAFe3E7E4Fe0E15281831f7D2f33eFfE18Fc7d5";
 
     const accounts = await hre.ethers.getSigners();
     

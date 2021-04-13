@@ -15,7 +15,7 @@ async function main() {
     const usdcAddress = "0x1ee9a3E27100B640E830ea4c8AC1954Ec8Fa601F"; //make faucet available 
     const usdcDecimals = 18;
     
-    const owner = "0x221CadcAC35E18eCc89d1C3d8aF88613b9d7518b";
+    const owner = "0x9AAFe3E7E4Fe0E15281831f7D2f33eFfE18Fc7d5";
     //prod config admin addresses
     const newOwner = "0xbb3982c15D92a8733e82Db8EBF881D979cFe9017";
     const ERC20ForwarderProxyAdmin = "0xccb9bA42d45ee6a7E3176B2f865Fb53266B6384D";
