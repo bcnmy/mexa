@@ -1,4 +1,4 @@
-const {estimateGasPrice} = require("./gas-price/get-gas-price");
+const {estimateGasPrice} = require("../gas-price/get-gas-price");
 /**
  * Check the owner and ERC20ForwarderProxyAdmin values before running the script.
  */

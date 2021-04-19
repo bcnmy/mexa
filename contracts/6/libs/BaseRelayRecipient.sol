@@ -41,7 +41,7 @@ abstract contract BaseRelayRecipient is IRelayRecipient {
                 ret := shr(96,calldataload(sub(calldatasize(),20)))
             }
         } else {
-            return msg.sender;
+            return payable(msg.sender);
         }
     }
 }
