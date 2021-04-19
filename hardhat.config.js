@@ -76,11 +76,11 @@ module.exports = {
     },
     hardhat:{
       allowUnlimitedContractSize:false,
-      gas: 6000000,
+      gas: "auto",
       accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
-        url:`https://mainnet.infura.io/v3/${infuraKey}`
-      // url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+        //url:`https://mainnet.infura.io/v3/${infuraKey}`
+        url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{
@@ -96,6 +96,12 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId:5,
       gas: 6400000
+    },
+    mainnet:{
+      url:`https://mainnet.infura.io/v3/${infuraKey}`,
+      accounts:walletUtils.makeKeyList(),
+      chainId:1,
+      gas: "auto"
     },
     maticMumbai: {
       url:"https://rpc-mumbai.matic.today",

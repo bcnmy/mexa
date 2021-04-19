@@ -9,9 +9,9 @@ async function main() {
     const daiAddress = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa"; // uniswap kovan DAI
     const daiDecimals = 18;
 
-    const DaiTransferHandlerGas = 39631;
-    const USDCTransferHandlerGas = 44970;
-    const USDTransferHandlerGas = 42425;
+    const DaiTransferHandlerGas = 46314;
+    const USDCTransferHandlerGas = 56321;
+    const USDTransferHandlerGas = 56734;
     
     const usdcEthPriceFeedAddress = "0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838";
     const usdcAddress = "0x6043fD7126e4229d6FcaC388c9E1C8d333CCb8fA"; //make faucet available 

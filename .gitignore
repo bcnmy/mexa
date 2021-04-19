@@ -59,6 +59,12 @@ typings/
 # dotenv environment variables file
 .env
 
+#provider keys
+.infura
+.blockvigil
+.alchemy
+.etherscan
+
 # Secret
 .secret
 

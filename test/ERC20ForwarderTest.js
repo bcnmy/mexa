@@ -2,11 +2,14 @@ const {
   expect
 } = require("chai");
 var abi = require('ethereumjs-abi');
+let sigUtil = require("eth-sig-util");
 const {
   ethers
 } = require("hardhat");
 
 const salt = ethers.BigNumber.from(31337);
+
+//const privateKey = <ACCOUNT_1_PRIVATe_KEY>
 
 describe("ERC20Forwarder", function () {
 
@@ -161,16 +164,30 @@ describe("ERC20Forwarder", function () {
 
     await erc20Forwarder.setSafeTransferRequired(USDT.address, true);
 
+    await testnetDai.mint(await accounts[0].getAddress(), ethers.utils.parseEther("1000"));
     await testnetDai.mint(await accounts[1].getAddress(), ethers.utils.parseEther("1000"));
     await testnetDai.mint(await accounts[2].getAddress(), ethers.utils.parseEther("1000"));
     await testnetDai.mint(await accounts[3].getAddress(), ethers.utils.parseEther("1000"));
+    await testnetDai.connect(accounts[0]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
     await testnetDai.connect(accounts[1]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
     await testnetDai.connect(accounts[2]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
     await testnetDai.connect(accounts[3]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
-    await realDai.approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
-    await USDC.approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
-    await GUSD.approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
-    await USDT.approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await realDai.connect(accounts[0]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await realDai.connect(accounts[1]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await realDai.connect(accounts[2]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await realDai.connect(accounts[3]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDC.connect(accounts[0]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDC.connect(accounts[1]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDC.connect(accounts[2]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDC.connect(accounts[3]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await GUSD.connect(accounts[0]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await GUSD.connect(accounts[1]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await GUSD.connect(accounts[2]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await GUSD.connect(accounts[3]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDT.connect(accounts[0]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDT.connect(accounts[1]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDT.connect(accounts[2]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
+    await USDT.connect(accounts[3]).approve(erc20Forwarder.address, ethers.utils.parseEther("1000"));
 
     await mockFeeManager.setTokenAllowed(realDai.address, true);
     await mockFeeManager.setTokenAllowed(USDC.address, true);
@@ -185,7 +202,7 @@ describe("ERC20Forwarder", function () {
     it("executes call successfully", async function () {
       //await uniswapRouter.swapExactETHForTokens(0, [WETHAddress,realDai.address], await accounts[1].getAddress(), "10000000000000000000000",{value:ethers.utils.parseEther("1").toString()});
       const req = await testRecipient.populateTransaction.nada();
-      req.from = await accounts[1].getAddress();
+      req.from = await accounts[0].getAddress();
       req.batchNonce = 0;
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
@@ -199,14 +216,14 @@ describe("ERC20Forwarder", function () {
         [req.from, req.to, req.token, req.txGas, req.tokenGasPrice, req.batchId, req.batchNonce, req.deadline,
           ethers.utils.keccak256(req.data)
         ]);
-      const sig = await accounts[1].signMessage(hashToSign);
+      const sig = await accounts[0].signMessage(hashToSign);
       await erc20Forwarder.executePersonalSign(req, sig);
       //expect(await testRecipient.callsMade(req.from)).to.equal(1);
       req0 = req;
     });
 
     it("Updates nonces", async function () {
-      expect(await erc20Forwarder.getNonce(await accounts[1].getAddress(), 0)).to.equal(1);
+      expect(await erc20Forwarder.getNonce(await accounts[0].getAddress(), 0)).to.equal(1);
     });
 
     it("Only pays relayers for the amount of gas used [ @skip-on-coverage ]", async function () {
@@ -216,27 +233,7 @@ describe("ERC20Forwarder", function () {
 
     it("Fails when nonce invalid", async function () {
       const req = await testRecipient.populateTransaction.nada();
-      req.from = await accounts[1].getAddress();
-      req.batchNonce = 0;
-      req.batchId = 0;
-      req.txGas = (req.gasLimit).toNumber();
-      req.tokenGasPrice = 0;
-      req.deadline = 0;
-      delete req.gasPrice;
-      delete req.gasLimit;
-      delete req.chainId;
-      req.token = testnetDai.address;
-      const hashToSign = abi.soliditySHA3(['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
-        [req.from, req.to, req.token, req.txGas, req.tokenGasPrice, req.batchId, req.batchNonce, req.deadline,
-          ethers.utils.keccak256(req.data)
-        ]);
-      const sig = await accounts[1].signMessage(hashToSign);
-      await expect(erc20Forwarder.executePersonalSign(req, sig)).to.be.revertedWith();
-    });
-
-    it("Fails when signer invalid", async function () {
-      const req = await testRecipient.populateTransaction.nada();
-      req.from = await accounts[1].getAddress();
+      req.from = await accounts[0].getAddress();
       req.batchNonce = 0;
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
@@ -254,6 +251,26 @@ describe("ERC20Forwarder", function () {
       await expect(erc20Forwarder.executePersonalSign(req, sig)).to.be.revertedWith();
     });
 
+    it("Fails when signer invalid", async function () {
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[0].getAddress();
+      req.batchNonce = 0;
+      req.batchId = 0;
+      req.txGas = (req.gasLimit).toNumber();
+      req.tokenGasPrice = 0;
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+      const hashToSign = abi.soliditySHA3(['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+        [req.from, req.to, req.token, req.txGas, req.tokenGasPrice, req.batchId, req.batchNonce, req.deadline,
+          ethers.utils.keccak256(req.data)
+        ]);
+      const sig = await accounts[1].signMessage(hashToSign);
+      await expect(erc20Forwarder.executePersonalSign(req, sig)).to.be.revertedWith();
+    });
+
   });
 
   describe("EIP712", function () {
@@ -261,7 +278,7 @@ describe("ERC20Forwarder", function () {
     it("executes call successfully", async function () {
       await erc20Forwarder.setFeeReceiver(await accounts[4].getAddress());
       const req = await testRecipient.populateTransaction.nada();
-      req.from = await accounts[2].getAddress();
+      req.from = await accounts[1].getAddress();
       req.batchNonce = 0;
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
@@ -283,14 +300,19 @@ describe("ERC20Forwarder", function () {
         primaryType: "ERC20ForwardRequest",
         message: req
       };
-      const sig = await ethers.provider.send("eth_signTypedData", [req.from, dataToSign]);
+      //const sig = await ethers.provider.send("eth_signTypedData", [req.from, dataToSign]);
+      const sig = sigUtil.signTypedMessage(
+        new Buffer.from(privateKey, "hex"),
+        { data: dataToSign },
+        "V3"
+      );
       await erc20Forwarder.executeEIP712(req, domainSeparator, sig);
       //expect(await testRecipient.callsMade(req.from)).to.equal(1);
       req0 = req;
     });
 
     it("Updates nonces", async function () {
-      expect(await erc20Forwarder.getNonce(await accounts[2].getAddress(), 0)).to.equal(1);
+      expect(await erc20Forwarder.getNonce(await accounts[1].getAddress(), 0)).to.equal(1);
     });
 
     it("Only pays relayers for the amount of gas used [ @skip-on-coverage ]", async function () {
@@ -300,7 +322,7 @@ describe("ERC20Forwarder", function () {
 
     it("Fails when nonce invalid", async function () {
       const req = await testRecipient.populateTransaction.nada();
-      req.from = await accounts[2].getAddress();
+      req.from = await accounts[1].getAddress();
       req.batchNonce = 0;
       req.batchId = 0;
       req.txGas = (req.gasLimit).toNumber();
@@ -322,7 +344,12 @@ describe("ERC20Forwarder", function () {
         primaryType: "ERC20ForwardRequest",
         message: req
       };
-      const sig = await ethers.provider.send("eth_signTypedData", [req.from, dataToSign]);;
+      //const sig = await ethers.provider.send("eth_signTypedData", [req.from, dataToSign]);;
+      const sig = sigUtil.signTypedMessage(
+        new Buffer.from(privateKey, "hex"),
+        { data: dataToSign },
+        "V3"
+      );
       await expect(erc20Forwarder.executeEIP712(req, domainSeparator, sig)).to.be.revertedWith();
     });
 
@@ -350,7 +377,12 @@ describe("ERC20Forwarder", function () {
         primaryType: "ERC20ForwardRequest",
         message: req
       };
-      const sig = await ethers.provider.send("eth_signTypedData", [await accounts[0].getAddress(), dataToSign]);
+      //const sig = await ethers.provider.send("eth_signTypedData", [await accounts[0].getAddress(), dataToSign]);
+      const sig = sigUtil.signTypedMessage(
+        new Buffer.from(privateKey, "hex"),
+        { data: dataToSign },
+        "V3"
+      );
       await expect(erc20Forwarder.executeEIP712(req, domainSeparator, sig)).to.be.revertedWith();
     });
 
@@ -523,7 +555,7 @@ describe("ERC20Forwarder", function () {
           ethers.utils.keccak256(req.data)
         ]);
       const sig = await accounts[1].signMessage(hashToSign);
-      await expect(erc20Forwarder.executePersonalSign(req, sig)).to.be.revertedWith();
+      await expect(erc20Forwarder.executePersonalSign(req, sig)).to.be.revertedWith("TOKEN NOT ALLOWED BY FEE MANAGER");
     });
     //transfer handler gas amount added correctly to total gas charged
     //transfers from correct token - validated implicitly from the other tests working
