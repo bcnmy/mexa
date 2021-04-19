@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 //to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../libs/BaseRelayRecipient.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract ERC20TransferHandler is BaseRelayRecipient{
 

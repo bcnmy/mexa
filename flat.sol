@@ -803,7 +803,7 @@ contract Pausable {
 
 // File contracts/6/libs/Ownable.sol
 
-pragma solidity 0.6.9;
+pragma solidity 0.8.0;
 
 /**
  * @title Ownable
@@ -884,7 +884,7 @@ contract Ownable {
 
 // File contracts/6/ExecutorManager.sol
 
-pragma solidity 0.6.9;
+pragma solidity 0.8.0;
 
 contract ExecutorManager is Ownable {
     address[] internal executors;
@@ -949,7 +949,7 @@ contract ExecutorManager is Ownable {
 
 // File contracts/6/insta-swaps/LiquidityPoolManager.sol
 
-pragma solidity 0.6.9;
+pragma solidity 0.8.0;
 
 
 
