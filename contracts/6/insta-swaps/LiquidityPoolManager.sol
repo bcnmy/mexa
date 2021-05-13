@@ -31,7 +31,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     mapping(address => TokenInfo) public tokensInfo;
     mapping ( bytes32 => bool ) public processedHash;
 
-    event AssetSent(address indexed asset, uint256 indexed amount, address indexed target, bytes indexed deposithash);
+    event AssetSent(address indexed asset, uint256 indexed amount, address indexed target, bytes depositHash);
     event Received(address indexed from, uint256 indexed amount);
     event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 toChainId, uint256 amount);
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
@@ -201,7 +201,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
             SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, amountToTransfer);
         }
 
-        emit AssetSent(tokenAddress, amountToTransfer, receiver, deposithash);
+        emit AssetSent(tokenAddress, amountToTransfer, receiver, depositHash);
     }
 
     function checkHashStatus(address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash) public view returns(bytes32 hashSendTransaction, bool status){
