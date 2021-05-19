@@ -108,6 +108,16 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId: 80001
     },
+    moonbeamTest: {
+      url:"https://rpc.testnet.moonbeam.network",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 1287
+    },
+    arbitrumTest: {
+      url:"https://kovan4.arbitrum.io/rpc",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 212984383488152
+    },
     maticMainnet: {
       url:`https://rpc-mainnet.maticvigil.com/v1/${blockvigilKey}`,
       accounts:walletUtils.makeKeyList(),
@@ -137,6 +147,12 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId:97,
       gas: 6400000
+    },
+    binance:{
+      url:`https://bsc-dataseed.binance.org/`,
+      accounts:walletUtils.makeKeyList(),
+      chainId:56,
+      gas: "auto"
     }
 
   }
