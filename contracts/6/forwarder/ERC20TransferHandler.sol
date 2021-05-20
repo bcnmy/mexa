@@ -17,6 +17,7 @@ contract ERC20TransferHandler is BaseRelayRecipient{
     function versionRecipient() external virtual view override returns (string memory){ return "1";}
 
     function transfer(address token, address to, uint256 amount) external{
+        // needs safe transfer from to support USDT
         require(IERC20(token).transferFrom(_msgSender(),to,amount));
     }
 

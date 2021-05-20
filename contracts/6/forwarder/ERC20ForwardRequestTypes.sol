@@ -42,5 +42,17 @@ ensure that you try to order your storage variables and struct members such that
         bytes32 s; 
     }
 
+    struct ERC20TokenTransferRequest {
+        address from; 
+        address to; 
+        address token; 
+        uint256 txGas; // usually fixed gas can be easily estimated to be constant
+        uint256 tokenGasPrice;
+        //could only have nonce and without deadline
+        uint256 batchId; 
+        uint256 batchNonce; 
+        uint256 deadline; 
+    }
+
     
 }

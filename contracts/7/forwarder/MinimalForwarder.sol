@@ -13,6 +13,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 contract MinimalForwarder is EIP712 {
     using ECDSA for bytes32;
 
+    // without deadline, batchNonce and tokenGasPrice
     struct ForwardRequest {
         address from;
         address to;
