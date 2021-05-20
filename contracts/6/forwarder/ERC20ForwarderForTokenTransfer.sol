@@ -235,8 +235,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
             (_to, _value) = abi.decode(req.data, (address,uint256));
             require(IERC20(req.token).transferFrom(req.from,_to,_value));
             //require(IERC20(token).transferFrom(req.to,amount));
+
+            /*There is no need of biconomy forwarder since there is no data to forward to recipient
+              But we still need to verify signature somehow
+              can we use modified verifyEIP712 (and update nonce) method with different or same request type? 
+            */
+
             //(success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
+            // transfer handler gas also needs to use custom one here
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
             emit FeeCharged(req.from,charge,req.token);

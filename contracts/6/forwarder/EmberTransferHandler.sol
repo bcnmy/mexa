@@ -11,6 +11,9 @@ import "../libs/Ownable.sol";
 import "../interfaces/IERC20Permit.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+//TODO
+//someone has to verify signatures
+//If this has to be custom skip trusted forwarder stuff and inherit from EIP712MetaTransaction instead!
 contract EmberTransferHandler is BaseRelayRecipient, Ownable{
     using SafeMath for uint256;
 
