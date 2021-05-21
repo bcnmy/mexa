@@ -47,6 +47,9 @@ typings/
 # Optional eslint cache
 .eslintcache
 
+# truffle 
+.secret
+
 # Optional REPL history
 .node_repl_history
 
