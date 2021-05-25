@@ -2,19 +2,13 @@
 pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
-//to do, seperate into forwarderWithPersonalSign.sol and ERC20Forwarder.sol
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-//import "../libs/BaseRelayRecipient.sol";
 import "../libs/EIP712MetaTransaction.sol";
 import "../libs/Ownable.sol";
 import "../interfaces/IERC20Permit.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-//TODO
-//someone has to verify signatures
-//If this has to be custom skip trusted forwarder stuff and inherit from EIP712MetaTransaction instead!
 contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","1"), Ownable{
     using SafeMath for uint256;
 
@@ -41,15 +35,11 @@ contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","
     uint128 public baseGas=21000;
 
     //transfer handler gas
+    //very predictable
     mapping(address=>uint256) public transferHandlerGas;
 
     constructor(address _owner) public Ownable(_owner){
-        //trustedForwarder = _forwarder;
     }
-
-    /*function setTrustedForwarder(address _forwarder) external onlyOwner {
-        trustedForwarder = _forwarder;
-    }*/
 
     function setDefaultFeeMultiplier(uint16 _bp) external onlyOwner{
         require(_bp <= maximumMarkup, "fee multiplier is too high");
@@ -78,8 +68,6 @@ contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","
         emit BaseGasChanged(baseGas,msg.sender);
     }
 
-    //function versionRecipient() external virtual view override returns (string memory){ return "1";}
-
     // Designed to enable capturing token fees charged during the execution
     event FeeCharged(address indexed from, uint256 indexed charge, address indexed token);
 
@@ -89,11 +77,24 @@ contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","
 
     event TransferHandlerGasChanged(address indexed tokenAddress, address indexed actor, uint256 indexed newGas);
 
+    /* we still need to verify tokenGasPrice in SDK and/or backend
+       by decoding ffrom functionSignature from executeMetaTransaction paramters.
+       Another way to do this could be within contract using tx.gasprice and builtIn oracle aggregator
+    */
+
+    /**
+     * @dev
+     * - Keeps track of gas consumed
+     * - Transfers ERC20 token to intended recipient
+     * - Calls _feeTransferHandler, supplying the gas usage of the trasfer call
+    **/
+    /**
+     * @param tokenGasPrice : gas price in context of ERC20 token being used to pay fees
+     * @param token : address of token contract being transferred and used to pay fees
+     * @param to : recipient address
+     * @param value : amount of token transferred to recipient
+     */
     function transfer(uint256 tokenGasPrice, address token, address to, uint256 value) external{
-        /* we still need to verify tokenGasPrice in SDK and/or backend
-           by decoding ffrom functionSignature from executeMetaTransaction paramters.
-           Another way to do this could be within contract using tx.gasprice and builtIn oracle aggregator
-        */
         uint256 initialGas = gasleft();
         // needs safe transfer from to support USDT
         require(IERC20(token).transferFrom(msgSender(),to,value));
@@ -102,15 +103,25 @@ contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","
         emit FeeCharged(msgSender(),charge,token);
     }
 
+    /**
+     * @dev
+     * - Keeps track of gas consumed
+     * - obtains permit to spend tokens worth permitOptions.value amount 
+     * - Transfers ERC20 token to intended recipient
+     * - Calls _feeTransferHandler, supplying the gas usage of the trasfer call
+    **/
+    /**
+     * @param tokenGasPrice : gas price in context of ERC20 token being used to pay fees
+     * @param token : address of token contract being transferred and used to pay fees
+     * @param to : recipient address
+     * @param value : amount of token transferred to recipient
+     * @param permitOptions : the permit request options for executing permit. Since it is EIP2612 permit pass permitOptions.allowed = true/false for this struct. 
+     */
     function permitEIP2612AndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
-        /* we still need to verify tokenGasPrice in SDK and/or backend
-           by decoding ffrom functionSignature from executeMetaTransaction paramters.
-           Another way to do this could be within contract using tx.gasprice and builtIn oracle aggregator
-        */
         uint256 initialGas = gasleft();
         //USDC or any EIP2612 permit
         IERC20Permit(token).permit(msgSender(), address(this), permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
-        //Needs safe transfer from to support USDT SafeERC20.safeTRansferFrom(IERC20(token),msgSender(), to, value)
+        //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
         require(IERC20(token).transferFrom(msgSender(),to,value));
         uint256 postGas = gasleft();
         uint256 charge = _feeTransferHandler(tokenGasPrice,msgSender(),token,initialGas.add(baseGas).add(transferHandlerGas[token]).sub(postGas));
@@ -118,30 +129,32 @@ contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","
     }
 
     function permitEIP2612UnlimitedAndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
-        /* we still need to verify tokenGasPrice in SDK and/or backend
-           by decoding ffrom functionSignature from executeMetaTransaction paramters.
-           Another way to do this could be within contract using tx.gasprice and builtIn oracle aggregator
-        */
         uint256 initialGas = gasleft();
         //USDC or any EIP2612 permit
         IERC20Permit(token).permit(msgSender(), address(this), type(uint256).max, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
-        //Needs safe transfer from to support USDT SafeERC20.safeTRansferFrom(IERC20(token),msgSender(), to, value)
+        //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
         require(IERC20(token).transferFrom(msgSender(),to,value));
         uint256 postGas = gasleft();
         uint256 charge = _feeTransferHandler(tokenGasPrice,msgSender(),token,initialGas.add(baseGas).add(transferHandlerGas[token]).sub(postGas));
         emit FeeCharged(msgSender(),charge,token);
     }
 
+    /**
+     * @dev
+     * - Charges fees in ERC20 token based on executionGas supplied
+     * - looks for feeMultiplier 
+     * - looks for feeREceiver and transfers fees to it
+    **/
+    /**
+     * @param tokenGasPrice : gas price in context of ERC20 token being used to pay fees
+     * @param _payer : address of the user paying fees in ERC20 tokens
+     * @param token : token contract address used as a fee token
+     * @param executionGas : amount of gas for which fee is to be charged
+     */
     function _feeTransferHandler(uint256 tokenGasPrice, address _payer, address token, uint256 executionGas) internal returns(uint256 charge){
-        /* we still need to verify tokenGasPrice in SDK and/or backend
-           by decoding ffrom functionSignature from executeMetaTransaction paramters.
-           Another way to do this could be within contract using tx.gasprice and builtIn oracle aggregator
-        */
-        
         // checks if token is allowed could be added     
-        // now we need token gas price for this 
         charge = tokenGasPrice.mul(executionGas).mul(feeMultiplier).div(10000);
-        //Needs safe transfer from to support USDT SafeERC20.safeTRansferFrom(IERC20(token),_payer, feeReceiver, charge)
+        //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),_payer, feeReceiver, charge)
         require(IERC20(token).transferFrom(
             _payer,
             feeReceiver,

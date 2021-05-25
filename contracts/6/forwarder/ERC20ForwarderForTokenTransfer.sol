@@ -221,7 +221,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
     // do we need req, domainSeparator and signature? 
     // or just pass from, to, token and amount as paramters
-    function executeTransferERC20AndPayGasFees(
+    function executeTransferERC20AndChargeTokens(
         ERC20ForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig
