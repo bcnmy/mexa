@@ -9,7 +9,7 @@ import "../libs/Ownable.sol";
 import "../interfaces/IERC20Permit.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract EmberTransferHandlerPurelyCustom is EIP712MetaTransaction("EmberFund","1"), Ownable{
+contract EmberTransferHandlerCustom is EIP712MetaTransaction("EmberFund","1"), Ownable{
     using SafeMath for uint256;
 
     //Ember fund fee receiver
