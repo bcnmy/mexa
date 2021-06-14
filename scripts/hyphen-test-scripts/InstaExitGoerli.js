@@ -4,16 +4,16 @@ async function main() {
   let usdcAddress = "0xb5B640E6414b6DeF4FC9B3C1EeF373925effeCcF"; //goerli
   let daiAddress = "0x2686eca13186766760a0347ee8eeb5a88710e11b"; //goerli
 
-  let owner = "0xEbdC114433f8119c1367e23A90CBbC7E2D11efBf";
-  let adminFeePercentage = 300; // This is value as per 10,000 basis point, so its actual value is .3
+  let owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
+  let adminFeePercentage = 30; // This is value as per 10,000 basis point, so its actual value is .3
 
-  const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
-  const executorMngr = await ExecutorMngr.deploy(owner);
-  await executorMngr.deployed();
-  console.log("✅ Executor Manager deployed at : ", executorMngr.address);
+  // const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
+  // const executorMngr = await ExecutorMngr.deploy(owner);
+  // await executorMngr.deployed();
+  // console.log("✅ Executor Manager deployed at : ", executorMngr.address);
 
   const LiquidityPoolMngr = await ethers.getContractFactory("LiquidityPoolManager");
-  const liquidityPoolMngr = await LiquidityPoolMngr.deploy("0xfA6d067626d4C9a84832d1088047563c81E9daa4", owner,"0x3075b4dc7085C48A14A5A39BBa68F58B19545971", adminFeePercentage);
+  const liquidityPoolMngr = await LiquidityPoolMngr.deploy("0x3858E9c99b2f50219B24D3174855E6C28FfdB4Ce", owner,"0xE041608922d06a4F26C0d4c27d8bCD01daf1f792", adminFeePercentage);
   await liquidityPoolMngr.deployed();
   console.log("✅ LiquidityPool Manager deployed at : ", liquidityPoolMngr.address);
 
@@ -24,7 +24,7 @@ async function main() {
   receipt = await tx.wait(1);
   console.log("✅ USDT support added");
 
-  tx = await lpProxy.addSupportedToken(usdcAddress, "1000000","10000000000");
+  tx = await lpProxy.addSupportedToken(usdcAddress, "100000","10000000000");
   receipt = await tx.wait(1);
   console.log("✅ USDC support added");
 
@@ -32,12 +32,12 @@ async function main() {
   receipt = await tx.wait(1);
   console.log("✅ DAI support added");
 
-  await lpProxy.setTokenTransferOverhead(daiAddress, 16006);
-  await lpProxy.setTokenTransferOverhead(usdcAddress, 10282);
-  await lpProxy.setTokenTransferOverhead(usdtAddress, 20278);
+  await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
+  await lpProxy.setTokenTransferOverhead(usdcAddress, 46174); //46174
+  await lpProxy.setTokenTransferOverhead(usdtAddress, 51657); //51657
   
-  tx = await lpProxy.transferOwnership("0x256144a60f34288F7b03D345F8Cb256C502e0f2C");
-  receipt = await tx.wait(1);
+  // tx = await lpProxy.transferOwnership("0x256144a60f34288F7b03D345F8Cb256C502e0f2C");
+  // receipt = await tx.wait(1);
 
 
   console.log("👏 🏁🏁 DEPLOYMENT FINISHED");

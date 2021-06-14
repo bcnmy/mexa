@@ -83,23 +83,29 @@ module.exports = {
       }
     },
     kovan:{
-      //url:`https://kovan.infura.io/v3/${infuraKey}`,
-      url:`https://eth-kovan.alchemyapi.io/v2/${alchemyKey}`,
+      url:`https://kovan.infura.io/v3/${infuraKey}`,
+      // url:`https://eth-kovan.alchemyapi.io/v2/${alchemyKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId:42,
-      gas: 1250000,
+      gas: 6400000,
       gasMultiplier:2
     },
     goerli:{
       url:`https://goerli.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId:5,
-      gas: 6400000
+      gas: 6400000,
+      gasPrice: 1500000000000
     },
     maticMumbai: {
-      url:"https://rpc-mumbai.matic.today",
+      url:"https://rpc-mumbai.maticvigil.com/v1/2ac03d4fd9d671e79063e071828a5260d3752de3",
       accounts:walletUtils.makeKeyList(),
       chainId: 80001
+    },
+    matic: {
+      url:"<matic_url>",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 137
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKey}`,
@@ -114,10 +120,10 @@ module.exports = {
       chainId:3,
       gas: 6400000
     },
-    goerli:{
-      url:`https://goerli.infura.io/v3/${infuraKey}`,
+    ethMainnet:{
+      url: `https://mainnet.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
-      chainId:5,
+      chainId:1,
       gas: 6400000
     },
     binanceTest:{
