@@ -159,6 +159,10 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     }
 
+    function getLiquidity(address liquidityProviderAddress, address tokenAddress) public view returns (uint256 ) {
+        return tokensInfo[tokenAddress].liquidityProvider[liquidityProviderAddress];
+    }
+    
     function depositErc20( address tokenAddress, address receiver, uint256 amount, uint256 toChainId ) public tokenChecks(tokenAddress) whenNotPaused {
         require(tokensInfo[tokenAddress].minCap <= amount && tokensInfo[tokenAddress].maxCap >= amount, "Deposit amount should be within allowed Cap limits");
         require(receiver != address(0), "Receiver address cannot be 0");
