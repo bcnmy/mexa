@@ -230,10 +230,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
             // decode amount and fees from the data
-            uint256 _value;
-            address _to;
-            (_to, _value) = abi.decode(req.data, (address,uint256));
-            require(IERC20(req.token).transferFrom(req.from,_to,_value));
+            require(IERC20(req.token).transferFrom(req.from,req.to,req.value));
             //require(IERC20(token).transferFrom(req.to,amount));
 
             /*There is no need of biconomy forwarder since there is no data to forward to recipient
@@ -245,7 +242,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
             uint256 postGas = gasleft();
             // transfer handler gas also needs to use custom one here
             uint256 transferHandlerGas = transferHandlerGas[req.token];
-            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
+            uint256 charge = _transferHandlerCustom(req,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
             emit FeeCharged(req.from,charge,req.token);
     }
 
@@ -343,7 +340,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
             (success,ret) = BiconomyForwarder(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
-            uint256 charge = _transferHandlerCustom(req,initialGas.add(baseGas).add(gasTokenForwarderBaseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
+            uint256 charge = _transferHandler(req,initialGas.add(baseGas).add(gasTokenForwarderBaseGas).add(transferHandlerGas).sub(postGas).sub(gasTokensBurned.mul(gasRefund)));
             emit FeeCharged(req.from,charge,req.token);
     }
 
@@ -502,7 +499,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
         }
     }
 
-    function _transferHandlerCustom(ERC20ForwardRequest calldata req,uint256 executionGas) internal returns(uint256 charge){
+    function _transferHandlerCustom(ERC20TokenTransferRequest calldata req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
         charge = req.tokenGasPrice.mul(executionGas).mul(_feeManager.getFeeMultiplier(req.from,req.token)).div(10000);

@@ -11,7 +11,9 @@ const salt = ethers.BigNumber.from(31337);
 
 //const privateKey = <ACCOUNT_1_PRIVATe_KEY>
 
-describe("ERC20Forwarder", function () {
+//TODO
+//Add test cases for Transfer Handler Custom
+describe("ERC20TransferCustom", function () {
 
   let accounts;
   let forwarder;

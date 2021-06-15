@@ -47,6 +47,7 @@ ensure that you try to order your storage variables and struct members such that
         address to; 
         address token; 
         uint256 txGas; // usually fixed gas can be easily estimated to be constant
+        uint256 value;
         uint256 tokenGasPrice;
         //could only have nonce and without deadline
         uint256 batchId; 
