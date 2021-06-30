@@ -106,7 +106,8 @@ module.exports = {
     matic: {
       url:"<matic_url>",
       accounts:walletUtils.makeKeyList(),
-      chainId: 137
+      chainId: 137,
+      gasPrice: 10000000000
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKey}`,
@@ -125,7 +126,7 @@ module.exports = {
       url: `https://mainnet.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId:1,
-      gas: 6400000
+      gasPrice: 25000000000
     },
     binanceTest:{
       url:`https://data-seed-prebsc-1-s1.binance.org:8545/`,

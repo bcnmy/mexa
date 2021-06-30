@@ -4,7 +4,7 @@ async function main() {
   let usdcAddress = "0xdA5289fCAAF71d52a80A254da614a192b693e977"; //mumbai
   let daiAddress = "0x27a44456bEDb94DbD59D0f0A14fE977c777fC5C3"; //mumbai
 
-  let owner = "0xEbdC114433f8119c1367e23A90CBbC7E2D11efBf";
+  let owner = "<owner_address>";
   let adminFeePercentage = 300; // This is value as per 10,000 basis point, so its actual value is .3
 
   // const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
