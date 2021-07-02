@@ -32,6 +32,12 @@ module.exports = {
   solidity: {
     compilers: [
       {
+        version: "0.5.12",
+        settings:{
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },
+      {
         version: "0.5.13",
         settings:{
           evmVersion: "istanbul",
@@ -39,31 +45,13 @@ module.exports = {
         }
       },
       {
-        version: "0.6.9",
+        version: "0.6.0",
         settings:{
           optimizer: { enabled: true, runs: 200 }
         }
       },
       {
-        version: "0.7.6",
-        settings:{
-          optimizer: { enabled: true, runs: 200 }
-        }
-      },
-      {
-        version: "0.8.0",
-        settings:{
-          optimizer: { enabled: true, runs: 200 }
-        }
-      },
-      {
-        version: "0.5.12",
-        settings:{
-          optimizer: { enabled: true, runs: 200 }
-        }
-      },
-      {
-        version: "0.6.12",
+        version: "0.6.2",
         settings: {
           optimizer: {
             enabled: true,
@@ -81,8 +69,32 @@ module.exports = {
         }
       },
       {
-        version: "0.6.0"
-      }
+        version: "0.6.9",
+        settings:{
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },
+      {
+        version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        }
+      },
+      {
+        version: "0.7.6",
+        settings:{
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },
+      {
+        version: "0.8.0",
+        settings:{
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },      
     ]
   },
   networks:{
@@ -94,8 +106,8 @@ module.exports = {
       gas: "auto",
       accounts:walletUtils.localWallet("1000000000000000000000000",num=20),
       forking : {
-        //url:`https://mainnet.infura.io/v3/${infuraKey}`
-        url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
+        url:`https://mainnet.infura.io/v3/${infuraKey}`
+        // url:`https://eth-mainnet.alchemyapi.io/v2/${alchemyKey}`
       }
     },
     kovan:{

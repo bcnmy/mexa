@@ -141,6 +141,15 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         emit FeeCharged(permitOptions.holder,charge,token);
     }
 
+    function permitDaiAndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
+        uint256 initialGas = gasleft();
+        IERC20Permit(token).permit(permitOptions.holder, address(this), permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
+        require(IERC20(token).transferFrom(permitOptions.holder,to,value));
+        uint256 postGas = gasleft();
+        uint256 charge = _feeTransferHandler(tokenGasPrice,permitOptions.holder,token,initialGas.add(baseGas).add(transferHandlerGas[token]).sub(postGas));
+        emit FeeCharged(permitOptions.holder,charge,token);
+    }
+
     /**
      * @dev
      * - Charges fees in ERC20 token based on executionGas supplied
