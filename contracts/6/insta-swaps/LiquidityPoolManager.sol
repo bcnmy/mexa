@@ -189,12 +189,10 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     /** 
-     * DAI permit and Approve
+     * DAI permit and Deposit.
      */
-    function permitAndExecuteEIP712(
+    function permitAndDepositErc20(
         address tokenAddress,
-        bytes32 domainSeparator,
-        bytes calldata sig,
         address receiver,
         uint256 amount,
         uint256 toChainId,
@@ -202,16 +200,15 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         )
         external 
         returns (bool success, bytes memory ret){
-            uint256 initialGas = gasleft();
-            //DAI permit
             IERC20Permit(tokenAddress).permit(_msgSender(), address(this), permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
             depositErc20(tokenAddress, receiver, amount, toChainId);
     }
 
-    function permitEIP2612AndExecuteEIP712(
+    /** 
+     * EIP2612 and Deposit.
+     */
+    function permitEIP2612AndDepositErc20(
         address tokenAddress,
-        bytes32 domainSeparator,
-        bytes calldata sig,
         address receiver,
         uint256 amount,
         uint256 toChainId,
@@ -219,8 +216,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         )
         external 
         returns (bool success, bytes memory ret){
-            uint256 initialGas = gasleft();
-            //USDC or any EIP2612 permit
             IERC20Permit(tokenAddress).permit(_msgSender(), address(this), amount, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
             depositErc20(tokenAddress, receiver, amount, toChainId);            
     }
