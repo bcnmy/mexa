@@ -1,6 +1,6 @@
 const {expect} = require("chai");
 const {ethers} = require("hardhat");
-const {getSignatureParameters, makeDaiPermit, makeUsdcPermit} = require("./helpers/permitHelpers");
+const {makeDaiPermit, makeUsdcPermit, makeMetaTransaction} = require("./helpers/eip712Helpers");
 
 describe('TransferHandlerCustom', function() {
   before(async function () {
@@ -9,7 +9,7 @@ describe('TransferHandlerCustom', function() {
     this.addr1 = addr1;
     this.addr2 = addr2;
     this.addr3 = addr3;
-    this.addr4 = addr4;
+    this.relayer = addr4;
     this.feeReceiver = addr5;
     this.daiContract = await ethers.getContractAt("Dai", "0x6b175474e89094c44da98b954eedeac495271d0f");
     this.usdcContract = await ethers.getContractAt("USDC", "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
@@ -85,6 +85,27 @@ describe('TransferHandlerCustom', function() {
     await expect(this.transferHandlerCustom.connect(this.addr1.address).setTransferHandlerGas(this.daiContract.address, transferHandlerGas)).to.be.revertedWith("Only contract owner is allowed to perform this operation");
   })
 
+  it("Should transfer when approved", async function() {
+    const nonce = await this.usdcContract.nonces(this.owner.address);
+    const value = ethers.utils.parseUnits("1000", 6);
+    const initialBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
+    const initialBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, value);
+    const permitRequest = {
+      holder: message.owner,
+      spender: message.spender,
+      value: message.value,
+      nonce,
+      expiry: message.deadline,
+      allowed: true, 
+      v, r, s};
+    await this.transferHandlerCustom.permitEIP2612AndTransfer(0, this.usdcContract.address, this.addr1.address, value, permitRequest);
+    const finalBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
+    const finalBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    expect(initialBalanceOwner.sub(finalBalanceOwner)).to.equal(value);
+    expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
+  })
+  
   it("Should transfer USDC via permit", async function() {
     const nonce = await this.usdcContract.nonces(this.owner.address);
     const value = ethers.utils.parseUnits("1000", 6);
@@ -106,6 +127,30 @@ describe('TransferHandlerCustom', function() {
     expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
   })
 
+  it("Should transfer USDC via permit and metatransaction", async function() {
+    const nonce = await this.usdcContract.nonces(this.owner.address);
+    const value = ethers.utils.parseUnits("1000", 6);
+    const initialBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
+    const initialBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, value);
+    const permitRequest = {
+      holder: message.owner,
+      spender: message.spender,
+      value: message.value,
+      nonce,
+      expiry: message.deadline,
+      allowed: true, 
+      v, r, s};
+    const permitEIP2612AndTransferFunctionData = this.transferHandlerCustom.interface.encodeFunctionData("permitEIP2612AndTransfer", [0, this.usdcContract.address, this.addr1.address, value, permitRequest]);  
+    const metaTxNonce = await this.transferHandlerCustom.getNonce(this.owner.address);
+    const sig = await makeMetaTransaction(this.owner, this.transferHandlerCustom.address, metaTxNonce, permitEIP2612AndTransferFunctionData);
+    await this.transferHandlerCustom.connect(this.relayer).executeMetaTransaction(this.owner.address, permitEIP2612AndTransferFunctionData, sig.r, sig.s, sig.v);
+    const finalBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
+    const finalBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    expect(initialBalanceOwner.sub(finalBalanceOwner)).to.equal(value);
+    expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
+  })
+
   it("Should fail transfer USDC via permit when expired", async function() {
     const nonce = await this.usdcContract.nonces(this.owner.address);
     const value = ethers.utils.parseUnits("1000", 6);
@@ -119,6 +164,25 @@ describe('TransferHandlerCustom', function() {
       allowed: true, 
       v, r, s};
     await expect(this.transferHandlerCustom.permitEIP2612AndTransfer(0, this.usdcContract.address, this.addr1.address, value, permitRequest)).to.be.revertedWith("FiatTokenV2: permit is expired");
+  })
+
+
+  it("Should fail transfer USDC via permit when expired via meta transaction", async function() {
+    const nonce = await this.usdcContract.nonces(this.owner.address);
+    const value = ethers.utils.parseUnits("1000", 6);
+    const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, value);
+    const permitRequest = {
+      holder: message.owner,
+      spender: message.spender,
+      value: message.value,
+      nonce,
+      expiry: message.deadline - 100000,
+      allowed: true, 
+      v, r, s};
+    const permitEIP2612AndTransferFunctionData = this.transferHandlerCustom.interface.encodeFunctionData("permitEIP2612AndTransfer", [0, this.usdcContract.address, this.addr1.address, value, permitRequest]);  
+    const metaTxNonce = await this.transferHandlerCustom.getNonce(this.owner.address);
+    const sig = await makeMetaTransaction(this.owner, this.transferHandlerCustom.address, metaTxNonce, permitEIP2612AndTransferFunctionData);
+    await expect( this.transferHandlerCustom.connect(this.relayer).executeMetaTransaction(this.owner.address, permitEIP2612AndTransferFunctionData, sig.r, sig.s, sig.v)).to.be.revertedWith("Function call not successful");
   })
 
   it("Should fail transfer USDC via permit when invalid nonce/invalid permit", async function() {
@@ -159,11 +223,33 @@ describe('TransferHandlerCustom', function() {
     expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
   })
 
-  it("Should fail to transfer USDC via infinite permit when expired", async function() {
+  it("Should transfer USDC via infinite permit and metaTrasnsaction", async function() {
     const nonce = await this.usdcContract.nonces(this.owner.address);
     const value = ethers.utils.parseUnits("1000", 6);
     const initialBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
     const initialBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, this.infinite);
+    const permitRequest = {
+      holder: message.owner,
+      spender: message.spender,
+      value: message.value,
+      nonce,
+      expiry: message.deadline,
+      allowed: true, 
+      v, r, s};
+    const permitEIP2612UnlimitedAndTransferFunctionData = this.transferHandlerCustom.interface.encodeFunctionData("permitEIP2612UnlimitedAndTransfer", [0, this.usdcContract.address, this.addr1.address, value, permitRequest]);  
+    const metaTxNonce = await this.transferHandlerCustom.getNonce(this.owner.address);
+    const sig = await makeMetaTransaction(this.owner, this.transferHandlerCustom.address, metaTxNonce, permitEIP2612UnlimitedAndTransferFunctionData);
+    await this.transferHandlerCustom.connect(this.relayer).executeMetaTransaction(this.owner.address, permitEIP2612UnlimitedAndTransferFunctionData, sig.r, sig.s, sig.v);
+    const finalBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
+    const finalBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    expect(initialBalanceOwner.sub(finalBalanceOwner)).to.equal(value);
+    expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
+  })
+
+  it("Should fail to transfer USDC via infinite permit when expired", async function() {
+    const nonce = await this.usdcContract.nonces(this.owner.address);
+    const value = ethers.utils.parseUnits("1000", 6);
     const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, this.infinite);
     const permitRequest = {
       holder: message.owner,
@@ -179,8 +265,6 @@ describe('TransferHandlerCustom', function() {
   it("Should fail to transfer USDC via infinite permit when invalid nonce/ invalid permit", async function() {
     const nonce = (await this.usdcContract.nonces(this.owner.address)) - 1;
     const value = ethers.utils.parseUnits("1000", 6);
-    const initialBalanceOwner = await this.usdcContract.balanceOf(this.owner.address);
-    const initialBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
     const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, this.infinite);
     const permitRequest = {
       holder: message.owner,
@@ -195,7 +279,7 @@ describe('TransferHandlerCustom', function() {
 
   it("Should transfer DAI via permit", async function() {
     const nonce = await this.daiContract.nonces(this.owner.address);
-    const value = ethers.utils.parseUnits("1000", 6);
+    const value = ethers.utils.parseUnits("1000", 18);
     const initialBalanceOwner = await this.daiContract.balanceOf(this.owner.address);
     const initialBalanceReciever = await this.daiContract.balanceOf(this.addr1.address);
     const {v, r, s, message} = await makeDaiPermit(this.owner, this.transferHandlerCustom.address, nonce);
@@ -213,8 +297,46 @@ describe('TransferHandlerCustom', function() {
     expect(initialBalanceOwner.sub(finalBalanceOwner)).to.equal(value);
     expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
   })
+
+  it("Should transfer DaI via permit and metaTrasnsaction", async function() {
+    const nonce = await this.daiContract.nonces(this.owner.address);
+    const value = ethers.utils.parseUnits("1000", 18);
+    const initialBalanceOwner = await this.daiContract.balanceOf(this.owner.address);
+    const initialBalanceReciever = await this.daiContract.balanceOf(this.addr1.address);
+    const {v, r, s, message} = await makeDaiPermit(this.owner, this.transferHandlerCustom.address, nonce);
+    const permitRequest = {
+      holder: message.holder,
+      spender: message.spender,
+      value: value,
+      nonce,
+      expiry: message.expiry,
+      allowed: message.allowed, 
+      v, r, s};
+    const permitEIP2612UnlimitedAndTransferFunctionData = this.transferHandlerCustom.interface.encodeFunctionData("permitDaiAndTransfer", [0, this.daiContract.address, this.addr1.address, value, permitRequest]);  
+    const metaTxNonce = await this.transferHandlerCustom.getNonce(this.owner.address);
+    const sig = await makeMetaTransaction(this.owner, this.transferHandlerCustom.address, metaTxNonce, permitEIP2612UnlimitedAndTransferFunctionData);
+    await this.transferHandlerCustom.connect(this.relayer).executeMetaTransaction(this.owner.address, permitEIP2612UnlimitedAndTransferFunctionData, sig.r, sig.s, sig.v);
+    const finalBalanceOwner = await this.daiContract.balanceOf(this.owner.address);
+    const finalBalanceReciever = await this.daiContract.balanceOf(this.addr1.address);
+    expect(initialBalanceOwner.sub(finalBalanceOwner)).to.equal(value);
+    expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
+  })
+
+  it("it should transfer funds via metaTransaction", async function() {
+    const nonce = await this.usdcContract.nonces(this.owner.address);
+    const value = ethers.utils.parseUnits("1000", 6);
+    const initialBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    const {v, r, s, message} = await makeUsdcPermit(this.owner, this.transferHandlerCustom.address, nonce, value);
+    await this.usdcContract.connect(this.relayer).permit(message.owner, message.spender, message.value, message.deadline, v, r, s);
+    const transferFunctionData = this.transferHandlerCustom.interface.encodeFunctionData("transfer", [0, this.usdcContract.address, this.addr1.address, message.value]);  
+    const metaTxNonce = await this.transferHandlerCustom.getNonce(this.owner.address);
+    const sig = await makeMetaTransaction(this.owner, this.transferHandlerCustom.address, metaTxNonce, transferFunctionData);
+    await this.transferHandlerCustom.connect(this.relayer).executeMetaTransaction(this.owner.address, transferFunctionData, sig.r, sig.s, sig.v);
+    const finalBalanceReciever = await this.usdcContract.balanceOf(this.addr1.address);
+    expect(finalBalanceReciever.sub(initialBalanceReciever)).to.equal(value);
+    })
+
   it("feeReceiver should recieve the charge", async function() {
-  // charge = tokenGasPrice.mul(executionGas).mul(feeMultiplier).div(10000);
     const nonce = await this.usdcContract.nonces(this.owner.address);
     const value = ethers.utils.parseUnits("1000", 6);
     const initialBalanceFeeReciever = await this.usdcContract.balanceOf(this.feeReceiver.address);
@@ -227,8 +349,11 @@ describe('TransferHandlerCustom', function() {
       expiry: message.deadline,
       allowed: true, 
       v, r, s};
-    await this.transferHandlerCustom.permitEIP2612AndTransfer(0, this.usdcContract.address, this.addr1.address, value, permitRequest);
-    const finalBalanceFeeReciever = await this.usdcContract.balanceOf(this.feeReceiver.address);
-    expect(finalBalanceFeeReciever.gte(initialBalanceFeeReciever));
-  })
+      await this.transferHandlerCustom.permitEIP2612AndTransfer(10, this.usdcContract.address, this.addr1.address, value, permitRequest);
+      const finalBalanceFeeReciever = await this.usdcContract.balanceOf(this.feeReceiver.address);
+      expect(finalBalanceFeeReciever.gte(initialBalanceFeeReciever));
+    })
+  
+    // function transfer(uint256 tokenGasPrice, address token, address to, uint256 value) external{
+
 });

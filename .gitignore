@@ -73,7 +73,7 @@ typings/
 contracts/SignatureVerify.sol
 
 node_modules
-
+bin
 #Buidler files
 cache
 artifacts

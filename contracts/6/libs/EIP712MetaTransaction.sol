@@ -28,7 +28,6 @@ contract EIP712MetaTransaction is EIP712Base {
         if (inBytes.length == 0) {
             return 0x0;
         }
-
         assembly {
             outBytes4 := mload(add(inBytes, 32))
         }

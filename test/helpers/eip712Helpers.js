@@ -1,5 +1,32 @@
 const {ethers} = require("hardhat");
 
+const makeMetaTransaction = async (owner, verifyingContract, nonce, functionSignature) => {
+    const chainId = owner.provider._network.chainId;
+
+    const MetaTransaction = [
+        { name: "nonce", type: "uint256" },
+        { name: "from", type: "address" },
+        { name: "functionSignature", type: "bytes" },
+        ];
+    // MetaTransaction(uint256 nonce,address from,bytes functionSignature)
+    const domain = {
+        name: "ERC20Transfer",
+        version: "1",
+        verifyingContract,
+        salt: ethers.utils.hexZeroPad((ethers.BigNumber.from(chainId)).toHexString(), 32)
+    };
+    const message = {
+        nonce,
+        from: owner.address,
+        functionSignature
+    };
+    const types = { MetaTransaction };
+    
+    signature = await owner._signTypedData(domain, types, message);
+    const {v, r, s} = getSignatureParameters(signature);
+    return {v, r, s, message};
+}
+
 const makeDaiPermit = async (holder, spender, nonce) => {
     const daiContractAddress = "0x6b175474e89094c44da98b954eedeac495271d0f";
     const expiry = Math.floor(((new Date).getTime() / 1000) + 1000);
@@ -23,9 +50,7 @@ const makeDaiPermit = async (holder, spender, nonce) => {
         expiry,
         allowed: true,
     };
-    const types = {
-        Permit
-    };
+    const types = { Permit };
     signature = await holder._signTypedData(domain, types, message);
     const {v, r, s} = getSignatureParameters(signature);
     return {v, r, s, message};
@@ -54,13 +79,10 @@ const makeUsdcPermit = async (holder, spender, nonce, value) => {
         nonce,
         deadline
     };
-    const types = {
-        Permit
-    };
+    const types = { Permit };
     signature = await holder._signTypedData(domain, types, message);
     const {v, r, s} = getSignatureParameters(signature);
     return {v, r, s, message};
-    
 }
 
 const getSignatureParameters = signature => {
@@ -81,4 +103,4 @@ const getSignatureParameters = signature => {
     };
 };
 
-module.exports = {getSignatureParameters, makeDaiPermit, makeUsdcPermit}
+module.exports = {makeMetaTransaction, makeDaiPermit, makeUsdcPermit}
