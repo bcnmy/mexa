@@ -246,7 +246,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
-            (bool success, ) = receiver.call{ value: amount }("");
+            (bool success, ) = receiver.call{ value: amountToTransfer }("");
             require(success, "Native Transfer Failed");
         } else {
             require(IERC20(tokenAddress).balanceOf(address(this)) >= amountToTransfer, "Not Enough Balance");
