@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.7.6;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../libs/BaseRelayRecipient.sol";
@@ -9,6 +10,7 @@ import "./ReentrancyGuard.sol";
 import "../libs/Pausable.sol";
 import "../libs/Ownable.sol";
 import "../ExecutorManager.sol";
+import "../interfaces/IERC20Permit.sol";
 
 contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, Pausable {
     using SafeMath for uint256;
@@ -26,6 +28,15 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 maxCap;
         uint256 liquidity;
         mapping(address => uint256) liquidityProvider;
+    }
+
+     struct PermitRequest {
+        uint256 nonce;
+        uint256 expiry;
+        bool allowed; 
+        uint8 v;
+        bytes32 r; 
+        bytes32 s; 
     }
 
     mapping(address => TokenInfo) public tokensInfo;
@@ -53,7 +64,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         _;
     }
 
-    constructor(address _executorManagerAddress, address owner, address _trustedForwarder, uint256 _adminFee) public Ownable(owner) Pausable(owner) {
+    constructor(address _executorManagerAddress, address owner, address pauser, address _trustedForwarder, uint256 _adminFee) public Ownable(owner) Pausable(pauser) {
         require(_executorManagerAddress != address(0), "ExecutorManager Contract Address cannot be 0");
         require(owner != address(0), "Owner Address cannot be 0");
         require(_trustedForwarder != address(0), "TrustedForwarder Contract Address cannot be 0");
@@ -119,44 +130,51 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     function addNativeLiquidity() public payable whenNotPaused {
         require(msg.value > 0, "amount should be greater then 0");
-        tokensInfo[NATIVE].liquidityProvider[_msgSender()] = tokensInfo[NATIVE].liquidityProvider[_msgSender()].add(msg.value);
+        address payable sender = _msgSender();
+        tokensInfo[NATIVE].liquidityProvider[sender] = tokensInfo[NATIVE].liquidityProvider[sender].add(msg.value);
         tokensInfo[NATIVE].liquidity = tokensInfo[NATIVE].liquidity.add(msg.value);
 
-        emit LiquidityAdded(_msgSender(), NATIVE, address(this), msg.value);
+        emit LiquidityAdded(sender, NATIVE, address(this), msg.value);
     }
 
     function removeNativeLiquidity(uint256 amount) public whenNotPaused nonReentrant {
         require(amount != 0 , "Amount cannot be 0");
-        require(tokensInfo[NATIVE].liquidityProvider[_msgSender()] >= amount, "Not enough balance");
-        tokensInfo[NATIVE].liquidityProvider[_msgSender()] = tokensInfo[NATIVE].liquidityProvider[_msgSender()].sub(amount);
+        address payable sender = _msgSender();
+        require(tokensInfo[NATIVE].liquidityProvider[sender] >= amount, "Not enough balance");
+        tokensInfo[NATIVE].liquidityProvider[sender] = tokensInfo[NATIVE].liquidityProvider[sender].sub(amount);
         tokensInfo[NATIVE].liquidity = tokensInfo[NATIVE].liquidity.sub(amount);
         
-        (bool success, ) = _msgSender().call{ value: amount }("");
+        (bool success, ) = sender.call{ value: amount }("");
         require(success, "Native Transfer Failed");
 
-        emit LiquidityRemoved( NATIVE, amount, _msgSender());
+        emit LiquidityRemoved( NATIVE, amount, sender);
     }
 
     function addTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
-
-        tokensInfo[tokenAddress].liquidityProvider[_msgSender()] = tokensInfo[tokenAddress].liquidityProvider[_msgSender()].add(amount);
+        address payable sender = _msgSender();
+        tokensInfo[tokenAddress].liquidityProvider[sender] = tokensInfo[tokenAddress].liquidityProvider[sender].add(amount);
         tokensInfo[tokenAddress].liquidity = tokensInfo[tokenAddress].liquidity.add(amount);
         
-        SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(), address(this), amount);
-        emit LiquidityAdded(_msgSender(), tokenAddress, address(this), amount);
+        SafeERC20.safeTransferFrom(IERC20(tokenAddress), sender, address(this), amount);
+        emit LiquidityAdded(sender, tokenAddress, address(this), amount);
     }
 
     function removeTokenLiquidity( address tokenAddress, uint256 amount ) public tokenChecks(tokenAddress) whenNotPaused {
         require(amount > 0, "amount should be greater then 0");
-        require(tokensInfo[tokenAddress].liquidityProvider[_msgSender()] >= amount, "Not enough balance");
+        address payable sender = _msgSender();
+        require(tokensInfo[tokenAddress].liquidityProvider[sender] >= amount, "Not enough balance");
 
-        tokensInfo[tokenAddress].liquidityProvider[_msgSender()] = tokensInfo[tokenAddress].liquidityProvider[_msgSender()].sub(amount);
+        tokensInfo[tokenAddress].liquidityProvider[sender] = tokensInfo[tokenAddress].liquidityProvider[sender].sub(amount);
         tokensInfo[tokenAddress].liquidity = tokensInfo[tokenAddress].liquidity.sub(amount);
 
-        SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), amount);
-        emit LiquidityRemoved( tokenAddress, amount, _msgSender());
+        SafeERC20.safeTransfer(IERC20(tokenAddress), sender, amount);
+        emit LiquidityRemoved( tokenAddress, amount, sender);
 
+    }
+
+    function getLiquidity(address liquidityProviderAddress, address tokenAddress) public view returns (uint256 ) {
+        return tokensInfo[tokenAddress].liquidityProvider[liquidityProviderAddress];
     }
 
     function depositErc20( address tokenAddress, address receiver, uint256 amount, uint256 toChainId ) public tokenChecks(tokenAddress) whenNotPaused {
@@ -164,8 +182,42 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         require(receiver != address(0), "Receiver address cannot be 0");
         require(amount > 0, "amount should be greater then 0");
 
-        SafeERC20.safeTransferFrom(IERC20(tokenAddress), _msgSender(), address(this),amount);
-        emit Deposit(_msgSender(), tokenAddress, receiver, toChainId, amount);
+        address payable sender = _msgSender();
+
+        SafeERC20.safeTransferFrom(IERC20(tokenAddress), sender, address(this),amount);
+        emit Deposit(sender, tokenAddress, receiver, toChainId, amount);
+    }
+
+    /** 
+     * DAI permit and Deposit.
+     */
+    function permitAndDepositErc20(
+        address tokenAddress,
+        address receiver,
+        uint256 amount,
+        uint256 toChainId,
+        PermitRequest calldata permitOptions
+        )
+        external 
+        returns (bool success, bytes memory ret){
+            IERC20Permit(tokenAddress).permit(_msgSender(), address(this), permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
+            depositErc20(tokenAddress, receiver, amount, toChainId);
+    }
+
+    /** 
+     * EIP2612 and Deposit.
+     */
+    function permitEIP2612AndDepositErc20(
+        address tokenAddress,
+        address receiver,
+        uint256 amount,
+        uint256 toChainId,
+        PermitRequest calldata permitOptions
+        )
+        external 
+        returns (bool success, bytes memory ret){
+            IERC20Permit(tokenAddress).permit(_msgSender(), address(this), amount, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
+            depositErc20(tokenAddress, receiver, amount, toChainId);            
     }
 
     function depositNative( address receiver, uint256 toChainId ) public whenNotPaused payable {
@@ -220,18 +272,20 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     function withdrawErc20(address tokenAddress) public onlyOwner whenNotPaused {
         uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this))).sub(tokensInfo[tokenAddress].liquidity);
         require(profitEarned > 0, "Profit earned is 0");
-        SafeERC20.safeTransfer(IERC20(tokenAddress), _msgSender(), profitEarned);
+        address payable sender = _msgSender();
 
-        emit fundsWithdraw(tokenAddress, _msgSender(),  profitEarned);
+        SafeERC20.safeTransfer(IERC20(tokenAddress), sender, profitEarned);
+
+        emit fundsWithdraw(tokenAddress, sender,  profitEarned);
     }
 
     function withdrawNative() public onlyOwner whenNotPaused {
         uint256 profitEarned = (address(this).balance).sub(tokensInfo[NATIVE].liquidity);
         require(profitEarned > 0, "Profit earned is 0");
-
-        (bool success, ) = _msgSender().call{ value: profitEarned }("");
+        address payable sender = _msgSender();
+        (bool success, ) = sender.call{ value: profitEarned }("");
         require(success, "Native Transfer Failed");
         
-        emit fundsWithdraw(address(this), _msgSender(), profitEarned);
+        emit fundsWithdraw(address(this), sender, profitEarned);
     }
 }
