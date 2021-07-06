@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.7.6;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../libs/BaseRelayRecipient.sol";
@@ -9,6 +10,7 @@ import "./ReentrancyGuard.sol";
 import "../libs/Pausable.sol";
 import "../libs/Ownable.sol";
 import "../ExecutorManager.sol";
+import "../interfaces/IERC20Permit.sol";
 
 contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, Pausable {
     using SafeMath for uint256;
@@ -26,6 +28,15 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 maxCap;
         uint256 liquidity;
         mapping(address => uint256) liquidityProvider;
+    }
+
+     struct PermitRequest {
+        uint256 nonce;
+        uint256 expiry;
+        bool allowed; 
+        uint8 v;
+        bytes32 r; 
+        bytes32 s; 
     }
 
     mapping(address => TokenInfo) public tokensInfo;
@@ -175,6 +186,38 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         SafeERC20.safeTransferFrom(IERC20(tokenAddress), sender, address(this),amount);
         emit Deposit(sender, tokenAddress, receiver, toChainId, amount);
+    }
+
+    /** 
+     * DAI permit and Deposit.
+     */
+    function permitAndDepositErc20(
+        address tokenAddress,
+        address receiver,
+        uint256 amount,
+        uint256 toChainId,
+        PermitRequest calldata permitOptions
+        )
+        external 
+        returns (bool success, bytes memory ret){
+            IERC20Permit(tokenAddress).permit(_msgSender(), address(this), permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
+            depositErc20(tokenAddress, receiver, amount, toChainId);
+    }
+
+    /** 
+     * EIP2612 and Deposit.
+     */
+    function permitEIP2612AndDepositErc20(
+        address tokenAddress,
+        address receiver,
+        uint256 amount,
+        uint256 toChainId,
+        PermitRequest calldata permitOptions
+        )
+        external 
+        returns (bool success, bytes memory ret){
+            IERC20Permit(tokenAddress).permit(_msgSender(), address(this), amount, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
+            depositErc20(tokenAddress, receiver, amount, toChainId);            
     }
 
     function depositNative( address receiver, uint256 toChainId ) public whenNotPaused payable {
