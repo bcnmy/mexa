@@ -39,10 +39,12 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         bytes32 s; 
     }
 
-    mapping(address => TokenInfo) public tokensInfo;
+    mapping ( address => TokenInfo ) public tokensInfo;
     mapping ( bytes32 => bool ) public processedHash;
+    mapping ( address => uint256 ) public totalAdminFee;
 
-    event AssetSent(address indexed asset, uint256 indexed amount, address indexed target, bytes depositHash);
+    event FundTransferInfo(uint256 indexed calculateAdminFee, bytes indexed depositHash);
+    event AssetSent(address indexed asset, uint256 indexed amount, address indexed target);
     event Received(address indexed from, uint256 indexed amount);
     event Deposit(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 toChainId, uint256 amount);
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
@@ -239,6 +241,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         processedHash[hashSendTransaction] = true;
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
+        totalAdminFee[tokenAddress] = totalAdminFee[tokenAddress].add(calculateAdminFee);
+
         uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokensInfo[tokenAddress].transferOverhead).add(baseGas);
 
         uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
@@ -246,14 +250,15 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
-            (bool success, ) = receiver.call{ value: amount }("");
+            (bool success, ) = receiver.call{ value: amountToTransfer }("");
             require(success, "Native Transfer Failed");
         } else {
             require(IERC20(tokenAddress).balanceOf(address(this)) >= amountToTransfer, "Not Enough Balance");
             SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, amountToTransfer);
         }
 
-        emit AssetSent(tokenAddress, amountToTransfer, receiver, depositHash);
+        emit FundTransferInfo(calculateAdminFee, depositHash)
+        emit AssetSent(tokenAddress, amountToTransfer, receiver);
     }
 
     function checkHashStatus(address tokenAddress, uint256 amount, address payable receiver, bytes memory depositHash) public view returns(bytes32 hashSendTransaction, bool status){
