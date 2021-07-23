@@ -94,6 +94,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
      * @param value : amount of token transferred to recipient
      */
     function transfer(uint256 tokenGasPrice, address token, address to, uint256 value) external{
+        require(msg.sender == tx.origin || msg.sender == address(this) , "Only EOA or self");
         uint256 initialGas = gasleft();
         // needs safe transfer from to support USDT
         SafeERC20.safeTransferFrom(IERC20(token), msgSender(),to,value);
@@ -120,6 +121,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
      * @param permitOptions : the permit request options for executing permit. Since it is EIP2612 permit pass permitOptions.allowed = true/false for this struct. 
      */
     function permitEIP2612AndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
+        require(msg.sender == tx.origin || msg.sender == address(this), "Only EOA or self");
         uint256 initialGas = gasleft();
         //USDC or any EIP2612 permit
         IERC20Permit(token).permit(permitOptions.holder, address(this), permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
@@ -131,6 +133,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     }
 
     function permitEIP2612UnlimitedAndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
+        require(msg.sender == tx.origin || msg.sender == address(this), "Only EOA or self");
         uint256 initialGas = gasleft();
         //USDC or any EIP2612 permit
         IERC20Permit(token).permit(permitOptions.holder, address(this), type(uint256).max, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
