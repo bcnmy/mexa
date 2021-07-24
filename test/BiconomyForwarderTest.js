@@ -127,7 +127,95 @@ describe("Biconomy Forwarder", function () {
         ]
       );
       const sig = await accounts[1].signMessage(hashToSign);
-      await forwarder.executePersonalSign(req, sig);
+      const tx = await forwarder.executePersonalSign(req, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
+      //expect(await testRecipient.callsMade(req.from)).to.equal(1);
+    });
+
+    it("executes call successfully", async function () {
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[1].getAddress();
+      req.batchNonce = 1;
+      req.batchId = 0;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = 0;
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+      const hashToSign = abi.soliditySHA3(
+        [
+          "address",
+          "address",
+          "address",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "bytes32",
+        ],
+        [
+          req.from,
+          req.to,
+          req.token,
+          req.txGas,
+          req.tokenGasPrice,
+          req.batchId,
+          req.batchNonce,
+          req.deadline,
+          ethers.utils.keccak256(req.data),
+        ]
+      );
+      const sig = await accounts[1].signMessage(hashToSign);
+      const tx = await forwarder.executePersonalSign(req, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
+      //expect(await testRecipient.callsMade(req.from)).to.equal(1);
+    });
+
+    it("executes call successfully", async function () {
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[1].getAddress();
+      req.batchNonce = 2;
+      req.batchId = 0;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = 0;
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+      const hashToSign = abi.soliditySHA3(
+        [
+          "address",
+          "address",
+          "address",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "uint256",
+          "bytes32",
+        ],
+        [
+          req.from,
+          req.to,
+          req.token,
+          req.txGas,
+          req.tokenGasPrice,
+          req.batchId,
+          req.batchNonce,
+          req.deadline,
+          ethers.utils.keccak256(req.data),
+        ]
+      );
+      const sig = await accounts[1].signMessage(hashToSign);
+      const tx = await forwarder.executePersonalSign(req, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
       //expect(await testRecipient.callsMade(req.from)).to.equal(1);
     });
 
@@ -177,7 +265,7 @@ describe("Biconomy Forwarder", function () {
     it("Updates nonces", async function () {
       expect(
         await forwarder.getNonce(await accounts[1].getAddress(), 0)
-      ).to.equal(1);
+      ).to.equal(3);
     });
 
     /*it("Transfers any funds received to the 'from address'", async function () {
@@ -472,7 +560,9 @@ describe("Biconomy Forwarder", function () {
         ]
       );
       const sig = await accounts[1].signMessage(hashToSign);
-      await forwarder.executePersonalSign(req, sig);
+      const tx = await forwarder.executePersonalSign(req, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
     });
   });
 
@@ -505,14 +595,85 @@ describe("Biconomy Forwarder", function () {
         req.from,
         dataToSign,
       ]);
-      await forwarder.executeEIP712(req, domainSeparator, sig);
+      const tx = await forwarder.executeEIP712(req, domainSeparator, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
       //expect(await testRecipient.callsMade(req.from)).to.equal(1);
     });
+
+    it("executes call successfully", async function () {
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[2].getAddress();
+      req.batchNonce = 1;
+      req.batchId = 0;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = 0;
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+      // const erc20fr = Object.assign({}, req);;
+      // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+      // delete erc20fr.data;
+      const dataToSign = {
+        types: {
+          EIP712Domain: domainType,
+          ERC20ForwardRequest: erc20ForwardRequest,
+        },
+        domain: domainData,
+        primaryType: "ERC20ForwardRequest",
+        message: req,
+      };
+      const sig = await ethers.provider.send("eth_signTypedData", [
+        req.from,
+        dataToSign,
+      ]);
+      const tx = await forwarder.executeEIP712(req, domainSeparator, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
+      //expect(await testRecipient.callsMade(req.from)).to.equal(1);
+    });
+
+    it("executes call successfully", async function () {
+      const req = await testRecipient.populateTransaction.nada();
+      req.from = await accounts[2].getAddress();
+      req.batchNonce = 2;
+      req.batchId = 0;
+      req.txGas = req.gasLimit.toNumber();
+      req.tokenGasPrice = 0;
+      req.deadline = 0;
+      delete req.gasPrice;
+      delete req.gasLimit;
+      delete req.chainId;
+      req.token = testnetDai.address;
+      // const erc20fr = Object.assign({}, req);;
+      // erc20fr.dataHash = ethers.utils.keccak256(erc20fr.data);
+      // delete erc20fr.data;
+      const dataToSign = {
+        types: {
+          EIP712Domain: domainType,
+          ERC20ForwardRequest: erc20ForwardRequest,
+        },
+        domain: domainData,
+        primaryType: "ERC20ForwardRequest",
+        message: req,
+      };
+      const sig = await ethers.provider.send("eth_signTypedData", [
+        req.from,
+        dataToSign,
+      ]);
+      const tx = await forwarder.executeEIP712(req, domainSeparator, sig);
+      const receipt = await tx.wait(confirmations = 1);
+      console.log(`gas used from receipt ${receipt.gasUsed.toNumber()}`);
+      //expect(await testRecipient.callsMade(req.from)).to.equal(1);
+    });
+
 
     it("Updates nonces", async function () {
       expect(
         await forwarder.getNonce(await accounts[2].getAddress(), 0)
-      ).to.equal(1);
+      ).to.equal(3);
     });
 
     /*it("Transfers any funds received to the 'from address'", async function () {

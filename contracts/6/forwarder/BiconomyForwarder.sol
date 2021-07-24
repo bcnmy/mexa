@@ -120,6 +120,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _updateNonce(req);
         /* solhint-disable-next-line avoid-low-level-calls */
          (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+         // Validate that the relayer has sent enough gas for the call.
+        // See https://ronan.eth.link/blog/ethereum-gas-dangers/
+        assert(gasleft() > req.txGas / 63);
         _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
     }
 
@@ -150,6 +153,9 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         _verifySigPersonalSign(req, sig);
         _updateNonce(req);
         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
+        // Validate that the relayer has sent enough gas for the call.
+        // See https://ronan.eth.link/blog/ethereum-gas-dangers/
+        assert(gasleft() > req.txGas / 63);
         _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
     }
 
