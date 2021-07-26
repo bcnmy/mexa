@@ -349,7 +349,7 @@ describe('TransferHandlerCustom', function() {
       expiry: message.deadline,
       allowed: true, 
       v, r, s};
-      await this.transferHandlerCustom.permitEIP2612AndTransfer(10, this.usdcContract.address, this.addr1.address, value, permitRequest);
+      await this.transferHandlerCustom.permitEIP2612AndTransfer(10, this.usdcContract.address, this.addr1.address, 10, permitRequest);
       const finalBalanceFeeReciever = await this.usdcContract.balanceOf(this.feeReceiver.address);
       expect(finalBalanceFeeReciever.gte(initialBalanceFeeReciever));
     })
