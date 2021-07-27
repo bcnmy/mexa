@@ -37,6 +37,7 @@ contract Pausable {
      * account & Initializes the contract in unpaused state..
      */
     constructor(address pauser) public {
+        require(pauser != address(0), "Pauser Address cannot be 0");
         _pauser = pauser;
         _paused = false;
     }
@@ -115,7 +116,7 @@ contract Pausable {
         _pauser = newPauser;
     }
 
-    function renouncePauser() public onlyPauser {
+    function renouncePauser() public onlyPauser whenNotPaused {
         emit PauserChanged(_pauser, address(0));
         _pauser = address(0);
     }
