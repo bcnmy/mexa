@@ -96,10 +96,10 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId:5,
       gas: 6400000,
-      gasPrice: 100000000000
+      gasPrice: 50000000000
     },
     maticMumbai: {
-      url:"https://rpc-mumbai.maticvigil.com/v1/<matic_key>",
+      url:"https://rpc-mumbai.maticvigil.com/v1/2ac03d4fd9d671e79063e071828a5260d3752de3",
       accounts:walletUtils.makeKeyList(),
       chainId: 80001
     },
