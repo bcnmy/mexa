@@ -80,6 +80,10 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         revert ("can't renounceOwnership here"); // not possible within this smart contract
     }
 
+    function renouncePauser() public override onlyPauser {
+        revert ("can't renouncePauser here"); // not possible within this smart contract
+    }
+
     function getAdminFee() public view returns (uint256 ) {
         return adminFee;
     }
