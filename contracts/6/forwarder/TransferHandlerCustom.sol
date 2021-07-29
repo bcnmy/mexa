@@ -18,6 +18,8 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
 
     uint16 public immutable maximumMarkup=25000;
 
+    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("TokenTransferRequest(uint256 tokenGasPrice, address token, address from, address to, uint256 value)"));
+
     struct PermitRequest {
         address holder; 
         address spender;  
@@ -28,6 +30,14 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         uint8 v;
         bytes32 r; 
         bytes32 s; 
+    }
+
+    struct TokenTransferRequest {
+        uint256 tokenGasPrice;
+        address token;
+        address from; //from could be optional 
+        address to;
+        uint256 value;
     }
 
     //transaction base gas
@@ -94,7 +104,6 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
      * @param value : amount of token transferred to recipient
      */
     function transfer(uint256 tokenGasPrice, address token, address to, uint256 value) external{
-        require(msg.sender == tx.origin || msg.sender == address(this) , "Only EOA or self");
         uint256 initialGas = gasleft();
         // needs safe transfer from to support USDT
         SafeERC20.safeTransferFrom(IERC20(token), msgSender(),to,value);
@@ -114,34 +123,79 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
      * can be directly called without having to go through executeMetaTransaction for signature verification. As holder signature will be verified during permit 
     **/
     /**
-     * @param tokenGasPrice : gas price in context of ERC20 token being used to pay fees
-     * @param token : address of token contract being transferred and used to pay fees
-     * @param to : recipient address
-     * @param value : amount of token transferred to recipient
+     * @param req : The request being processed
+     * @param sigR : User signature
+     * @param sigS : User signature
+     * @param sigV : User signature
      * @param permitOptions : the permit request options for executing permit. Since it is EIP2612 permit pass permitOptions.allowed = true/false for this struct. 
      */
-    function permitEIP2612AndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
-        require(msg.sender == tx.origin || msg.sender == address(this), "Only EOA or self");
+    //TODO
+    //finalise need on req.from so it can be used instead of permitOptions.holder ?
+    //review for replay protections
+    function permitEIP2612AndTransfer(TokenTransferRequest calldata req, bytes32 sigR, bytes32 sigS, uint8 sigV, PermitRequest calldata permitOptions) external{
         uint256 initialGas = gasleft();
         //USDC or any EIP2612 permit
-        IERC20Permit(token).permit(permitOptions.holder, address(this), permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
+        IERC20Permit(req.token).permit(permitOptions.holder, address(this), permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
+        //Must verify signature for sent request
+        require(verifySignature(permitOptions.holder, req, sigR, sigS, sigV), "Signer and signature do not match");
         //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
-        require(IERC20(token).transferFrom(permitOptions.holder,to,value));
+        require(IERC20(req.token).transferFrom(permitOptions.holder,req.to,req.value));
         uint256 postGas = gasleft();
-        uint256 charge = _feeTransferHandler(tokenGasPrice,permitOptions.holder,token,initialGas.add(baseGas).add(transferHandlerGas[token]).sub(postGas));
-        emit FeeCharged(permitOptions.holder,charge,token);
+        uint256 transferHandlerGas = transferHandlerGas[req.token];
+        uint256 charge = _feeTransferHandler(req.tokenGasPrice,permitOptions.holder,req.token,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
+        emit FeeCharged(permitOptions.holder,charge,req.token);
     }
 
-    function permitEIP2612UnlimitedAndTransfer(uint256 tokenGasPrice, address token, address to, uint256 value, PermitRequest calldata permitOptions) external{
-        require(msg.sender == tx.origin || msg.sender == address(this), "Only EOA or self");
+    function hashTransferRequest(TokenTransferRequest memory req) internal pure returns (bytes32) {
+        return keccak256(abi.encode(
+            REQUEST_TYPEHASH,
+            req.tokenGasPrice,
+            req.token,
+            req.from,
+            req.to,
+            req.value
+        ));
+    }
+
+    /**
+     *@dev verifies the signature sent for token transfer request against the authorizer of permit
+     */
+    function verifySignature(address user, TokenTransferRequest memory req, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
+        address signer = ecrecover(toTypedMessageHash(hashTransferRequest(req)), sigV, sigR, sigS);
+        require(signer != address(0), "Invalid signature");
+        return signer == user;
+    }
+
+    /**
+     * @dev
+     * - Keeps track of gas consumed
+     * - obtains permit to spend tokens worth uint MAX amount 
+     * - Transfers ERC20 token to intended recipient
+     * - Calls _feeTransferHandler, supplying the gas usage of the trasfer call
+     * @notice
+     * can be directly called without having to go through executeMetaTransaction for signature verification. As holder signature will be verified during permit 
+    **/
+    /**
+     * @param req : The request being processed
+     * @param sigR : User signature
+     * @param sigS : User signature
+     * @param sigV : User signature
+     * @param permitOptions : the permit request options for executing permit. Since it is EIP2612 permit pass permitOptions.allowed = true/false for this struct. 
+     */
+    //TODO
+    //finalise need on req.from so it can be used instead of permitOptions.holder ?
+    function permitEIP2612UnlimitedAndTransfer(TokenTransferRequest calldata req, bytes32 sigR, bytes32 sigS, uint8 sigV, PermitRequest calldata permitOptions) external{
         uint256 initialGas = gasleft();
         //USDC or any EIP2612 permit
-        IERC20Permit(token).permit(permitOptions.holder, address(this), type(uint256).max, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
+        IERC20Permit(req.token).permit(permitOptions.holder, address(this), type(uint256).max, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
+        //Must verify signature for sent request
+        require(verifySignature(permitOptions.holder, req, sigR, sigS, sigV), "Signer and signature do not match");
         //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
-        require(IERC20(token).transferFrom(permitOptions.holder,to,value));
+        require(IERC20(req.token).transferFrom(permitOptions.holder,req.to,req.value));
         uint256 postGas = gasleft();
-        uint256 charge = _feeTransferHandler(tokenGasPrice,permitOptions.holder,token,initialGas.add(baseGas).add(transferHandlerGas[token]).sub(postGas));
-        emit FeeCharged(permitOptions.holder,charge,token);
+        uint256 transferHandlerGas = transferHandlerGas[req.token];
+        uint256 charge = _feeTransferHandler(req.tokenGasPrice,permitOptions.holder,req.token,initialGas.add(baseGas).add(transferHandlerGas).sub(postGas));
+        emit FeeCharged(permitOptions.holder,charge,req.token);
     }
 
     /**
