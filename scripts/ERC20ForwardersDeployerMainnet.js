@@ -138,7 +138,7 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
-    receipt = await tx.wait(priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress));  
+    receipt = await tx.wait(confirmations = 1);  
     console.log(`✅ Oracle aggregator added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();

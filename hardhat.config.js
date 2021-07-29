@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
+require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 //require('solidity-coverage');
 const walletUtils = require("./walletUtils");
@@ -155,5 +156,10 @@ module.exports = {
       gas: "auto"
     }
 
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: "B2GZS7B1U65IQHHSYU3KX7PSXQRXA59EYP"
   }
 };
