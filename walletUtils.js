@@ -2,12 +2,19 @@ const ethers = require("ethers");
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".secret").toString().trim();
+const privateKey = fs.readFileSync(".env").toString().trim();
 
 const makeKeyList = (num=1,mn=mnemonic,index=0,path="m/44'/60'/0'/0/") => {
   let accounts = [];
   for(i=0; i<num; i++){
     accounts.push(ethers.Wallet.fromMnemonic(mn,path+i).privateKey);
   }
+  return accounts;
+}
+
+const getAccount = () => {
+  let accounts = [];
+  accounts.push(privateKey);
   return accounts;
 }
 
@@ -42,5 +49,6 @@ walletUtils.makeKeyList = makeKeyList;
 walletUtils.makeSignerList = makeSignerList;
 walletUtils.localWallet = localWallet;
 walletUtils.ganacheWallet = ganacheWallet;
+walletUtils.getAccount = getAccount;
 
 module.exports = walletUtils;

@@ -105,9 +105,9 @@ module.exports = {
     },
     matic: {
       url:"<matic_url>",
-      accounts:walletUtils.makeKeyList(),
+      accounts:walletUtils.getAccount(),
       chainId: 137,
-      gasPrice: 10000000000
+      gasPrice: 10000000000 
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKey}`,
@@ -124,7 +124,7 @@ module.exports = {
     },
     ethMainnet:{
       url: `https://mainnet.infura.io/v3/${infuraKey}`,
-      accounts:walletUtils.makeKeyList(),
+      accounts:walletUtils.getAccount(),
       chainId:1,
       gasPrice: 25000000000
     },

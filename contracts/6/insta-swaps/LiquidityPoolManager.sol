@@ -66,7 +66,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         _;
     }
 
-    constructor(address _executorManagerAddress, address owner, address pauser, address _trustedForwarder, uint256 _adminFee) public Ownable(owner) Pausable(pauser) {
+    constructor(address _executorManagerAddress, address owner, address pauser, address _trustedForwarder, uint256 _adminFee) Ownable(owner) Pausable(pauser) {
         require(_executorManagerAddress != address(0), "ExecutorManager Contract Address cannot be 0");
         require(_trustedForwarder != address(0), "TrustedForwarder Contract Address cannot be 0");
         require(_adminFee != 0, "AdminFee cannot be 0");
@@ -76,11 +76,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         baseGas = 21000;
     }
 
-    function renounceOwnership() public override onlyOwner {
+    function renounceOwnership() external override onlyOwner {
         revert ("can't renounceOwnership here"); // not possible within this smart contract
     }
 
-    function renouncePauser() public override onlyPauser {
+    function renouncePauser() external override onlyPauser {
         revert ("can't renouncePauser here"); // not possible within this smart contract
     }
 
@@ -209,8 +209,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 toChainId,
         PermitRequest calldata permitOptions
         )
-        external 
-        returns (bool success, bytes memory ret){
+        external {
             IERC20Permit(tokenAddress).permit(_msgSender(), address(this), permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
             depositErc20(tokenAddress, receiver, amount, toChainId);
     }
@@ -225,8 +224,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 toChainId,
         PermitRequest calldata permitOptions
         )
-        external 
-        returns (bool success, bytes memory ret){
+        external {
             IERC20Permit(tokenAddress).permit(_msgSender(), address(this), amount, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
             depositErc20(tokenAddress, receiver, amount, toChainId);            
     }
