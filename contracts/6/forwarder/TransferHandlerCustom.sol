@@ -18,7 +18,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
 
     uint16 public immutable maximumMarkup=25000;
 
-    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("TokenTransferRequest(uint256 tokenGasPrice, address token, address from, address to, uint256 value)"));
+    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("TokenTransferRequest(uint256 nonce, address from, uint256 tokenGasPrice, address token, address to, uint256 value)"));
 
     struct PermitRequest {
         address holder; 
@@ -33,9 +33,10 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     }
 
     struct TokenTransferRequest {
+        uint256 nonce;
+        address from; //from could be optional 
         uint256 tokenGasPrice;
         address token;
-        address from; //from could be optional 
         address to;
         uint256 value;
     }
@@ -138,6 +139,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         IERC20Permit(req.token).permit(permitOptions.holder, address(this), permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
         //Must verify signature for sent request
         require(verifySignature(permitOptions.holder, req, sigR, sigS, sigV), "Signer and signature do not match");
+        nonces[permitOptions.holder] = nonces[permitOptions.holder].add(1); //req.from
         //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
         require(IERC20(req.token).transferFrom(permitOptions.holder,req.to,req.value));
         uint256 postGas = gasleft();
@@ -146,22 +148,24 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         emit FeeCharged(permitOptions.holder,charge,req.token);
     }
 
-    function hashTransferRequest(TokenTransferRequest memory req) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
-            REQUEST_TYPEHASH,
-            req.tokenGasPrice,
-            req.token,
-            req.from,
-            req.to,
-            req.value
-        ));
-    }
-
     /**
      *@dev verifies the signature sent for token transfer request against the authorizer of permit
      */
     function verifySignature(address user, TokenTransferRequest memory req, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
-        address signer = ecrecover(toTypedMessageHash(hashTransferRequest(req)), sigV, sigR, sigS);
+        bytes32 digest =
+            keccak256(abi.encodePacked(
+                "\x19\x01",
+                domainSeparator,
+                keccak256(abi.encode(REQUEST_TYPEHASH,
+                                     req.nonce,
+                                     req.from,
+                                     req.tokenGasPrice,
+                                     req.token,
+                                     req.to,
+                                     req.value))
+        ));
+
+        address signer =  ecrecover(digest, sigV, sigR, sigS);
         require(signer != address(0), "Invalid signature");
         return signer == user;
     }
@@ -190,6 +194,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         IERC20Permit(req.token).permit(permitOptions.holder, address(this), type(uint256).max, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
         //Must verify signature for sent request
         require(verifySignature(permitOptions.holder, req, sigR, sigS, sigV), "Signer and signature do not match");
+        nonces[permitOptions.holder] = nonces[permitOptions.holder].add(1); //req.from
         //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
         require(IERC20(req.token).transferFrom(permitOptions.holder,req.to,req.value));
         uint256 postGas = gasleft();

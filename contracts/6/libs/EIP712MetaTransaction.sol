@@ -9,7 +9,7 @@ contract EIP712MetaTransaction is EIP712Base {
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
-    mapping(address => uint256) private nonces;
+    mapping(address => uint256) internal nonces;
 
     /*
      * Meta transaction structure.
