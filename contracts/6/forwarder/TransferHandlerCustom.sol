@@ -136,8 +136,6 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
      * @param sigV : User signature
      * @param permitOptions : the permit request options for executing permit. Since it is EIP2612 permit pass permitOptions.allowed = true/false for this struct. 
      */
-    //TODO
-    //finalise need on req.from so it can be used instead of permitOptions.holder ?
     //review for replay protections
     function permitEIP2612AndTransfer(TokenTransferRequest calldata req, bytes32 sigR, bytes32 sigS, uint8 sigV, PermitRequest calldata permitOptions) external{
         uint256 initialGas = gasleft();
