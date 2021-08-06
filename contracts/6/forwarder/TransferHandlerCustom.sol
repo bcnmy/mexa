@@ -18,9 +18,9 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
 
     uint16 public immutable maximumMarkup=25000;
 
-    mapping(address => uint256) private transferNonces;
+    mapping(address => mapping(uint256 => uint256)) private transferNonces;
 
-    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("TokenTransferRequest(uint256 nonce,address from,uint256 tokenGasPrice,address token,address to,uint256 value)"));
+    bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("TokenTransferRequest(uint256 batchId,uint256 batchNonce,address from,uint256 tokenGasPrice,address token,address to,uint256 value)"));
 
     struct PermitRequest {
         address holder; 
@@ -35,7 +35,8 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     }
 
     struct TokenTransferRequest {
-        uint256 nonce;
+        uint256 batchId;
+        uint256 batchNonce;
         address from; 
         uint256 tokenGasPrice;
         address token;
@@ -80,8 +81,8 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         emit BaseGasChanged(baseGas,msg.sender);
     }
 
-    function getTransferNonce(address user) external view returns(uint256 nonce) {
-        nonce = transferNonces[user];
+    function getTransferNonce(address user,uint256 batchId) external view returns(uint256 nonce) {
+        nonce = transferNonces[user][batchId];
     }
 
     // Designed to enable capturing token fees charged during the execution
@@ -143,8 +144,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
         IERC20Permit(req.token).permit(permitOptions.holder, address(this), permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
         //Must verify signature for sent request
         require(verifySignature(permitOptions.holder, req, sigR, sigS, sigV), "Signer and signature do not match");
-        transferNonces[permitOptions.holder] = transferNonces[permitOptions.holder].add(1); //req.from
-        //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),msgSender(), to, value)
+        transferNonces[permitOptions.holder][req.batchId] = transferNonces[permitOptions.holder][req.batchId].add(1); //req.from
         require(IERC20(req.token).transferFrom(permitOptions.holder,req.to,req.value));
         uint256 postGas = gasleft();
         uint256 transferHandlerGas = transferHandlerGas[req.token];
@@ -161,7 +161,8 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
                 "\x19\x01",
                 domainSeparator,
                 keccak256(abi.encode(REQUEST_TYPEHASH,
-                                     transferNonces[req.from],
+                                     req.batchId,
+                                     transferNonces[req.from][req.batchId],
                                      req.from,
                                      req.tokenGasPrice,
                                      req.token,
