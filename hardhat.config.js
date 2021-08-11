@@ -1,6 +1,8 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
+//https://hardhat.org/plugins/nomiclabs-hardhat-etherscan.html
+require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 //require('solidity-coverage');
 const walletUtils = require("./walletUtils");
@@ -20,6 +22,7 @@ const fs = require('fs');
 const infuraKey = fs.readFileSync(".infura").toString().trim();
 const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 const blockvigilKey = fs.readFileSync(".blockvigil").toString().trim();
+const etherScanKey = fs.readFileSync(".etherscan").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -154,5 +157,10 @@ module.exports = {
       gas: 6400000
     }
 
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: etherScanKey
   }
 };
