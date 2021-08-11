@@ -1,3 +1,4 @@
+// @unsupported: ovm
 pragma solidity ^0.5.0;
 
 import "./IERC165.sol";

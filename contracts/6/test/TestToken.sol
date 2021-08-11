@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// @unsupported: ovm
 pragma solidity ^0.6.8;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";

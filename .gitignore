@@ -78,6 +78,7 @@ node_modules
 #Buidler files
 cache
 artifacts
+artifacts-ovm
 .alchemy
 .infura
 .vscode

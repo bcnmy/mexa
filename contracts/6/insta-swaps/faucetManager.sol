@@ -3,6 +3,7 @@
 // File @openzeppelin/contracts/math/SafeMath.sol@v3.3.0
 // SPDX-License-Identifier: MIT
 
+// @unsupported: ovm
 pragma solidity 0.6.9;
 
 import "@opengsn/gsn/contracts/BaseRelayRecipient.sol";

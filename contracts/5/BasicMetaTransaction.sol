@@ -1,3 +1,4 @@
+// @unsupported: ovm
 pragma solidity ^0.5.12;
 pragma experimental ABIEncoderV2;
 

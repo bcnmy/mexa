@@ -11,6 +11,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+// @unsupported: ovm// @unsupported: ovm
 pragma solidity ^0.5.12;
 pragma experimental ABIEncoderV2;
 
