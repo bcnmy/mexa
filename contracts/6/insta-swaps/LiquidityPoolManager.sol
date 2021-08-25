@@ -50,6 +50,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event fundsWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
     event AdminFeeChanged(uint256 indexed newAdminFee);
     event TrustedForwarderChanged(address indexed forwarderAddress);
+    event EthReceived(address, uint);
 
     // MODIFIERS
     modifier onlyExecutor() {
@@ -255,7 +256,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
         uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
-
+        
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
             (bool success, ) = receiver.call{ value: amountToTransfer }("");
@@ -299,5 +300,9 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         require(success, "Native Transfer Failed");
         
         emit fundsWithdraw(address(this), sender, profitEarned);
+    }
+
+    receive() external payable {
+        emit EthReceived(_msgSender(), msg.value);
     }
 }
