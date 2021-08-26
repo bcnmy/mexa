@@ -11,6 +11,7 @@ import "../libs/Pausable.sol";
 import "../libs/Ownable.sol";
 import "../ExecutorManager.sol";
 import "../interfaces/IERC20Permit.sol";
+import "hardhat/console.sol";
 
 contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, Pausable {
     using SafeMath for uint256;
@@ -247,7 +248,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 initialGas = gasleft();
         require(tokensInfo[tokenAddress].minCap <= amount && tokensInfo[tokenAddress].maxCap >= amount, "Withdraw amount should be within allowed Cap limits");
         require(receiver != address(0), "Bad receiver address");
-        
+
         (bytes32 hashSendTransaction, bool status) = checkHashStatus(tokenAddress, amount, receiver, depositHash);
 
         require(!status, "Already Processed");
@@ -263,12 +264,14 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
          * Measures Gas used by the function call. 
          * Gas consumed by (1) transferring tokens and (2) storing the amt. of gas used are counted separately, since they occur after this calculation.
         */
-        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokensInfo[tokenAddress].transferOverhead).add(baseGas).add(gasUsedInStoringMappedValue);
+        uint256 totalGasUsed = (initialGas.sub(gasleft()));
+        totalGasUsed = totalGasUsed.add(tokensInfo[tokenAddress].transferOverhead);
+        totalGasUsed = totalGasUsed.add(baseGas);
+        totalGasUsed = totalGasUsed.add(gasUsedInStoringMappedValue);
 
-        uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
-        uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
+        gasFeeAccumulatedByToken[tokenAddress] = gasFeeAccumulatedByToken[tokenAddress].add(totalGasUsed.mul(tokenGasPrice));
+        uint256 amountToTransfer = amount.sub(calculateAdminFee.add(totalGasUsed.mul(tokenGasPrice)));
 
-        gasFeeAccumulatedByToken[tokenAddress] = gasFeeAccumulatedByToken[tokenAddress].add(gasFeeInToken);
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
