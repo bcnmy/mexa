@@ -41,6 +41,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     mapping ( address => TokenInfo ) public tokensInfo;
     mapping ( bytes32 => bool ) public processedHash;
+    mapping ( address => uint256 ) public gasFeeAccumulatedByToken;
+    mapping ( address => uint256 ) public adminFeeAccumulatedByToken;
 
     event AssetSent(address indexed asset, uint256 indexed amount, uint256 indexed transferredAmount, address target, bytes depositHash);
     event Received(address indexed from, uint256 indexed amount);
@@ -48,6 +50,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
     event fundsWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
+    event AdminFeeWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
+    event GasFeeWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
     event AdminFeeChanged(uint256 indexed newAdminFee);
     event TrustedForwarderChanged(address indexed forwarderAddress);
 
@@ -251,10 +255,20 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
 
-        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokensInfo[tokenAddress].transferOverhead).add(baseGas);
+        uint256 gasUsedInStoringMappedValue = gasleft();
+        adminFeeAccumulatedByToken[tokenAddress] = adminFeeAccumulatedByToken[tokenAddress].add(calculateAdminFee); 
+        gasUsedInStoringMappedValue = gasUsedInStoringMappedValue.sub(gasleft());
+
+        /* 
+         * Measures Gas used by the function call. 
+         * Gas consumed by (1) transferring tokens and (2) storing the amt. of gas used are counted separately, since they occur after this calculation.
+        */
+        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokensInfo[tokenAddress].transferOverhead).add(baseGas).add(gasUsedInStoringMappedValue);
 
         uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
         uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
+
+        gasFeeAccumulatedByToken[tokenAddress] = gasFeeAccumulatedByToken[tokenAddress].add(gasFeeInToken);
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
@@ -286,18 +300,69 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         require(profitEarned != 0, "Profit earned is 0");
         address payable sender = _msgSender();
 
+        adminFeeAccumulatedByToken[tokenAddress] = 0;
+        gasFeeAccumulatedByToken[tokenAddress] = 0;
+
         SafeERC20.safeTransfer(IERC20(tokenAddress), sender, profitEarned);
 
         emit fundsWithdraw(tokenAddress, sender,  profitEarned);
     }
 
+    function withdrawErc20AdminFee(address tokenAddress) external onlyOwner whenNotPaused {
+        require(tokenAddress != NATIVE, "Use withdrawNativeAdminFee() for native token");
+        uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[tokenAddress];
+        require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
+
+        address payable sender = _msgSender();
+        adminFeeAccumulatedByToken[tokenAddress] = 0;
+
+        SafeERC20.safeTransfer(IERC20(tokenAddress), sender, adminFeeAccumulated);
+        emit AdminFeeWithdraw(tokenAddress, sender, adminFeeAccumulated);
+    }
+
+    function withdrawErc20GasFee(address tokenAddress) external onlyOwner whenNotPaused {
+        require(tokenAddress != NATIVE, "Use withdrawNativeGasFee() for native token");
+        uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[tokenAddress];
+        require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
+
+        address payable sender = _msgSender();
+        gasFeeAccumulatedByToken[tokenAddress] = 0;
+
+        SafeERC20.safeTransfer(IERC20(tokenAddress), sender, gasFeeAccumulated);
+        emit GasFeeWithdraw(tokenAddress, sender, gasFeeAccumulated);
+    }
+
     function withdrawNative() external onlyOwner whenNotPaused {
         uint256 profitEarned = (address(this).balance).sub(tokensInfo[NATIVE].liquidity);
         require(profitEarned != 0, "Profit earned is 0");
+
+        adminFeeAccumulatedByToken[NATIVE] = 0;
+        gasFeeAccumulatedByToken[NATIVE] = 0;
+
         address payable sender = _msgSender();
         (bool success, ) = sender.call{ value: profitEarned }("");
         require(success, "Native Transfer Failed");
         
         emit fundsWithdraw(address(this), sender, profitEarned);
+    }
+
+    function withdrawNativeAdminFee() external onlyOwner whenNotPaused {
+        uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[NATIVE];
+        require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
+        address payable sender = _msgSender();
+        (bool success, ) = sender.call{ value: adminFeeAccumulated }("");
+        require(success, "Native Transfer Failed");
+        
+        emit AdminFeeWithdraw(address(this), sender, adminFeeAccumulated);
+    }
+
+    function withdrawNativeGasFee() external onlyOwner whenNotPaused {
+        uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[NATIVE];
+        require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
+        address payable sender = _msgSender();
+        (bool success, ) = sender.call{ value: gasFeeAccumulated }("");
+        require(success, "Native Transfer Failed");
+        
+        emit GasFeeWithdraw(address(this), sender, gasFeeAccumulated);
     }
 }
