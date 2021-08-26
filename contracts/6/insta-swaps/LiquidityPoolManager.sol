@@ -272,7 +272,6 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         gasFeeAccumulatedByToken[tokenAddress] = gasFeeAccumulatedByToken[tokenAddress].add(totalGasUsed.mul(tokenGasPrice));
         uint256 amountToTransfer = amount.sub(calculateAdminFee.add(totalGasUsed.mul(tokenGasPrice)));
 
-
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
             (bool success, ) = receiver.call{ value: amountToTransfer }("");
@@ -352,6 +351,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     function withdrawNativeAdminFee() external onlyOwner whenNotPaused {
         uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[NATIVE];
         require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
+        adminFeeAccumulatedByToken[NATIVE] = 0;
         address payable sender = _msgSender();
         (bool success, ) = sender.call{ value: adminFeeAccumulated }("");
         require(success, "Native Transfer Failed");
@@ -362,6 +362,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     function withdrawNativeGasFee() external onlyOwner whenNotPaused {
         uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[NATIVE];
         require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
+        gasFeeAccumulatedByToken[NATIVE] = 0;
         address payable sender = _msgSender();
         (bool success, ) = sender.call{ value: gasFeeAccumulated }("");
         require(success, "Native Transfer Failed");
