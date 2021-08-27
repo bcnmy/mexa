@@ -343,23 +343,28 @@ describe("Liquidity Pool Manager", function () {
 
             await expect(() => liquidityPoolMngr.withdrawErc20AdminFee(
                 USDT.address,
+                owner,
                 { from: owner }
             )).to.changeTokenBalances(USDT, [accounts[0], liquidityPoolMngr], [+expectedAdminFee, -expectedAdminFee]);
 
-            await expect(liquidityPoolMngr.withdrawErc20AdminFee(USDT.address, {
-                from: owner
-            })).to.be.revertedWith("Admin Fee earned is 0")
+            await expect(liquidityPoolMngr.withdrawErc20AdminFee(
+                USDT.address,
+                owner,
+                 { from: owner }))
+                .to.be.revertedWith("Admin Fee earned is 0")
 
             const expectedGasFee = amount - expectedAdminFee - receiverFundsReceived;
 
             await expect(() => liquidityPoolMngr.withdrawErc20GasFee(
                 USDT.address, 
+                owner,
                 { from: owner}
             )).to.changeTokenBalances(USDT, [accounts[0], liquidityPoolMngr], [+expectedGasFee, -expectedGasFee])
 
-            await expect(liquidityPoolMngr.withdrawErc20GasFee(USDT.address, {
-                from: owner
-            })).to.be.revertedWith("Gas Fee earned is 0")
+            await expect(liquidityPoolMngr.withdrawErc20GasFee(USDT.address,
+                owner,
+                { from: owner}))
+            .to.be.revertedWith("Gas Fee earned is 0")
         });
 
         it("Should withdraw NativeAdminFee and NativeGasFee successfully", async () => {
@@ -384,23 +389,27 @@ describe("Liquidity Pool Manager", function () {
             const expectedAdminFee = amount * (await liquidityPoolMngr.getAdminFee()).toNumber() / 10000;
 
             await expect(() => liquidityPoolMngr.withdrawNativeAdminFee(
+                owner,
                 { from: owner }
             )).to.changeEtherBalances([accounts[0], liquidityPoolMngr], [+expectedAdminFee, -expectedAdminFee]);
 
-            await expect(liquidityPoolMngr.withdrawNativeAdminFee({
-                from: owner
-            })).to.be.revertedWith("Admin Fee earned is 0")
+            await expect(liquidityPoolMngr.withdrawNativeAdminFee(
+                owner,
+                { from: owner }
+            )).to.be.revertedWith("Admin Fee earned is 0")
 
             const expectedGasFee = amount - expectedAdminFee - receiverFundsReceived;
 
             await expect(() => liquidityPoolMngr.withdrawNativeGasFee(
+                owner,
                 { from: owner }
             )).to.changeEtherBalances([accounts[0], liquidityPoolMngr], [+expectedGasFee, -expectedGasFee])
             
 
-            await expect(liquidityPoolMngr.withdrawNativeGasFee({
-                from: owner
-            })).to.be.revertedWith("Gas Fee earned is 0")
+            await expect(liquidityPoolMngr.withdrawNativeGasFee(
+                owner,
+                { from: owner }))
+            .to.be.revertedWith("Gas Fee earned is 0")
         });
 
         it("Should fail to withdrawErc20 : not Authorized", async () => {  

@@ -256,6 +256,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
 
+        // Measure gas fee consumed when storing a value in map
+        // Used to account for the map update done for storing totalGasUsed in gasFeeAccumulatedByToken
         uint256 gasUsedInStoringMappedValue = gasleft();
         adminFeeAccumulatedByToken[tokenAddress] = adminFeeAccumulatedByToken[tokenAddress].add(calculateAdminFee); 
         gasUsedInStoringMappedValue = gasUsedInStoringMappedValue.sub(gasleft());
@@ -310,28 +312,26 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit fundsWithdraw(tokenAddress, sender,  profitEarned);
     }
 
-    function withdrawErc20AdminFee(address tokenAddress) external onlyOwner whenNotPaused {
+    function withdrawErc20AdminFee(address tokenAddress, address receiver) external onlyOwner whenNotPaused {
         require(tokenAddress != NATIVE, "Use withdrawNativeAdminFee() for native token");
         uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[tokenAddress];
         require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
 
-        address payable sender = _msgSender();
         adminFeeAccumulatedByToken[tokenAddress] = 0;
 
-        SafeERC20.safeTransfer(IERC20(tokenAddress), sender, adminFeeAccumulated);
-        emit AdminFeeWithdraw(tokenAddress, sender, adminFeeAccumulated);
+        SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, adminFeeAccumulated);
+        emit AdminFeeWithdraw(tokenAddress, receiver, adminFeeAccumulated);
     }
 
-    function withdrawErc20GasFee(address tokenAddress) external onlyOwner whenNotPaused {
+    function withdrawErc20GasFee(address tokenAddress, address receiver) external onlyOwner whenNotPaused {
         require(tokenAddress != NATIVE, "Use withdrawNativeGasFee() for native token");
         uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[tokenAddress];
         require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
 
-        address payable sender = _msgSender();
         gasFeeAccumulatedByToken[tokenAddress] = 0;
 
-        SafeERC20.safeTransfer(IERC20(tokenAddress), sender, gasFeeAccumulated);
-        emit GasFeeWithdraw(tokenAddress, sender, gasFeeAccumulated);
+        SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, gasFeeAccumulated);
+        emit GasFeeWithdraw(tokenAddress, receiver, gasFeeAccumulated);
     }
 
     function withdrawNative() external onlyOwner whenNotPaused {
@@ -348,25 +348,23 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit fundsWithdraw(address(this), sender, profitEarned);
     }
 
-    function withdrawNativeAdminFee() external onlyOwner whenNotPaused {
+    function withdrawNativeAdminFee(address payable receiver) external onlyOwner whenNotPaused {
         uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[NATIVE];
         require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
         adminFeeAccumulatedByToken[NATIVE] = 0;
-        address payable sender = _msgSender();
-        (bool success, ) = sender.call{ value: adminFeeAccumulated }("");
+        (bool success, ) = receiver.call{ value: adminFeeAccumulated }("");
         require(success, "Native Transfer Failed");
         
-        emit AdminFeeWithdraw(address(this), sender, adminFeeAccumulated);
+        emit AdminFeeWithdraw(address(this), receiver, adminFeeAccumulated);
     }
 
-    function withdrawNativeGasFee() external onlyOwner whenNotPaused {
+    function withdrawNativeGasFee(address payable receiver) external onlyOwner whenNotPaused {
         uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[NATIVE];
         require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
         gasFeeAccumulatedByToken[NATIVE] = 0;
-        address payable sender = _msgSender();
-        (bool success, ) = sender.call{ value: gasFeeAccumulated }("");
+        (bool success, ) = receiver.call{ value: gasFeeAccumulated }("");
         require(success, "Native Transfer Failed");
         
-        emit GasFeeWithdraw(address(this), sender, gasFeeAccumulated);
+        emit GasFeeWithdraw(address(this), receiver, gasFeeAccumulated);
     }
 }
