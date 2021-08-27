@@ -7,7 +7,7 @@ pragma solidity 0.7.6;
  * @dev The Ownable contract has an owner address, and provides basic authorization control
  * functions, this simplifies the implementation of "user permissions".
  */
-contract Ownable {
+abstract contract Ownable {
     address private _owner;
 
     event OwnershipTransferred(
@@ -19,7 +19,8 @@ contract Ownable {
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
      * account.
      */
-    constructor(address owner) public {
+    constructor(address owner) {
+        require(owner != address(0), "Owner Address cannot be 0");
         _owner = owner;
     }
 
@@ -54,7 +55,7 @@ contract Ownable {
      * It will not be possible to call the functions with the `onlyOwner`
      * modifier anymore.
      */
-    function renounceOwnership() public onlyOwner {
+    function renounceOwnership() public virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }

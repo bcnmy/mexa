@@ -13,7 +13,7 @@ pragma solidity >=0.6.0 <0.8.0;
  * the functions of your contract. Note that they will not be pausable by
  * simply including this module, only once the modifiers are put in place.
  */
-contract Pausable {
+abstract contract Pausable {
     /**
      * @dev Emitted when the pause is triggered by `account`.
      */
@@ -36,7 +36,8 @@ contract Pausable {
      * @dev The pausable constructor sets the original `pauser` of the contract to the sender
      * account & Initializes the contract in unpaused state..
      */
-    constructor(address pauser) public {
+    constructor(address pauser) {
+        require(pauser != address(0), "Pauser Address cannot be 0");
         _pauser = pauser;
         _paused = false;
     }
@@ -115,7 +116,7 @@ contract Pausable {
         _pauser = newPauser;
     }
 
-    function renouncePauser() public onlyPauser {
+    function renouncePauser() public virtual onlyPauser {
         emit PauserChanged(_pauser, address(0));
         _pauser = address(0);
     }
