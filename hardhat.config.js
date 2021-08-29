@@ -68,6 +68,15 @@ module.exports = {
         }
       },
       {
+        version: "0.6.2",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        }
+      },
+      {
         version: "0.6.0"
       }
     ]
