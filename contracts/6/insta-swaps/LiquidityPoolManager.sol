@@ -256,20 +256,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
 
-        // Measure gas fee consumed when storing a value in map
-        // Used to account for the map update done for storing totalGasUsed in gasFeeAccumulatedByToken
-        uint256 gasUsedInStoringMappedValue = gasleft();
         adminFeeAccumulatedByToken[tokenAddress] = adminFeeAccumulatedByToken[tokenAddress].add(calculateAdminFee); 
-        gasUsedInStoringMappedValue = gasUsedInStoringMappedValue.sub(gasleft());
 
-        /* 
-         * Measures Gas used by the function call. 
-         * Gas consumed by (1) transferring tokens and (2) storing the amt. of gas used are counted separately, since they occur after this calculation.
-        */
         uint256 totalGasUsed = (initialGas.sub(gasleft()));
         totalGasUsed = totalGasUsed.add(tokensInfo[tokenAddress].transferOverhead);
         totalGasUsed = totalGasUsed.add(baseGas);
-        totalGasUsed = totalGasUsed.add(gasUsedInStoringMappedValue);
 
         gasFeeAccumulatedByToken[tokenAddress] = gasFeeAccumulatedByToken[tokenAddress].add(totalGasUsed.mul(tokenGasPrice));
         uint256 amountToTransfer = amount.sub(calculateAdminFee.add(totalGasUsed.mul(tokenGasPrice)));
