@@ -31,7 +31,7 @@ contract DappGasTank is Ownable, DappGasTankStorage {
      *
      */
     function initialize(
-    ) public {
+    ) public {_fudingKey
         require(!initialized, "Dapp Gas Tank: contract is already initialized");
         initialized = true;
         //assignments
@@ -91,6 +91,8 @@ contract DappGasTank is Ownable, DappGasTankStorage {
     receive() external payable {
         require(msg.value > 0, "No value provided to fallback.");
         require(tx.origin == msg.sender, "Only EOA can deposit directly.");
+        //review
+        depositors[msg.sender][0] = depositors[msg.sender][0] + msg.value;
         emit Deposit(msg.sender, msg.value, 0);
     }
 

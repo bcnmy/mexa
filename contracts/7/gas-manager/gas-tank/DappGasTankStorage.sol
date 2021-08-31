@@ -21,12 +21,12 @@ contract DappGasTankStorage {
     //Maintains fundingKey and depositedAmount information for each Depositor
     //TODO: or have parent mapping on fundingKey instead of address?
     //review
-    mapping(address => mapping(uint256 => uint256) ) depositors;
+    mapping(address => mapping(uint256 => uint256) ) public depositors;
 
     //Allowed tokens as deposit currency in Dapp Gas Tank
-    mapping(address => bool) allowedTokens;
+    mapping(address => bool) public allowedTokens;
     //Pricefeeds info should you require to calculate Token/ETH
-    mapping(address => address) tokenPriceFeed;
+    mapping(address => address) public tokenPriceFeed;
 
     //review
     //any other structs necessary for future implementations
