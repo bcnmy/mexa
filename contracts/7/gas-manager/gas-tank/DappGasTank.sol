@@ -72,6 +72,7 @@ contract DappGasTank is Ownable, DappGasTankStorage {
      * Caution: The funding key must be an your identifier generated from biconomy dashboard 
      */
     function depositFor(uint256 _fundingKey) public payable { 
+        require(msg.sender == tx.origin, "sender must be EOA");
         require(msg.value > 0, "No value provided to depositFor.");
         require(msg.value >= minDeposit, "Must be grater than minimum deposit for this network");
         masterAccount.transfer(msg.value);
