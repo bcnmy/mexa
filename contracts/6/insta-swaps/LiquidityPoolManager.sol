@@ -291,12 +291,12 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function withdrawErc20(address tokenAddress) external onlyOwner whenNotPaused {
-        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this))).sub(tokensInfo[tokenAddress].liquidity);
+        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this)))
+                                .sub(tokensInfo[tokenAddress].liquidity)
+                                .sub(adminFeeAccumulatedByToken[tokenAddress])
+                                .sub(gasFeeAccumulatedByToken[tokenAddress]);
         require(profitEarned != 0, "Profit earned is 0");
         address payable sender = _msgSender();
-
-        adminFeeAccumulatedByToken[tokenAddress] = 0;
-        gasFeeAccumulatedByToken[tokenAddress] = 0;
 
         SafeERC20.safeTransfer(IERC20(tokenAddress), sender, profitEarned);
 
@@ -326,11 +326,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function withdrawNative() external onlyOwner whenNotPaused {
-        uint256 profitEarned = (address(this).balance).sub(tokensInfo[NATIVE].liquidity);
+        uint256 profitEarned = (address(this).balance)
+                                .sub(tokensInfo[NATIVE].liquidity)
+                                .sub(adminFeeAccumulatedByToken[NATIVE])
+                                .sub(gasFeeAccumulatedByToken[NATIVE]);
         require(profitEarned != 0, "Profit earned is 0");
-
-        adminFeeAccumulatedByToken[NATIVE] = 0;
-        gasFeeAccumulatedByToken[NATIVE] = 0;
 
         address payable sender = _msgSender();
         (bool success, ) = sender.call{ value: profitEarned }("");
