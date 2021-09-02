@@ -31,7 +31,7 @@ contract DappGasTank is Ownable, DappGasTankStorage {
      *
      */
     function initialize(
-    ) public {_fudingKey
+    ) public {
         require(!initialized, "Dapp Gas Tank: contract is already initialized");
         initialized = true;
         //assignments
