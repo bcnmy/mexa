@@ -11,6 +11,7 @@ import "../libs/Pausable.sol";
 import "../libs/Ownable.sol";
 import "../ExecutorManager.sol";
 import "../interfaces/IERC20Permit.sol";
+import "hardhat/console.sol";
 
 contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, Pausable {
     using SafeMath for uint256;
@@ -41,6 +42,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
     mapping ( address => TokenInfo ) public tokensInfo;
     mapping ( bytes32 => bool ) public processedHash;
+    mapping ( address => uint256 ) public gasFeeAccumulatedByToken;
+    mapping ( address => uint256 ) public adminFeeAccumulatedByToken;
 
     event AssetSent(address indexed asset, uint256 indexed amount, uint256 indexed transferredAmount, address target, bytes depositHash);
     event Received(address indexed from, uint256 indexed amount);
@@ -48,6 +51,8 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event LiquidityAdded(address indexed from, address indexed tokenAddress, address indexed receiver, uint256 amount);
     event LiquidityRemoved(address indexed tokenAddress, uint256 indexed amount, address indexed sender);
     event fundsWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
+    event AdminFeeWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
+    event GasFeeWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
     event AdminFeeChanged(uint256 indexed newAdminFee);
     event TrustedForwarderChanged(address indexed forwarderAddress);
 
@@ -243,7 +248,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 initialGas = gasleft();
         require(tokensInfo[tokenAddress].minCap <= amount && tokensInfo[tokenAddress].maxCap >= amount, "Withdraw amount should be within allowed Cap limits");
         require(receiver != address(0), "Bad receiver address");
-        
+
         (bytes32 hashSendTransaction, bool status) = checkHashStatus(tokenAddress, amount, receiver, depositHash);
 
         require(!status, "Already Processed");
@@ -251,10 +256,14 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         uint256 calculateAdminFee = amount.mul(adminFee).div(10000);
 
-        uint256 totalGasUsed = (initialGas.sub(gasleft())).add(tokensInfo[tokenAddress].transferOverhead).add(baseGas);
+        adminFeeAccumulatedByToken[tokenAddress] = adminFeeAccumulatedByToken[tokenAddress].add(calculateAdminFee); 
 
-        uint256 gasFeeInToken = totalGasUsed.mul(tokenGasPrice);
-        uint256 amountToTransfer = amount.sub(calculateAdminFee.add(gasFeeInToken));
+        uint256 totalGasUsed = (initialGas.sub(gasleft()));
+        totalGasUsed = totalGasUsed.add(tokensInfo[tokenAddress].transferOverhead);
+        totalGasUsed = totalGasUsed.add(baseGas);
+
+        gasFeeAccumulatedByToken[tokenAddress] = gasFeeAccumulatedByToken[tokenAddress].add(totalGasUsed.mul(tokenGasPrice));
+        uint256 amountToTransfer = amount.sub(calculateAdminFee.add(totalGasUsed.mul(tokenGasPrice)));
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
@@ -282,7 +291,10 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     }
 
     function withdrawErc20(address tokenAddress) external onlyOwner whenNotPaused {
-        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this))).sub(tokensInfo[tokenAddress].liquidity);
+        uint256 profitEarned = (IERC20(tokenAddress).balanceOf(address(this)))
+                                .sub(tokensInfo[tokenAddress].liquidity)
+                                .sub(adminFeeAccumulatedByToken[tokenAddress])
+                                .sub(gasFeeAccumulatedByToken[tokenAddress]);
         require(profitEarned != 0, "Profit earned is 0");
         address payable sender = _msgSender();
 
@@ -291,13 +303,59 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit fundsWithdraw(tokenAddress, sender,  profitEarned);
     }
 
+    function withdrawErc20AdminFee(address tokenAddress, address receiver) external onlyOwner whenNotPaused {
+        require(tokenAddress != NATIVE, "Use withdrawNativeAdminFee() for native token");
+        uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[tokenAddress];
+        require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
+
+        adminFeeAccumulatedByToken[tokenAddress] = 0;
+
+        SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, adminFeeAccumulated);
+        emit AdminFeeWithdraw(tokenAddress, receiver, adminFeeAccumulated);
+    }
+
+    function withdrawErc20GasFee(address tokenAddress, address receiver) external onlyOwner whenNotPaused {
+        require(tokenAddress != NATIVE, "Use withdrawNativeGasFee() for native token");
+        uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[tokenAddress];
+        require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
+
+        gasFeeAccumulatedByToken[tokenAddress] = 0;
+
+        SafeERC20.safeTransfer(IERC20(tokenAddress), receiver, gasFeeAccumulated);
+        emit GasFeeWithdraw(tokenAddress, receiver, gasFeeAccumulated);
+    }
+
     function withdrawNative() external onlyOwner whenNotPaused {
-        uint256 profitEarned = (address(this).balance).sub(tokensInfo[NATIVE].liquidity);
+        uint256 profitEarned = (address(this).balance)
+                                .sub(tokensInfo[NATIVE].liquidity)
+                                .sub(adminFeeAccumulatedByToken[NATIVE])
+                                .sub(gasFeeAccumulatedByToken[NATIVE]);
         require(profitEarned != 0, "Profit earned is 0");
+
         address payable sender = _msgSender();
         (bool success, ) = sender.call{ value: profitEarned }("");
         require(success, "Native Transfer Failed");
         
         emit fundsWithdraw(address(this), sender, profitEarned);
+    }
+
+    function withdrawNativeAdminFee(address payable receiver) external onlyOwner whenNotPaused {
+        uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[NATIVE];
+        require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
+        adminFeeAccumulatedByToken[NATIVE] = 0;
+        (bool success, ) = receiver.call{ value: adminFeeAccumulated }("");
+        require(success, "Native Transfer Failed");
+        
+        emit AdminFeeWithdraw(address(this), receiver, adminFeeAccumulated);
+    }
+
+    function withdrawNativeGasFee(address payable receiver) external onlyOwner whenNotPaused {
+        uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[NATIVE];
+        require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
+        gasFeeAccumulatedByToken[NATIVE] = 0;
+        (bool success, ) = receiver.call{ value: gasFeeAccumulated }("");
+        require(success, "Native Transfer Failed");
+        
+        emit GasFeeWithdraw(address(this), receiver, gasFeeAccumulated);
     }
 }

@@ -48,6 +48,7 @@ describe("Liquidity Pool Manager", function () {
         liquidityPoolMngr = await LiquidityPoolMngr.deploy(
             executorManager.address,
             owner,
+            owner,
             executorManager.address,
             300
         );
@@ -321,6 +322,96 @@ describe("Liquidity Pool Manager", function () {
             expect(getTokenInfo.liquidity).to.equal(usdtBalanceAfter);
         });
 
+        it("Should withdraw Erc20AdminFee and Erc20GasFee successfully", async () => {
+            const amount = 1000000;
+            const dummyDepositHash = "0xf408509b00caba5d37325ab33a92f6185c9b5f007a965dfbeff7b81ab1ec871b";
+
+            await liquidityPoolMngr.addTokenLiquidity(USDT.address, amount);
+
+            let receiverFundsReceived = await USDT.balanceOf(receiver);
+            await liquidityPoolMngr.sendFundsToUser(
+                USDT.address,
+                amount.toString(),
+                receiver,
+                dummyDepositHash,
+                1,
+                { from: owner }
+            );
+            receiverFundsReceived = (await USDT.balanceOf(receiver)).sub(receiverFundsReceived);
+
+            const expectedAdminFee = amount * (await liquidityPoolMngr.getAdminFee()).toNumber() / 10000;
+
+            await expect(() => liquidityPoolMngr.withdrawErc20AdminFee(
+                USDT.address,
+                owner,
+                { from: owner }
+            )).to.changeTokenBalances(USDT, [accounts[0], liquidityPoolMngr], [+expectedAdminFee, -expectedAdminFee]);
+
+            await expect(liquidityPoolMngr.withdrawErc20AdminFee(
+                USDT.address,
+                owner,
+                 { from: owner }))
+                .to.be.revertedWith("Admin Fee earned is 0")
+
+            const expectedGasFee = amount - expectedAdminFee - receiverFundsReceived;
+
+            await expect(() => liquidityPoolMngr.withdrawErc20GasFee(
+                USDT.address, 
+                owner,
+                { from: owner}
+            )).to.changeTokenBalances(USDT, [accounts[0], liquidityPoolMngr], [+expectedGasFee, -expectedGasFee])
+
+            await expect(liquidityPoolMngr.withdrawErc20GasFee(USDT.address,
+                owner,
+                { from: owner}))
+            .to.be.revertedWith("Gas Fee earned is 0")
+        });
+
+        it("Should withdraw NativeAdminFee and NativeGasFee successfully", async () => {
+            const amount = 1000000;
+            const dummyDepositHash = "0xf408509b00caba5d37325ab33a92f6185c9b5f007a965dfbeff7b81ab1ec871c";
+
+            await liquidityPoolMngr.addNativeLiquidity({
+                value: amount
+            });
+
+            let receiverFundsReceived = await ethers.provider.getBalance(receiver);
+            await liquidityPoolMngr.sendFundsToUser(
+                NATIVE,
+                amount.toString(),
+                receiver,
+                dummyDepositHash,
+                1,
+                { from: owner }
+            );
+            receiverFundsReceived = (await ethers.provider.getBalance(receiver)).sub(receiverFundsReceived);
+
+            const expectedAdminFee = amount * (await liquidityPoolMngr.getAdminFee()).toNumber() / 10000;
+
+            await expect(() => liquidityPoolMngr.withdrawNativeAdminFee(
+                owner,
+                { from: owner }
+            )).to.changeEtherBalances([accounts[0], liquidityPoolMngr], [+expectedAdminFee, -expectedAdminFee]);
+
+            await expect(liquidityPoolMngr.withdrawNativeAdminFee(
+                owner,
+                { from: owner }
+            )).to.be.revertedWith("Admin Fee earned is 0")
+
+            const expectedGasFee = amount - expectedAdminFee - receiverFundsReceived;
+
+            await expect(() => liquidityPoolMngr.withdrawNativeGasFee(
+                owner,
+                { from: owner }
+            )).to.changeEtherBalances([accounts[0], liquidityPoolMngr], [+expectedGasFee, -expectedGasFee])
+            
+
+            await expect(liquidityPoolMngr.withdrawNativeGasFee(
+                owner,
+                { from: owner }))
+            .to.be.revertedWith("Gas Fee earned is 0")
+        });
+
         it("Should fail to withdrawErc20 : not Authorized", async () => {  
             await expect( liquidityPoolMngr.withdrawErc20(
                 USDT.address,
@@ -511,7 +602,7 @@ describe("Liquidity Pool Manager", function () {
                 liquidityPoolMngr.addTokenLiquidity(tokenAddress, "0", {
                     from: owner
                 })
-            ).to.be.revertedWith("amount should be greater then 0");
+            ).to.be.revertedWith("Amount cannot be 0");
         });
 
         
@@ -540,7 +631,7 @@ describe("Liquidity Pool Manager", function () {
                 liquidityPoolMngr.removeTokenLiquidity(tokenAddress, "0", {
                     from: owner,
                 })
-            ).to.be.revertedWith("amount should be greater then 0");
+            ).to.be.revertedWith("Amount cannot be 0");
         });
 
         it("Should fail to removeTokenLiquidity: Not enough balance", async () => {
