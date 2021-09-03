@@ -3,6 +3,7 @@ async function main() {
   let usdtAddress = "0xeaBc4b91d9375796AA4F69cC764A4aB509080A58"; //mumbai
   let usdcAddress = "0xdA5289fCAAF71d52a80A254da614a192b693e977"; //mumbai
   let daiAddress = "0x27a44456bEDb94DbD59D0f0A14fE977c777fC5C3"; //mumbai
+  let ethAddress = "0xa6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa"; // mumbai
 
   let owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
   let adminFeePercentage = 30; // This is value as per 10,000 basis point, so its actual value is .3
@@ -34,15 +35,21 @@ async function main() {
   receipt = await tx.wait(1);
   console.log("✅ DAI support added");
 
+  tx = await lpProxy.addSupportedToken(ethAddress, "10000000000000000","100000000000000000000");
+  receipt = await tx.wait(1);
+  console.log("✅ ETH support added");
+
   await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
   console.log("✅ DAI overhead added");
   await lpProxy.setTokenTransferOverhead(usdcAddress, 46174); //46174
   console.log("✅ USDC overhead added");
   await lpProxy.setTokenTransferOverhead(usdtAddress, 51657); //51657
   console.log("✅ USDT overhead added");
+  await lpProxy.setTokenTransferOverhead(ethAddress, 29766); //29766
+  console.log("✅ USDT overhead added");
 
-  tx = await lpProxy.transferOwnership("0x65E3092D6dB27a20599dbbEc054A28a14Af32b27");
-  receipt = await tx.wait(1);
+  // tx = await lpProxy.transferOwnership("0x65E3092D6dB27a20599dbbEc054A28a14Af32b27");
+  // receipt = await tx.wait(1);
   console.log("✅ Ownership transferred");
 
   
