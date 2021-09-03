@@ -55,6 +55,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
     event GasFeeWithdraw(address indexed tokenAddress, address indexed owner,  uint256 indexed amount);
     event AdminFeeChanged(uint256 indexed newAdminFee);
     event TrustedForwarderChanged(address indexed forwarderAddress);
+    event EthReceived(address, uint);
 
     // MODIFIERS
     modifier onlyExecutor() {
@@ -357,5 +358,9 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         require(success, "Native Transfer Failed");
         
         emit GasFeeWithdraw(address(this), receiver, gasFeeAccumulated);
+    }
+
+    receive() external payable {
+        emit EthReceived(_msgSender(), msg.value);
     }
 }
