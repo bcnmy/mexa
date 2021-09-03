@@ -11,7 +11,6 @@ import "../libs/Pausable.sol";
 import "../libs/Ownable.sol";
 import "../ExecutorManager.sol";
 import "../interfaces/IERC20Permit.sol";
-import "hardhat/console.sol";
 
 contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, Pausable {
     using SafeMath for uint256;
