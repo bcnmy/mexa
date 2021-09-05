@@ -11,6 +11,8 @@ async function main() {
 
     let feeReceiver = "0xabcd3f544CF8c7AcF59AB0dA6e89e170d610bA91";
 
+    let oracleAggregator = "0xf0Ca76b79E9eAc71ecC12FA77b23D0fB9a36728f";
+
     const usdcEthPriceFeedAddress = "0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838";
     const usdcAddress = "0x6043fD7126e4229d6FcaC388c9E1C8d333CCb8fA"; //make faucet available 
     const usdcDecimals = 18;
@@ -41,6 +43,12 @@ async function main() {
     tx = await transferHandler.setDefaultFeeMultiplier(10000,options);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Fee multiplier is set`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+
+    tx = await transferHandler.setOracleAggregator(oracleAggregator,options);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Oracle Aggregator is set`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 

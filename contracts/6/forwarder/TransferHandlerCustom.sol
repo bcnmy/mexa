@@ -7,12 +7,15 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../libs/EIP712MetaTransaction.sol";
 import "../libs/Ownable.sol";
 import "../interfaces/IERC20Permit.sol";
+import "./OracleAggregator.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ownable{
     using SafeMath for uint256;
 
     address public feeReceiver;
+
+    address public oracleAggregator;
 
     uint16 public feeMultiplier;
 
@@ -55,8 +58,18 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     }
 
     function setDefaultFeeMultiplier(uint16 _bp) external onlyOwner{
+        require(_bp > 0, "fee multiplier must be greater than 0");
         require(_bp <= maximumMarkup, "fee multiplier is too high");
         feeMultiplier = _bp;
+    }
+
+    function setOracleAggregator(address oa) external onlyOwner{
+        require(
+            oa != address(0),
+            "TransferHandler: new oracle aggregator can not be a zero address"
+        );
+        oracleAggregator = oa;
+        emit OracleAggregatorChanged(oracleAggregator, msg.sender);
     }
 
     function setFeeReceiver(address _feeReceiver) external onlyOwner{
@@ -91,6 +104,8 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     event BaseGasChanged(uint128 newBaseGas, address indexed actor);
 
     event FeeReceiverChanged(address newFeeReceiver, address indexed actor);
+
+    event OracleAggregatorChanged(address indexed newOracleAggregatorAddress, address indexed actor);
 
     event TransferHandlerGasChanged(address indexed tokenAddress, address indexed actor, uint256 indexed newGas);
 
@@ -189,6 +204,9 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
      * @param executionGas : amount of gas for which fee is to be charged
      */ 
     function _feeTransferHandler(uint256 tokenGasPrice, address _payer, address token, uint256 executionGas) internal returns(uint256 charge){
+        OracleAggregator oa = OracleAggregator(oracleAggregator);
+        uint256 tokenGasPriceNow = tx.gasprice * (10 ** oa.getTokenOracleDecimals(token)) / (oa.getTokenPrice(token));
+        require(tokenGasPrice >= tokenGasPriceNow, "pre flight checks have failed");
         // optional checks if token is allowed could be added     
         charge = tokenGasPrice.mul(executionGas).mul(feeMultiplier).div(10000);
         //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),_payer, feeReceiver, charge)
