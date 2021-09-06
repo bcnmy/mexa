@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
-pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../libs/EIP712MetaTransaction.sol";
-import "../libs/Ownable.sol";
+import "../libs/OwnableWithoutRenounce.sol";
 import "../interfaces/IERC20Permit.sol";
 import "./OracleAggregator.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ownable{
+contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), OwnableWithoutRenounce{
     using SafeMath for uint256;
 
     address public feeReceiver;
@@ -54,13 +53,23 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     //very predictable
     mapping(address=>uint256) public transferHandlerGas;
 
-    constructor(address _owner) public Ownable(_owner){
+    constructor(address _owner, address _feeReceiver) public OwnableWithoutRenounce(_owner){
+        require(
+         _owner != address(0),
+        "Transfer Handler : _owner can not be a zero address"
+       );
+        require(
+         _feeReceiver != address(0),
+        "Transfer Handler : the fee receiver can not be a zero address"
+       );
+        feeReceiver = _feeReceiver;
     }
 
     function setDefaultFeeMultiplier(uint16 _bp) external onlyOwner{
         require(_bp > 0, "fee multiplier must be greater than 0");
         require(_bp <= maximumMarkup, "fee multiplier is too high");
         feeMultiplier = _bp;
+        emit FeeMultiplierChanged(_bp, msg.sender);
     }
 
     function setOracleAggregator(address oa) external onlyOwner{
@@ -78,6 +87,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
             "Transfer Handler: new fee receiver can not be a zero address"
         );
         feeReceiver = _feeReceiver;
+        emit FeeReceiverChanged(_feeReceiver, msg.sender);
     }
 
     function setTransferHandlerGas(address token, uint256 _transferHandlerGas) external onlyOwner{
@@ -104,6 +114,8 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     event BaseGasChanged(uint128 newBaseGas, address indexed actor);
 
     event FeeReceiverChanged(address newFeeReceiver, address indexed actor);
+
+    event FeeMultiplierChanged(uint16 newFeeMultiplier, address indexed actor);
 
     event OracleAggregatorChanged(address indexed newOracleAggregatorAddress, address indexed actor);
 
@@ -206,7 +218,7 @@ contract TransferHandlerCustom is EIP712MetaTransaction("ERC20Transfer","1"), Ow
     function _feeTransferHandler(uint256 tokenGasPrice, address _payer, address token, uint256 executionGas) internal returns(uint256 charge){
         OracleAggregator oa = OracleAggregator(oracleAggregator);
         uint256 tokenGasPriceNow = tx.gasprice * (10 ** oa.getTokenOracleDecimals(token)) / (oa.getTokenPrice(token));
-        require(tokenGasPrice >= tokenGasPriceNow, "pre flight checks have failed");
+        require(tokenGasPrice >= tokenGasPriceNow, "Transfer Handler: Pre flight checks on token gas price has failed");
         // optional checks if token is allowed could be added     
         charge = tokenGasPrice.mul(executionGas).mul(feeMultiplier).div(10000);
         //Needs safe transfer from to support USDT SafeERC20.safeTransferFrom(IERC20(token),_payer, feeReceiver, charge)

@@ -47,8 +47,7 @@ contract EIP712MetaTransaction is EIP712Base {
         nonces[userAddress] = nonces[userAddress].add(1);
         // Append userAddress at the end to extract it from calling context
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
-
-        require(success, "Function call not successful");
+        _verifyCallResult(success,returnData,"Function call to destination was not successful");
         emit MetaTransactionExecuted(userAddress, payable(msg.sender), functionSignature);
         return returnData;
     }
@@ -84,5 +83,29 @@ contract EIP712MetaTransaction is EIP712Base {
             sender = msg.sender;
         }
         return sender;
+    }
+
+    /**
+     * @dev verifies the call result and bubbles up revert reason for failed calls
+     *
+     * @param success : outcome of forwarded call
+     * @param returndata : returned data from the frowarded call
+     * @param errorMessage : fallback error message to show 
+     */
+     function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure {
+        if (!success) {
+            // Look for revert reason and bubble it up if present
+            if (returndata.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(errorMessage);
+            }
+        }
     }
 }

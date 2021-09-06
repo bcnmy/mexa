@@ -26,7 +26,7 @@ async function main() {
     var options = { gasPrice: gasPrices.fastGasPriceInWei};
     
     const TransferHandler = await hre.ethers.getContractFactory("TransferHandlerCustom");
-    const transferHandler = await TransferHandler.deploy(owner,options);
+    const transferHandler = await TransferHandler.deploy(owner,feeReceiver,options);
     await transferHandler.deployed();
     receipt = await transferHandler.deployTransaction.wait(confirmations = 2);
 
@@ -34,11 +34,11 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
-    tx = await transferHandler.setFeeReceiver(feeReceiver,options);
+    /*tx = await transferHandler.setFeeReceiver(feeReceiver,options);
     receipt = await tx.wait(confirmations = 2);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     console.log(`✅Fee receiver set to ${feeReceiver}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
 
     tx = await transferHandler.setDefaultFeeMultiplier(10000,options);
     receipt = await tx.wait(confirmations = 1);
