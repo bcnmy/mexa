@@ -153,14 +153,14 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit LiquidityAdded(sender, NATIVE, address(this), msg.value);
     }
 
-    function removeNativeLiquidity(uint256 amount) external whenNotPaused nonReentrant {
+    function removeNativeLiquidity(uint256 amount) external nonReentrant {
         require(amount != 0 , "Amount cannot be 0");
         address payable sender = _msgSender();
         require(tokensInfo[NATIVE].liquidityProvider[sender] >= amount, "Not enough balance");
         tokensInfo[NATIVE].liquidityProvider[sender] = tokensInfo[NATIVE].liquidityProvider[sender].sub(amount);
         tokensInfo[NATIVE].liquidity = tokensInfo[NATIVE].liquidity.sub(amount);
         
-        (bool success, ) = sender.call{ value: amount }("");
+        bool success = sender.send(amount);
         require(success, "Native Transfer Failed");
 
         emit LiquidityRemoved( NATIVE, amount, sender);
@@ -176,7 +176,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         emit LiquidityAdded(sender, tokenAddress, address(this), amount);
     }
 
-    function removeTokenLiquidity( address tokenAddress, uint256 amount ) external tokenChecks(tokenAddress) whenNotPaused {
+    function removeTokenLiquidity( address tokenAddress, uint256 amount ) external tokenChecks(tokenAddress) {
         require(amount != 0, "Amount cannot be 0");
         address payable sender = _msgSender();
         require(tokensInfo[tokenAddress].liquidityProvider[sender] >= amount, "Not enough balance");
@@ -267,7 +267,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
 
         if (tokenAddress == NATIVE) {
             require(address(this).balance >= amountToTransfer, "Not Enough Balance");
-            (bool success, ) = receiver.call{ value: amountToTransfer }("");
+            bool success = receiver.send(amountToTransfer);
             require(success, "Native Transfer Failed");
         } else {
             require(IERC20(tokenAddress).balanceOf(address(this)) >= amountToTransfer, "Not Enough Balance");
@@ -330,10 +330,11 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
                                 .sub(tokensInfo[NATIVE].liquidity)
                                 .sub(adminFeeAccumulatedByToken[NATIVE])
                                 .sub(gasFeeAccumulatedByToken[NATIVE]);
+        
         require(profitEarned != 0, "Profit earned is 0");
 
         address payable sender = _msgSender();
-        (bool success, ) = sender.call{ value: profitEarned }("");
+        bool success = sender.send(profitEarned);
         require(success, "Native Transfer Failed");
         
         emit fundsWithdraw(address(this), sender, profitEarned);
@@ -343,7 +344,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 adminFeeAccumulated = adminFeeAccumulatedByToken[NATIVE];
         require(adminFeeAccumulated != 0, "Admin Fee earned is 0");
         adminFeeAccumulatedByToken[NATIVE] = 0;
-        (bool success, ) = receiver.call{ value: adminFeeAccumulated }("");
+        bool success = receiver.send(adminFeeAccumulated);
         require(success, "Native Transfer Failed");
         
         emit AdminFeeWithdraw(address(this), receiver, adminFeeAccumulated);
@@ -353,7 +354,7 @@ contract LiquidityPoolManager is ReentrancyGuard, Ownable, BaseRelayRecipient, P
         uint256 gasFeeAccumulated = gasFeeAccumulatedByToken[NATIVE];
         require(gasFeeAccumulated != 0, "Gas Fee earned is 0");
         gasFeeAccumulatedByToken[NATIVE] = 0;
-        (bool success, ) = receiver.call{ value: gasFeeAccumulated }("");
+        bool success = receiver.send(gasFeeAccumulated);
         require(success, "Native Transfer Failed");
         
         emit GasFeeWithdraw(address(this), receiver, gasFeeAccumulated);
