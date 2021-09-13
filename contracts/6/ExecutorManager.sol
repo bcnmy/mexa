@@ -20,7 +20,7 @@ contract ExecutorManager is Ownable {
         _;
     }
 
-    constructor(address owner) public Ownable(owner) {
+    constructor(address owner) Ownable(owner) {
         require( owner != address(0), "owner cannot be zero");
     }
 
