@@ -37,11 +37,11 @@ async function main() {
     let lpProxy = await hre.ethers.getContractAt("contracts/6/insta-swaps/LiquidityPoolManager.sol:LiquidityPoolManager",liquidityPoolMngr.address);
     let tx, receipt;
   
-    tx = await lpProxy.addSupportedToken(usdtAddress, "200000000000000000000","1000000000000000000000");
+    tx = await lpProxy.addSupportedToken(usdtAddress, "100000000","50000000000");
     receipt = await tx.wait(1);
     console.log("✅ USDT support added");
   
-    tx = await lpProxy.addSupportedToken(usdcAddress, "200000000","1000000000");
+    tx = await lpProxy.addSupportedToken(usdcAddress, "100000000","50000000000");
     receipt = await tx.wait(1);
     console.log("✅ USDC support added");
   
@@ -49,7 +49,7 @@ async function main() {
     // receipt = await tx.wait(1);
     // console.log("✅ DAI support added");
 
-    tx = await lpProxy.addSupportedToken(nativeTokenAddress, "10000000000000000","15000000000000000000");
+    tx = await lpProxy.addSupportedToken(nativeTokenAddress, "20000000000000000","15000000000000000000");
     receipt = await tx.wait(1);
     console.log("✅ Native support added");
   
