@@ -16,11 +16,11 @@ async function main() {
   let daiAddress = "0x2686eca13186766760a0347ee8eeb5a88710e11b"; //goerli
   let nativeTokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; //goerli
 
-  let executorManagerAddress = "0x3858E9c99b2f50219B24D3174855E6C28FfdB4Ce";
+  let executorManagerAddress = "0xfA6d067626d4C9a84832d1088047563c81E9daa4";
   let owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
   let pauser = "0xD66a690aD1BA31989f4D8F4E0CC588b9cDeB0975";
   let trustedForwarder = "0xE041608922d06a4F26C0d4c27d8bCD01daf1f792";
-  let hyphenOwnerAccount = "0x65E3092D6dB27a20599dbbEc054A28a14Af32b27";
+  let hyphenOwnerAccount = "0x256144a60f34288F7b03D345F8Cb256C502e0f2C";
 
   let adminFeePercentage = 10; // This is value as per 10,000 basis point, so its actual value is .3%
 
@@ -55,13 +55,13 @@ async function main() {
   receipt = await tx.wait(1);
   console.log("✅ Native support added");
 
-  await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
-  console.log("✅ DAI overhead added");
-  await lpProxy.setTokenTransferOverhead(usdcAddress, 46174); //46174
+  // await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
+  // console.log("✅ DAI overhead added");
+  await lpProxy.setTokenTransferOverhead(usdcAddress, 53083); //53083
   console.log("✅ USDC overhead added");
-  await lpProxy.setTokenTransferOverhead(usdtAddress, 51657); //51657
+  await lpProxy.setTokenTransferOverhead(usdtAddress, 61373); //61373
   console.log("✅ USDT overhead added");
-  await lpProxy.setTokenTransferOverhead(nativeTokenAddress, 29766); // 29766
+  await lpProxy.setTokenTransferOverhead(nativeTokenAddress, 40789); // 40789
   console.log("✅ Native overhead added");
   
   tx = await lpProxy.transferOwnership(hyphenOwnerAccount);
