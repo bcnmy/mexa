@@ -3,9 +3,9 @@
 // File @openzeppelin/contracts/math/SafeMath.sol@v3.3.0
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.9;
+pragma solidity 0.7.6;
 
-import "@opengsn/gsn/contracts/BaseRelayRecipient.sol";
+import "../libs/BaseRelayRecipient.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../interfaces/IERC20Extented.sol";

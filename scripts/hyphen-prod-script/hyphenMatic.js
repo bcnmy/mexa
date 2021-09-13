@@ -1,19 +1,35 @@
 async function main() {
 
+   /**
+    * Follow the steps to deploy contracts on local machine
+    * If you are deploying for the first time
+    * 1. Uncomment below lines involving ExecutorMngr deployment
+    * 2. Set executorManagerAddress value to the deployed ExecutorMngr address
+    * 
+    * If you are updating already deployed LiquidityPoolManager Contract
+    * 1. Set executorManagerAddress with your ExecutorManager Address
+    * 2. Set the owner variable with the address represented by the mnemonic present in .secret file
+    * 3. Set the hyphenOwnerAccount variable with the owner address set in hyphen config .env file
+    */
     let usdtAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; 
     let usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; 
     let daiAddress = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063";
   
+    let executorManagerAddress = "0x33714db7883be25da2a92a02e1eb8b28dc4f0f3f";
     let owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
-    let adminFeePercentage = 30; // This is value as per 10,000 basis point, so its actual value is .03
+    let hyphenOwnerAccount = "0x29ab82ec552573b1b7d4933b2aaa3c568be9c6d1";
+    let pauser = "0x29ab82ec552573b1b7d4933b2aaa3c568be9c6d1";
+    let trustedForwarder = "0x86C80a8aa58e0A4fa09A69624c31Ab2a6CAD56b8";
+    let adminFeePercentage = 10; // This is value as per 10,000 basis point, so its actual value is .1
   
     const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
     const executorMngr = await ExecutorMngr.deploy(owner);
     await executorMngr.deployed();
+    executorManagerAddress = executorMngr.address;
     console.log("✅ Executor Manager deployed at : ", executorMngr.address);
   
     const LiquidityPoolMngr = await ethers.getContractFactory("LiquidityPoolManager");
-    const liquidityPoolMngr = await LiquidityPoolMngr.deploy(executorMngr.address, owner,"0x29ab82ec552573b1b7d4933b2aaa3c568be9c6d1", "0x86C80a8aa58e0A4fa09A69624c31Ab2a6CAD56b8", adminFeePercentage);
+    const liquidityPoolMngr = await LiquidityPoolMngr.deploy(executorManagerAddress, owner, pauser, trustedForwarder, adminFeePercentage);
     await liquidityPoolMngr.deployed();
     console.log("✅ LiquidityPool Manager deployed at : ", liquidityPoolMngr.address);
   
@@ -39,8 +55,8 @@ async function main() {
     await lpProxy.setTokenTransferOverhead(usdtAddress, 51657);
     console.log("✅ usdtAddress support added");
     
-    // tx = await lpProxy.transferOwnership("0x29ab82ec552573b1b7d4933b2aaa3c568be9c6d1");
-    // receipt = await tx.wait(1);
+    tx = await lpProxy.transferOwnership(hyphenOwnerAccount);
+    receipt = await tx.wait(1);
   
   
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
