@@ -331,7 +331,8 @@ describe("Liquidity Pool Manager", function () {
             await liquidityPoolMngr.addTokenLiquidity(USDT.address, amount);
 
             let receiverFundsReceived = await USDT.balanceOf(receiver);
-            const currentAdminFee = await liquidityPoolMngr.adminFeeAccumulatedByToken(USDT.address);
+            const previouslyAccumulatedAdminFee = await liquidityPoolMngr.adminFeeAccumulatedByToken(USDT.address);
+            const previouslyAccumulatedGasFee = await liquidityPoolMngr.gasFeeAccumulatedByToken(USDT.address);
 
             await liquidityPoolMngr.sendFundsToUser(
                 USDT.address,
@@ -343,7 +344,7 @@ describe("Liquidity Pool Manager", function () {
             );
             receiverFundsReceived = (await USDT.balanceOf(receiver)).sub(receiverFundsReceived);
 
-            let expectedAdminFee = (await liquidityPoolMngr.getAdminFee()).mul(amount).div(10000).add(currentAdminFee);
+            let expectedAdminFee = (await liquidityPoolMngr.getAdminFee()).mul(amount).div(10000).add(previouslyAccumulatedAdminFee);
 
             await expect(() => liquidityPoolMngr.withdrawErc20AdminFee(
                 USDT.address,
@@ -357,7 +358,7 @@ describe("Liquidity Pool Manager", function () {
                  { from: owner }))
                 .to.be.revertedWith("Admin Fee earned is 0")
 
-            const expectedGasFee = amount.sub(expectedAdminFee).sub(receiverFundsReceived);
+            const expectedGasFee = amount.sub(expectedAdminFee.sub(previouslyAccumulatedAdminFee)).sub(receiverFundsReceived).add(previouslyAccumulatedGasFee);
 
             await expect(() => liquidityPoolMngr.withdrawErc20GasFee(
                 USDT.address, 
