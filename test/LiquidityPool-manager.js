@@ -303,7 +303,7 @@ describe("Liquidity Pool Manager", function () {
             )).to.be.reverted;
         });
 
-        it("Should withdrawErc20 successfully", async () => {
+        it("Should withdrawErc20 profit successfully", async () => {
             await liquidityPoolMngr.depositErc20(
                 USDT.address,
                 notOwner,
@@ -312,6 +312,8 @@ describe("Liquidity Pool Manager", function () {
                 { from: owner }
             );
             const getTokenInfo = await liquidityPoolMngr.tokensInfo(USDT.address);
+            const adminFeeAccumulated = await liquidityPoolMngr.adminFeeAccumulatedByToken(USDT.address);
+            const gasFeeAccumulated = await liquidityPoolMngr.gasFeeAccumulatedByToken(USDT.address);
 
             await liquidityPoolMngr.withdrawErc20(
                 USDT.address,
@@ -319,19 +321,21 @@ describe("Liquidity Pool Manager", function () {
             );
 
             const usdtBalanceAfter = await USDT.balanceOf(liquidityPoolMngr.address);
-            expect(getTokenInfo.liquidity).to.equal(usdtBalanceAfter);
+            expect(getTokenInfo.liquidity.add(adminFeeAccumulated).add(gasFeeAccumulated)).to.equal(usdtBalanceAfter);
         });
 
         it("Should withdraw Erc20AdminFee and Erc20GasFee successfully", async () => {
-            const amount = 1000000;
+            const amount = ethers.BigNumber.from(1000000);
             const dummyDepositHash = "0xf408509b00caba5d37325ab33a92f6185c9b5f007a965dfbeff7b81ab1ec871b";
 
             await liquidityPoolMngr.addTokenLiquidity(USDT.address, amount);
 
             let receiverFundsReceived = await USDT.balanceOf(receiver);
+            const currentAdminFee = await liquidityPoolMngr.adminFeeAccumulatedByToken(USDT.address);
+
             await liquidityPoolMngr.sendFundsToUser(
                 USDT.address,
-                amount.toString(),
+                amount,
                 receiver,
                 dummyDepositHash,
                 1,
@@ -339,7 +343,7 @@ describe("Liquidity Pool Manager", function () {
             );
             receiverFundsReceived = (await USDT.balanceOf(receiver)).sub(receiverFundsReceived);
 
-            const expectedAdminFee = amount * (await liquidityPoolMngr.getAdminFee()).toNumber() / 10000;
+            let expectedAdminFee = (await liquidityPoolMngr.getAdminFee()).mul(amount).div(10000).add(currentAdminFee);
 
             await expect(() => liquidityPoolMngr.withdrawErc20AdminFee(
                 USDT.address,
@@ -353,7 +357,7 @@ describe("Liquidity Pool Manager", function () {
                  { from: owner }))
                 .to.be.revertedWith("Admin Fee earned is 0")
 
-            const expectedGasFee = amount - expectedAdminFee - receiverFundsReceived;
+            const expectedGasFee = amount.sub(expectedAdminFee).sub(receiverFundsReceived);
 
             await expect(() => liquidityPoolMngr.withdrawErc20GasFee(
                 USDT.address, 
@@ -420,20 +424,22 @@ describe("Liquidity Pool Manager", function () {
         });
 
 
-        it("Should withdrawNative successfully", async () => {
+        it("Should withdrawNative profit successfully", async () => {
             await liquidityPoolMngr.depositNative(
                 notOwner,
                 1, 
                 { from: owner, value: "10000000" }
             );
             const getTokenInfo = await liquidityPoolMngr.tokensInfo(NATIVE);
+            const adminFeeAccumulated = await liquidityPoolMngr.adminFeeAccumulatedByToken(NATIVE);
+            const gasFeeAccumulated = await liquidityPoolMngr.gasFeeAccumulatedByToken(NATIVE);
 
             await liquidityPoolMngr.withdrawNative(
                 { from: owner }
             );
 
             const nativeBalanceAfter = await ethers.provider.getBalance(liquidityPoolMngr.address);
-            expect(getTokenInfo.liquidity).to.equal(nativeBalanceAfter);
+            expect(getTokenInfo.liquidity.add(adminFeeAccumulated).add(gasFeeAccumulated)).to.equal(nativeBalanceAfter);
         });
 
         it("Should fail to withdrawErc20 : not Authorized", async () => {  
