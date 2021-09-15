@@ -12,10 +12,6 @@ import "../libs/Ownable.sol";
  */
 contract DappGasTank is Ownable, DappGasTankStorage {
 
-    //Every depositor has a unique identifier. Helps with off-chain tracking. 
-    //mapping(address => uint256) public depositors;
-    //uint256 public uniqueDepositors; 
-
     bool internal initialized;
     
     constructor(
@@ -37,9 +33,9 @@ contract DappGasTank is Ownable, DappGasTankStorage {
         //assignments
     }
 
-    event Deposit(address indexed sender, uint256 amount, uint256 indexed fundingKey); // fundingKey 
+    event Deposit(address indexed sender, uint256 indexed amount, uint256 indexed fundingKey); // fundingKey 
     
-    event Withdraw(address indexed actor, uint256 amount, address indexed receiver); // for when owner withdraws funds
+    event Withdraw(address indexed actor, uint256 indexed amount, address indexed receiver); // for when owner withdraws funds
 
     event MasterAccountChanged(address indexed account, address indexed actor);
 

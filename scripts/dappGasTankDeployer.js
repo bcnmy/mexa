@@ -3,7 +3,7 @@ const {estimateGasPrice} = require("./gas-price/get-gas-price");
 async function main() {
     try {
 
-    const owner = "0x9AAFe3E7E4Fe0E15281831f7D2f33eFfE18Fc7d5";
+    const owner = "0x2b241cBe6B455e08Ade78a7ccC42DE2403d7b566";
     const newOwner = "0xbb3982c15D92a8733e82Db8EBF881D979cFe9017";
     const proxyAdmin = "0xccb9bA42d45ee6a7E3176B2f865Fb53266B6384D";
     const relayerMasterAccount = "0x92c0BA99B59dBA211b70De410AB3513BD25de408";

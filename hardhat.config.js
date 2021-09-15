@@ -124,7 +124,7 @@ module.exports = {
       gas: "auto"
     },
     maticMumbai: {
-      url:"https://rpc-mumbai.matic.today",
+      url:"https://rpc-mumbai.maticvigil.com",
       accounts:walletUtils.makeKeyList(),
       chainId: 80001
     },
