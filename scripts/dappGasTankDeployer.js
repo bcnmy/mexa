@@ -44,7 +44,7 @@ async function main() {
     //Setters on Dapp Gas Tank via Proxy
     tx = await gasTankProxy.setMasterAccount(relayerMasterAccount, options); 
     receipt = await tx.wait(confirmations = 2); 
-    console.log(`✅ Mast account ${relayerMasterAccount} added`);
+    console.log(`✅ Main account ${relayerMasterAccount} added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
