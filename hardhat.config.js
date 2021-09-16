@@ -120,6 +120,11 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId: 212984383488152
     },
+    avalancheTest: {
+      url:"https://api.avax-test.network/ext/bc/C/rpc",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 43113
+    },
     optimisticTest: {
       url:"https://kovan.optimism.io",
       accounts:walletUtils.makeKeyList(),

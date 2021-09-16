@@ -5,7 +5,7 @@ const {estimateGasPrice} = require("./gas-price/get-gas-price");
 async function main() {
   try {
   
-    let owner = "0x9AAFe3E7E4Fe0E15281831f7D2f33eFfE18Fc7d5";
+    let owner = "0x2b241cBe6B455e08Ade78a7ccC42DE2403d7b566";
     //prod config admin addresses
     let newOwner = "0xbb3982c15D92a8733e82Db8EBF881D979cFe9017";
 
