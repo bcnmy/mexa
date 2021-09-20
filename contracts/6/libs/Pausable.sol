@@ -80,7 +80,7 @@ abstract contract Pausable {
     /**
      * @return the address of the owner.
      */
-    function pauser() public view returns (address) {
+    function getPauser() public view returns (address) {
         return _pauser;
     }
 
@@ -116,7 +116,7 @@ abstract contract Pausable {
         _pauser = newPauser;
     }
 
-    function renouncePauser() public virtual onlyPauser {
+    function renouncePauser() external virtual onlyPauser {
         emit PauserChanged(_pauser, address(0));
         _pauser = address(0);
     }

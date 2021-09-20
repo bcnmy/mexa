@@ -38,7 +38,7 @@ abstract contract Ownable {
     /**
      * @return the address of the owner.
      */
-    function owner() public view returns (address) {
+    function getOwner() public view returns (address) {
         return _owner;
     }
 
@@ -55,7 +55,7 @@ abstract contract Ownable {
      * It will not be possible to call the functions with the `onlyOwner`
      * modifier anymore.
      */
-    function renounceOwnership() public virtual onlyOwner {
+    function renounceOwnership() external virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }
