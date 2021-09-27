@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
 require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
+require("@eth-optimism/plugins/hardhat/compiler")
 //require('solidity-coverage');
 require('@eth-optimism/hardhat-ovm')
 const walletUtils = require("./walletUtils");
@@ -28,6 +29,9 @@ const blockvigilKey = fs.readFileSync(".blockvigil").toString().trim();
 // defaultNetwork, networks, solc, and paths.
 // Go to https://buidler.dev/config/ to learn more
 module.exports = {
+  ovm: {
+    solcVersion: '0.7.6' // Your version goes here.
+  },
   mocha: {
     timeout: 500000
   },

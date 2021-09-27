@@ -76,7 +76,7 @@ contracts/SignatureVerify.sol
 node_modules
 
 #Buidler files
-cache
+cache*
 artifacts
 artifacts-ovm
 .alchemy
