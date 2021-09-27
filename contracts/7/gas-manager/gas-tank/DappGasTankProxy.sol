@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "./DappGasTankStorage.sol";
 import "../libs/Ownable.sol";
 
 /**
@@ -309,7 +308,7 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
  * @title ERC20ForwarderProxy
  * @dev This contract proxies ERC20Forwarder calls and enables ERC20Forwarder upgrades
 */ 
-contract DappGasTankProxy is AdminUpgradeabilityProxy, Ownable, DappGasTankStorage  {
+contract DappGasTankProxy is AdminUpgradeabilityProxy, Ownable {
     constructor(address _implementation, address _admin, address _owner) public AdminUpgradeabilityProxy(_implementation, _admin) Ownable(_owner) {
       require(
          _owner != address(0),

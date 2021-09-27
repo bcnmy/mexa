@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "./DappGasTankStorage.sol";
 import "../libs/Ownable.sol";
 
 /* 
@@ -10,7 +9,27 @@ import "../libs/Ownable.sol";
  * @title Dapp Deposit Gas Tank Contract
  * @notice Handles customers deposits  
  */
-contract DappGasTank is Ownable, DappGasTankStorage {
+contract DappGasTank is Ownable {
+
+    address payable public masterAccount;
+    uint256 public minDeposit = 1e18;
+    address private constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    //Maintain balances for each funding key
+    mapping(uint256 => uint256) public dappBalances;
+
+    //Maintains fundingKey and depositedAmount information for each Depositor
+    //TODO: or have parent mapping on fundingKey instead of address?
+    //review
+    mapping(address => mapping(uint256 => uint256) ) public depositors;
+
+    //Allowed tokens as deposit currency in Dapp Gas Tank
+    mapping(address => bool) public allowedTokens;
+    //Pricefeeds info should you require to calculate Token/ETH
+    mapping(address => address) public tokenPriceFeed;
+
+    //review
+    //any other structs necessary for future implementations
+    //ERC20 - dapp balances or any other book keeping
 
     bool internal initialized;
     
