@@ -1,7 +1,8 @@
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
 
-import "../libs/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /* 
  * @title DappGasTank
@@ -9,7 +10,7 @@ import "../libs/Ownable.sol";
  * @title Dapp Deposit Gas Tank Contract
  * @notice Handles customers deposits  
  */
-contract DappGasTank is Ownable {
+contract DappGasTank is Initializable, OwnableUpgradeable {
 
     address payable public masterAccount;
     uint256 public minDeposit = 1e18;
@@ -18,8 +19,7 @@ contract DappGasTank is Ownable {
     mapping(uint256 => uint256) public dappBalances;
 
     //Maintains fundingKey and depositedAmount information for each Depositor
-    //TODO: or have parent mapping on fundingKey instead of address?
-    //review
+    //review mapping and how it is populated with each deposits
     mapping(address => mapping(uint256 => uint256) ) public depositors;
 
     //Allowed tokens as deposit currency in Dapp Gas Tank
@@ -27,30 +27,25 @@ contract DappGasTank is Ownable {
     //Pricefeeds info should you require to calculate Token/ETH
     mapping(address => address) public tokenPriceFeed;
 
-    //review
-    //any other structs necessary for future implementations
-    //ERC20 - dapp balances or any other book keeping
-
-    bool internal initialized;
-    
-    constructor(
-        address _owner
-    ) public Ownable(_owner){
-        require(_owner != address(0), "Owner Address cannot be 0");
-    }
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
 
     /**
-     * @dev sets other constructor arguments
-     *
-     *
-     *
+     * @dev Initializes the contract
      */
-    function initialize(
-    ) public {
-        require(!initialized, "Dapp Gas Tank: contract is already initialized");
-        initialized = true;
-        //assignments
+    function initialize() public initializer {
+       __DappGasTank_init_unchained();
+       __Ownable_init();
     }
+
+    function __DappGasTank_init() internal initializer {
+       __DappGasTank_init_unchained();
+       __Ownable_init();
+    }
+
+    function __DappGasTank_init_unchained() internal initializer {
+    }
+
 
     event Deposit(address indexed sender, uint256 indexed amount, uint256 indexed fundingKey); // fundingKey 
     
@@ -58,33 +53,44 @@ contract DappGasTank is Ownable {
 
     event MasterAccountChanged(address indexed account, address indexed actor);
 
+    event MinimumDepositChanged(uint256 indexed minDeposit, address indexed actor);
+
+    event DepositTokenAdded(address indexed token, address indexed actor);
+
+    /**
+     * Admin function to set minimum deposit amount
+     * emits and event 
+     */
     function setMinDeposit(uint256 _newMinDeposit) external onlyOwner{
         minDeposit = _newMinDeposit;
+        emit MinimumDepositChanged(_newMinDeposit,msg.sender);
     }
 
+    /**
+     * Admin function to set master account which collects gas tank deposits
+     */
     function setMasterAccount(address payable _newAccount) external onlyOwner{
         masterAccount = _newAccount;
         emit MasterAccountChanged(_newAccount, msg.sender);
     }
 
+    /**
+     * Admin function to set token allowed for depositing in gas tank 
+     */
     function setTokenAllowed(address token, bool allowed) external onlyOwner{
         require(token != address(0), "Token address cannot be 0");  
         allowedTokens[token] = allowed;
+        emit DepositTokenAdded(token,msg.sender);
     }
-
-    //Q: Should we allow Dapps to withdraw their funds?
-    //A: Not now
-    //event WithdrawnByDApp
-
-    //Q :Should owner be able to pull the funds OR we directly transfer to main account with each transaction?
-    //A :Direct transfer
-
-    //TODO: smart contract conditions on deposit value? must be > outstanding and minimum amount 
-    
+     
     /**
      * @param _fundingKey Associate funds with this funding key. 
      * Supply a deposit for a specified funding key. (This will be a unique unix epoch time)
      * Caution: The funding key must be an your identifier generated from biconomy dashboard 
+     * Funds deposited will be forwarded to master account to fund the relayers
+     * emits an event for off-chain accounting
+     * @notice In the future this method may be upgraded to allow ERC20 token deposits 
+     * @notice Generic depositFor could be added that allows deposit of ERC20 tokens and swaps them for native currency. 
      */
     function depositFor(uint256 _fundingKey) public payable { 
         require(msg.sender == tx.origin, "sender must be EOA");
@@ -96,23 +102,23 @@ contract DappGasTank is Ownable {
         depositors[msg.sender][_fundingKey] = depositors[msg.sender][_fundingKey] + msg.value;
         emit Deposit(msg.sender, msg.value, _fundingKey);
     }
-
-    //Generic depositFor could be added that allows deposit of ERC20 tokens and swaps them for native currency. 
-
-    /*
-     * It is only intended for external users who want to deposit via a wallet.
+  
+    /** 
+     * @dev If someone deposits funds directly to contract address
      * Here we wouldn't know the funding key!
      */ 
     receive() external payable {
         require(msg.value > 0, "No value provided to fallback.");
         require(tx.origin == msg.sender, "Only EOA can deposit directly.");
         //review
+        //funding key stored is 0 
         depositors[msg.sender][0] = depositors[msg.sender][0] + msg.value;
+        //All these types of deposits come under funding key 0
         emit Deposit(msg.sender, msg.value, 0);
     }
 
     /**
-     * Internal function for sending/migrating funds. 
+     * Admin function for sending/migrating any stuck funds. 
      */
     function withdraw(uint256 _amount) public onlyOwner {
         masterAccount.transfer(_amount);
