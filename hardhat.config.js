@@ -124,6 +124,11 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId: 212984383488152
     },
+    arbitrumMain: {
+      url:"https://arb1.arbitrum.io/rpc/",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 42161
+    },
     avalancheTest: {
       url:"https://api.avax-test.network/ext/bc/C/rpc",
       accounts:walletUtils.makeKeyList(),

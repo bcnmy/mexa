@@ -73,6 +73,8 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
 
     event DomainRegistered(bytes32 indexed domainSeparator, bytes domainValue);
 
+    event MetaTransactionExecuted(address indexed userAddress, address payable indexed relayerAddress, bytes indexed functionSignature);
+
     /**
      * @dev returns a value from the nonces 2d mapping
      * @param from : the user address
@@ -124,6 +126,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.txGas / 63);
         _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
+        emit MetaTransactionExecuted(req.from, msg.sender, req.data);
     }
 
     /**
@@ -157,6 +160,7 @@ contract BiconomyForwarder is ERC20ForwardRequestTypes,Ownable{
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > req.txGas / 63);
         _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
+        emit MetaTransactionExecuted(req.from, msg.sender, req.data);
     }
 
     /**
