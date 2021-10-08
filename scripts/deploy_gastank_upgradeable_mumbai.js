@@ -20,6 +20,7 @@ async function main() {
     const proxyAdmin = "0xccb9bA42d45ee6a7E3176B2f865Fb53266B6384D";
     const relayerMasterAccount = "0x92c0BA99B59dBA211b70De410AB3513BD25de408";
     const trustedForwarder = "0x9399BB24DBB5C4b782C70c2969F58716Ebbd6a3b";
+    const minDeposit = ethers.utils.parseEther("1.0");
 
 
     let tx, receipt;
@@ -49,6 +50,7 @@ async function main() {
   
     tx = await gasTankProxy.initialize(trustedForwarder);
     receipt = await tx.wait(confirmations = 2);
+    console.log("✅ Dapp Gas Tank proxy Initialized");
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
@@ -56,6 +58,13 @@ async function main() {
     tx = await gasTankProxy.setMasterAccount(relayerMasterAccount); 
     receipt = await tx.wait(confirmations = 2); 
     console.log(`✅ Main account ${relayerMasterAccount} added`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+
+    //Setters on Dapp Gas Tank via Proxy
+    tx = await gasTankProxy.setMinDeposit(minDeposit.toString()); 
+    receipt = await tx.wait(confirmations = 2); 
+    console.log(`✅ Min deposit set to ${minDeposittoString()}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
