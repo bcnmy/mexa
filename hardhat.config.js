@@ -137,6 +137,11 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId: 80001
     },
+    xDaiMainnet: {
+      url:"https://rpc.xdaichain.com/",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 100
+    },
     moonbeamTest: {
       url:"https://rpc.testnet.moonbeam.network",
       accounts:walletUtils.makeKeyList(),
@@ -188,7 +193,6 @@ module.exports = {
       url:`https://bsc-dataseed.binance.org/`,
       accounts:walletUtils.makeKeyList(),
       chainId:56,
-      gas: "auto"
     }
 
   },

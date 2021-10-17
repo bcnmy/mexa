@@ -93,7 +93,7 @@ abstract contract Proxy {
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev This is the interface that {BeaconProxy} expects of its beacon.
@@ -112,7 +112,7 @@ interface IBeacon {
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev Collection of functions related to the address type
@@ -332,7 +332,7 @@ library Address {
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev Library for reading and writing primitive types to specific storage slots.
@@ -614,7 +614,7 @@ abstract contract ERC1967Upgrade {
 
 
 
-pragma solidity ^0.8.0;
+
 
 
 /**
@@ -648,7 +648,7 @@ contract ERC1967Proxy is Proxy, ERC1967Upgrade {
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev This contract implements a proxy that is upgradeable by an admin.
@@ -773,7 +773,7 @@ contract TransparentUpgradeableProxy is ERC1967Proxy {
 // File contracts/7/gas-manager/gas-tank/DappGasTankProxy.sol
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev This contract implements a proxy that is upgradeable by an admin.

@@ -54,7 +54,7 @@ abstract contract Initializable {
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev Provides information about the current execution context, including the
@@ -88,7 +88,7 @@ abstract contract ContextUpgradeable is Initializable {
 
 
 
-pragma solidity ^0.8.0;
+
 
 
 /**
@@ -166,7 +166,7 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
 
 // File contracts/7/gas-manager/gas-tank/DappGasTank.sol
 
-pragma solidity ^0.8.0;
+
 
 
 
@@ -229,7 +229,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
 
     //Maintains fundingKey and depositedAmount information for each Depositor
     //review mapping and how it is populated with each deposits
-    mapping(address => mapping(uint256 => uint256) ) public depositors;
+    mapping(address => mapping(uint256 => uint256) ) public depositorBalances;
 
     //Allowed tokens as deposit currency in Dapp Gas Tank
     mapping(address => bool) public allowedTokens;
@@ -345,7 +345,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
         masterAccount.transfer(msg.value);
         dappBalances[_fundingKey] = dappBalances[_fundingKey] + msg.value; 
         //review
-        depositors[msg.sender][_fundingKey] = depositors[msg.sender][_fundingKey] + msg.value;
+        depositorBalances[msg.sender][_fundingKey] = depositorBalances[msg.sender][_fundingKey] + msg.value;
         emit Deposit(msg.sender, msg.value, _fundingKey);
     }
   
@@ -358,7 +358,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
         require(tx.origin == msg.sender, "Only EOA can deposit directly.");
         //review
         //funding key stored is 0 
-        depositors[msg.sender][0] = depositors[msg.sender][0] + msg.value;
+        depositorBalances[msg.sender][0] = depositorBalances[msg.sender][0] + msg.value;
         //All these types of deposits come under funding key 0
         emit Deposit(msg.sender, msg.value, 0);
     }

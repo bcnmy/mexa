@@ -17,30 +17,28 @@ async function main() {
     // await hre.run('compile');
     const owner = "0x2b241cBe6B455e08Ade78a7ccC42DE2403d7b566";
     const newOwner = "0xbb3982c15D92a8733e82Db8EBF881D979cFe9017";
-    const proxyAdmin = "0xccb9bA42d45ee6a7E3176B2f865Fb53266B6384D";
-    const relayerMasterAccount = "0x92c0BA99B59dBA211b70De410AB3513BD25de408";
-    const trustedForwarder = "0xF82986F574803dfFd9609BE8b9c7B92f63a1410E";
-    const minDeposit = ethers.utils.parseEther("1.0");
+    const proxyAdmin = "0x621f18127133b591eAdeEA14F2fe95c7695BcE61";
+    const relayerMasterAccount = "0x9e1980070743cb86bdbe3ae1d01018c6e97b0932";
+    const trustedForwarder = "0x86C80a8aa58e0A4fa09A69624c31Ab2a6CAD56b8";
+    const minDeposit = ethers.utils.parseEther("2.0");
 
 
     let tx, receipt;
     let totalGasUsed = 0;
 
     var gasPrices = await estimateGasPrice();
-    var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000 };
+    //var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000 };
 
     //Deploy logic contract
     const DappGasTank = await hre.ethers.getContractFactory("DappGasTank");
-    const gasTank = await DappGasTank.deploy(options);
+    const gasTank = await DappGasTank.deploy();
     await gasTank.deployed();
     console.log("✅ Dapp Gas Tank Token Logic Contract deployed at:", gasTank.address);
     receipt = await gasTank.deployTransaction.wait(confirmations = 2);
-    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     //Deploy proxy contract
     const DappGasTankProxy = await hre.ethers.getContractFactory("DappGasTankProxy");
-    const dappGasTankProxy = await DappGasTankProxy.deploy(gasTank.address, proxyAdmin, options);
+    const dappGasTankProxy = await DappGasTankProxy.deploy(gasTank.address, proxyAdmin);
     await dappGasTankProxy.deployed();
     receipt = await dappGasTankProxy.deployTransaction.wait(confirmations = 2);
   
@@ -50,21 +48,21 @@ async function main() {
 
     let gasTankProxy = await hre.ethers.getContractAt("contracts/7/gas-manager/gas-tank/DappGasTank.sol:DappGasTank", dappGasTankProxy.address);
   
-    tx = await gasTankProxy.initialize(trustedForwarder, options);
+    tx = await gasTankProxy.initialize(trustedForwarder);
     receipt = await tx.wait(confirmations = 2);
     console.log("✅ Dapp Gas Tank proxy Initialized");
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     //Setters on Dapp Gas Tank via Proxy
-    tx = await gasTankProxy.setMasterAccount(relayerMasterAccount, options); 
+    tx = await gasTankProxy.setMasterAccount(relayerMasterAccount); 
     receipt = await tx.wait(confirmations = 2); 
     console.log(`✅ Main account ${relayerMasterAccount} added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     //Setters on Dapp Gas Tank via Proxy
-    tx = await gasTankProxy.setMinDeposit(minDeposit.toString(), options); 
+    tx = await gasTankProxy.setMinDeposit(minDeposit.toString()); 
     receipt = await tx.wait(confirmations = 2); 
     console.log(`✅ Min deposit set to ${minDeposit.toString()}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
