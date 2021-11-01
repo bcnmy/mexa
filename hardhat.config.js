@@ -23,6 +23,7 @@ const fs = require('fs');
 const infuraKey = fs.readFileSync(".infura").toString().trim();
 const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 const blockvigilKey = fs.readFileSync(".blockvigil").toString().trim();
+const palmInfuraKey = fs.readFileSync(".palminfura").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -133,6 +134,21 @@ module.exports = {
       url:"https://api.avax-test.network/ext/bc/C/rpc",
       accounts:walletUtils.makeKeyList(),
       chainId: 43113
+    },
+    avalancheMain: {
+      url:"https://api.avax.network/ext/bc/C/rpc",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 43114
+    },
+    palmTestnet: {
+      url:`https://palm-testnet.infura.io/v3/${palmInfuraKey}`,
+      accounts:walletUtils.makeKeyList(),
+      chainId: 11297108099
+    },
+    palmMainnet: {
+      url:`https://palm-mainnet.infura.io/v3/${palmInfuraKey}`,
+      accounts:walletUtils.makeKeyList(),
+      chainId: 11297108109
     },
     optimisticTest: {
       url:"https://kovan.optimism.io",

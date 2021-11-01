@@ -81,4 +81,5 @@ artifacts
 artifacts-ovm
 .alchemy
 .infura
+.palminfura
 .vscode
