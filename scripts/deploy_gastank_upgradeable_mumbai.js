@@ -64,7 +64,7 @@ async function main() {
     //Setters on Dapp Gas Tank via Proxy
     tx = await gasTankProxy.setMinDeposit(minDeposit.toString()); 
     receipt = await tx.wait(confirmations = 2); 
-    console.log(`✅ Min deposit set to ${minDeposittoString()}`);
+    console.log(`✅ Min deposit set to ${minDeposit.toString()}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 

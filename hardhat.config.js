@@ -22,6 +22,7 @@ const fs = require('fs');
 const infuraKey = fs.readFileSync(".infura").toString().trim();
 const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 const blockvigilKey = fs.readFileSync(".blockvigil").toString().trim();
+const etherscanKey = fs.readFileSync(".etherscan").toString().trim();
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -199,6 +200,6 @@ module.exports = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: "B2GZS7B1U65IQHHSYU3KX7PSXQRXA59EYP"
+    apiKey: `${etherscanKey}`
   }
 };
