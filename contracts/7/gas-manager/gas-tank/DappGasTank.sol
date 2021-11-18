@@ -58,6 +58,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
     address payable public masterAccount;
     uint256 public minDeposit;
     uint8 internal _initializedVersion;
+    //review
     address private NATIVE;
     //Maintain balances for each funding key
     mapping(uint256 => uint256) public dappBalances;
@@ -84,6 +85,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
        __ReentrancyGuard_init();
        __DappGasTank_init_unchained(_masterAccount,_minDeposit);
        _initializedVersion = 0;
+       //review
        NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
