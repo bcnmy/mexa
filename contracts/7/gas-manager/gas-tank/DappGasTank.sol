@@ -1,8 +1,9 @@
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 // SPDX-License-Identifier: MIT
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**
  * @dev Context variant with ERC2771 support.
@@ -52,12 +53,12 @@ abstract contract ERC2771ContextUpgradeable is Initializable {
  * @title Dapp Deposit Gas Tank Contract
  * @notice Handles customers deposits  
  */
-contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgradeable {
+contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgradeable, ReentrancyGuardUpgradeable {
 
     address payable public masterAccount;
-    uint256 public minDeposit = 1e18;
+    uint256 public minDeposit;
     uint8 internal _initializedVersion;
-    address private constant NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address private NATIVE;
     //Maintain balances for each funding key
     mapping(uint256 => uint256) public dappBalances;
 
@@ -76,10 +77,21 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
     /**
      * @dev Initializes the contract
      */
-    function initialize(address trustedForwarder) public initializer {
+    function initialize(address trustedForwarder, address payable _masterAccount, uint256 _minDeposit) public initializer {
+       require(trustedForwarder != address(0), "DappGasTank:: Invalid address for trusted forwarder");
        __ERC2771Context_init(trustedForwarder);
        __Ownable_init();
+       __ReentrancyGuard_init();
+       __DappGasTank_init_unchained(_masterAccount,_minDeposit);
        _initializedVersion = 0;
+       NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    }
+
+    function __DappGasTank_init_unchained(address payable _masterAccount, uint256 _minDeposit) internal initializer {
+        require(_masterAccount != address(0), "DappGasTank:: Master account should not be zero address");
+        require(_minDeposit > 0, "DappGasTank:: Minimum deposit amount should be greater than zero");
+        masterAccount = _masterAccount;
+        minDeposit = _minDeposit;
     }
 
     event Deposit(address indexed sender, uint256 indexed amount, uint256 indexed fundingKey); // fundingKey 
@@ -131,6 +143,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
      * emits and event 
      */
     function setMinDeposit(uint256 _newMinDeposit) external onlyOwner{
+        require(_newMinDeposit > 0, "DappGasTank:: Minimum deposit amount should be greater than zero");
         minDeposit = _newMinDeposit;
         emit MinimumDepositChanged(_newMinDeposit,msg.sender);
     }
@@ -150,6 +163,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
      * Admin function to set master account which collects gas tank deposits
      */
     function setMasterAccount(address payable _newAccount) external onlyOwner{
+        require(_newAccount != address(0), "DappGasTank:: Master account should not be zero address");
         masterAccount = _newAccount;
         emit MasterAccountChanged(_newAccount, msg.sender);
     }
@@ -172,7 +186,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
      * @notice In the future this method may be upgraded to allow ERC20 token deposits 
      * @notice Generic depositFor could be added that allows deposit of ERC20 tokens and swaps them for native currency. 
      */
-    function depositFor(uint256 _fundingKey) public payable { 
+    function depositFor(uint256 _fundingKey) public payable nonReentrant { 
         require(msg.sender == tx.origin || msg.sender == _trustedForwarder, "sender must be EOA or trusted forwarder");
         require(msg.value > 0, "No value provided to depositFor.");
         require(msg.value >= minDeposit, "Must be grater than minimum deposit for this network");
@@ -200,7 +214,7 @@ contract DappGasTank is Initializable, OwnableUpgradeable, ERC2771ContextUpgrade
     /**
      * Admin function for sending/migrating any stuck funds. 
      */
-    function withdraw(uint256 _amount) public onlyOwner {
+    function withdraw(uint256 _amount) public onlyOwner nonReentrant {
         masterAccount.transfer(_amount);
         emit Withdraw(msg.sender, _amount, masterAccount);
     }
