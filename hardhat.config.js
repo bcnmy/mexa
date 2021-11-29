@@ -2,6 +2,8 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
+require('@openzeppelin/hardhat-upgrades');
+
 //require('solidity-coverage');
 const walletUtils = require("./walletUtils");
 
@@ -67,7 +69,16 @@ module.exports = {
       },
       {
         version: "0.6.0"
-      }
+      },
+      {
+        version: "0.8.9",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        }
+      },
     ]
   },
   networks:{

@@ -8,25 +8,25 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20Burnable
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./IbToken.sol";
 
-contract BToken is
+contract bToken is
   Initializable,
   ERC20Upgradeable,
   ERC20PausableUpgradeable,
   ERC20BurnableUpgradeable,
-  ERC2771ContextUpgradeable
+  ERC2771ContextUpgradeable,
+  OwnableUpgradeable,
+  IbToken
 {
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
   IERC20Upgradeable public baseToken;
-  address liquidityPoolManagerAddress;
+  address depositPoolAddress;
+  address liquidityPoolAddress;
 
   uint8 private decimals_;
-
-  modifier onlyLiquidityPoolManager() {
-    require(_msgSender() == liquidityPoolManagerAddress, "ERR_UNAUTHORIZED");
-    _;
-  }
 
   function initialize(
     string memory _name,
@@ -34,15 +34,41 @@ contract BToken is
     uint8 _decimals,
     IERC20Upgradeable _baseToken,
     address _trustedForwarder,
-    address _liquidityPoolManagerAddress
+    address _depositPoolAddress,
+    address _liquidityPoolAddress
   ) public initializer {
     __ERC20_init(_name, _symbol);
     __ERC20Pausable_init();
     __ERC20Burnable_init();
     __ERC2771Context_init(_trustedForwarder);
+    __Ownable_init();
     decimals_ = _decimals;
     baseToken = _baseToken;
-    liquidityPoolManagerAddress = _liquidityPoolManagerAddress;
+    depositPoolAddress = _depositPoolAddress;
+    liquidityPoolAddress = _liquidityPoolAddress;
+  }
+
+  modifier onlyHyphenPools() {
+    require(
+      _msgSender() == depositPoolAddress ||
+        _msgSender() == liquidityPoolAddress,
+      "ERR_UNAUTHORIZED"
+    );
+    _;
+  }
+
+  function updateLiquidityPoolAddress(address _liquidityPoolAddress)
+    external
+    onlyOwner
+  {
+    liquidityPoolAddress = _liquidityPoolAddress;
+  }
+
+  function updateDepositPoolAddress(address _depositPoolAddress)
+    external
+    onlyOwner
+  {
+    depositPoolAddress = _depositPoolAddress;
   }
 
   function decimals() public view override returns (uint8) {
@@ -77,7 +103,8 @@ contract BToken is
 
   function mint(address _account, uint256 _amount)
     public
-    onlyLiquidityPoolManager
+    override
+    onlyHyphenPools
   {
     require(
       baseToken.allowance(_msgSender(), address(this)) >= _amount,
@@ -88,15 +115,21 @@ contract BToken is
     _mint(_account, _amount);
   }
 
-  function burn(uint256 _amount) public override onlyLiquidityPoolManager {
+  function burn(uint256 _amount)
+    public
+    override(ERC20BurnableUpgradeable, IbToken)
+    onlyHyphenPools
+  {
     ERC20BurnableUpgradeable.burn(_amount);
+    baseToken.safeTransfer(_msgSender(), _amount);
   }
 
   function burnFrom(address _account, uint256 _amount)
     public
-    override
-    onlyLiquidityPoolManager
+    override(ERC20BurnableUpgradeable, IbToken)
+    onlyHyphenPools
   {
     ERC20BurnableUpgradeable.burnFrom(_account, _amount);
+    baseToken.safeTransfer(_msgSender(), _amount);
   }
 }
