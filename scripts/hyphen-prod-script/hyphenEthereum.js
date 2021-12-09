@@ -17,24 +17,24 @@ async function main() {
     let nativeTokenAddress = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
   
     let executorManagerAddress = "0xEeD0c0AA1d73Ed0F48559e6CC2C762D4Ed5ca1Ca";
-    let owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
+    let owner = "0xF9bc6309FAe18d29bF2Ba0FA46aFDa9A8bb5B37c";
     let hyphenOwnerAccount = "0x29ab82ec552573b1b7d4933b2aaa3c568be9c6d1";
     let pauser = "0x129443cA2a9Dec2020808a2868b38dDA457eaCC7";
     let trustedForwarder = "0x84a0856b038eaAd1cC7E297cF34A7e72685A8693";
     let adminFeePercentage = 10; // This is value as per 10,000 basis point, so its actual value is .1
   
-    // const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
-    // const executorMngr = await ExecutorMngr.deploy(owner);
-    // await executorMngr.deployed();
-    // executorManagerAddress = executorMngr.address;
-    // console.log("✅ Executor Manager deployed at : ", executorMngr.address);  
+    const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
+    const executorMngr = await ExecutorMngr.deploy(owner);
+    await executorMngr.deployed();
+    executorManagerAddress = executorMngr.address;
+    console.log("✅ Executor Manager deployed at : ", executorMngr.address);  
   
     const LiquidityPoolMngr = await ethers.getContractFactory("LiquidityPoolManager");
     const liquidityPoolMngr = await LiquidityPoolMngr.deploy(executorManagerAddress, owner, pauser, trustedForwarder, adminFeePercentage);
     await liquidityPoolMngr.deployed();
     console.log("✅ LiquidityPool Manager deployed at : ", liquidityPoolMngr.address);
   
-    let lpProxy = await hre.ethers.getContractAt("contracts/6/insta-swaps/LiquidityPoolManager.sol:LiquidityPoolManager",liquidityPoolMngr.address);
+    let lpProxy = await hre.ethers.getContractAt("contracts/6/insta-swaps/LiquidityPoolManager.sol:LiquidityPoolManager","0xf78765bd14b4e8527d9e4e5c5a5c11a44ad12f47");
     let tx, receipt;
   
     tx = await lpProxy.addSupportedToken(usdtAddress, "100000000","50000000000");
@@ -49,19 +49,21 @@ async function main() {
     // receipt = await tx.wait(1);
     // console.log("✅ DAI support added");
 
+    console.log("started")
     tx = await lpProxy.addSupportedToken(nativeTokenAddress, "20000000000000000","15000000000000000000");
+    console.log("waiting")
     receipt = await tx.wait(1);
     console.log("✅ Native support added");
   
-    // await lpProxy.setTokenTransferOverhead(daiAddress, 40007);
-    // console.log("✅ DAI overhead added");
-    await lpProxy.setTokenTransferOverhead(usdcAddress, 53083);//53083
+    await lpProxy.setTokenTransferOverhead(daiAddress, 40007);
+    console.log("✅ DAI overhead added");
+    await lpProxy.setTokenTransferOverhead(usdcAddress, 64302);//64302
     console.log("✅ USDC overhead added");
-    await lpProxy.setTokenTransferOverhead(usdtAddress, 61373); // 61373
+    await lpProxy.setTokenTransferOverhead(usdtAddress, 61345); // 61345
     console.log("✅ USDT overhead added");
     await lpProxy.setTokenTransferOverhead(nativeTokenAddress, 40789); // 40789
     console.log("✅ Native overhead added");
-    
+     
     tx = await lpProxy.transferOwnership(hyphenOwnerAccount);
     receipt = await tx.wait(1);
   

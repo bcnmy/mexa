@@ -104,7 +104,7 @@ module.exports = {
       chainId: 80001
     },
     matic: {
-      url:"<matic_url>",
+      url:"<matic_rpc_url>",
       accounts:walletUtils.makeKeyList(),
       chainId: 137,
       gasPrice: 10000000000
@@ -113,8 +113,7 @@ module.exports = {
       url: `https://rinkeby.infura.io/v3/${infuraKey}`,
       accounts: walletUtils.makeKeyList(),
       chainId:4,
-      gas: 1250000,
-      gasMultiplier:2
+      gas: 1250000
     },
     ropsten:{
       url:`https://ropsten.infura.io/v3/${infuraKey}`,
@@ -126,14 +125,31 @@ module.exports = {
       url: `https://mainnet.infura.io/v3/${infuraKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId:1,
-      gasPrice: 25000000000
+      gasPrice: 55000000000
     },
     binanceTest:{
       url:`https://data-seed-prebsc-1-s1.binance.org:8545/`,
       accounts:walletUtils.makeKeyList(),
       chainId:97,
       gas: 6400000
+    },
+    avaxlocal: {
+      url: 'http://localhost:9650/ext/bc/C/rpc',
+      gasPrice: 225000000000,
+      chainId: 43112,
+      accounts: walletUtils.makeKeyList()
+    },
+    avaxfuji: {
+      url: 'https://api.avax-test.network/ext/bc/C/rpc',
+      gasPrice: 225000000000,
+      chainId: 43113,
+      accounts: walletUtils.makeKeyList()
+    },
+    avaxmainnet: {
+      url: 'https://api.avax.network/ext/bc/C/rpc',
+      gasPrice: 225000000000,
+      chainId: 43114,
+      accounts: walletUtils.makeKeyList()
     }
-
   }
 };

@@ -11,18 +11,15 @@ async function main() {
    * 2. Set the owner variable with the address represented by the mnemonic present in .secret file
    * 3. Set the hyphenOwnerAccount variable with the owner address set in hyphen config .env file
    */
-  let usdtAddress = "0x64ef393b6846114bad71e2cb2ccc3e10736b5716"; //goerli
-  let usdcAddress = "0xb5B640E6414b6DeF4FC9B3C1EeF373925effeCcF"; //goerli
-  let daiAddress = "0x2686eca13186766760a0347ee8eeb5a88710e11b"; //goerli
-  let nativeTokenAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"; //goerli
+  let usdtAddress = "0xc7198437980c041c805a1edcba50c1ce5db95118";
+  let usdcAddress = "0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664";
+   let ethAddress = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619";
 
-  // let executorManagerAddress = "0xfA6d067626d4C9a84832d1088047563c81E9daa4";
-  let owner = "0xF86B30C63E068dBB6bdDEa6fe76bf92F194Dc53c";
-  let pauser = "0xD66a690aD1BA31989f4D8F4E0CC588b9cDeB0975";
-  let trustedForwarder = "0xE041608922d06a4F26C0d4c27d8bCD01daf1f792";
-  let hyphenOwnerAccount = "0x256144a60f34288F7b03D345F8Cb256C502e0f2C";
-
-  let adminFeePercentage = 10; // This is value as per 10,000 basis point, so its actual value is .3%
+  let owner = "0xF9bc6309FAe18d29bF2Ba0FA46aFDa9A8bb5B37c";
+  let hyphenOwnerAccount = "0x29ab82ec552573b1b7d4933b2aaa3c568be9c6d1";
+  let pauser = "0x129443cA2a9Dec2020808a2868b38dDA457eaCC7";
+  let trustedForwarder = "0x86C80a8aa58e0A4fa09A69624c31Ab2a6CAD56b8";
+  let adminFeePercentage = 10; // This is value as per 10,000 basis point, so its actual value is .1
 
   const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
   const executorMngr = await ExecutorMngr.deploy(owner);
@@ -30,40 +27,39 @@ async function main() {
   executorManagerAddress = executorMngr.address;
   console.log("✅ Executor Manager deployed at : ", executorMngr.address);
 
-  console.log("Sending transaction to deploy LPManager");
   const LiquidityPoolMngr = await ethers.getContractFactory("LiquidityPoolManager");
   const liquidityPoolMngr = await LiquidityPoolMngr.deploy(executorManagerAddress, owner, pauser, trustedForwarder, adminFeePercentage);
   await liquidityPoolMngr.deployed();
   console.log("✅ LiquidityPool Manager deployed at : ", liquidityPoolMngr.address);
 
   let lpProxy = await hre.ethers.getContractAt("contracts/6/insta-swaps/LiquidityPoolManager.sol:LiquidityPoolManager", liquidityPoolMngr.address);
-  let tx, receipt;
+  // let tx, receipt;
 
-  tx = await lpProxy.addSupportedToken(usdtAddress, "100000000000000000000","1000000000000000000000");
+  tx = await lpProxy.addSupportedToken(usdtAddress, "100000000", "50000000000");
   receipt = await tx.wait(1);
   console.log("✅ USDT support added");
 
-  tx = await lpProxy.addSupportedToken(usdcAddress, "100000000","1000000000");
+  tx = await lpProxy.addSupportedToken(usdcAddress, "100000000", "50000000000");
   receipt = await tx.wait(1);
   console.log("✅ USDC support added");
 
-  // tx = await lpProxy.addSupportedToken(daiAddress, "100000000000000000000","1000000000000000000000");
+  // tx = await lpProxy.addSupportedToken(daiAddress, "200000000000000000000", "1000000000000000000000");
   // receipt = await tx.wait(1);
   // console.log("✅ DAI support added");
 
-  tx = await lpProxy.addSupportedToken(nativeTokenAddress, "10000000000000000","1000000000000000000");
+  tx = await lpProxy.addSupportedToken(ethAddress, "20000000000000000", "15000000000000000000");
   receipt = await tx.wait(1);
-  console.log("✅ Native support added");
+  console.log("✅ ETH support added");
 
-  // await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
-  // console.log("✅ DAI overhead added");
-  await lpProxy.setTokenTransferOverhead(usdcAddress, 64302); //64302 - latest
-  console.log("✅ USDC overhead added");
-  await lpProxy.setTokenTransferOverhead(usdtAddress, 61345); //61345 - latest
-  console.log("✅ USDT overhead added");
-  await lpProxy.setTokenTransferOverhead(nativeTokenAddress, 40850); // 40850 - latest
-  console.log("✅ Native overhead added");
-  
+  // await lpProxy.setTokenTransferOverhead(daiAddress, 40007);
+  // console.log("✅ daiAddress support added");
+  await lpProxy.setTokenTransferOverhead(usdcAddress, 53083);
+  console.log("✅ usdcAddress overhaead added");
+  await lpProxy.setTokenTransferOverhead(usdtAddress, 61373);
+  console.log("✅ usdtAddress overhaead added");
+  await lpProxy.setTokenTransferOverhead(ethAddress, 40789);
+  console.log("✅ ethAddress overhaead added");
+
   tx = await lpProxy.transferOwnership(hyphenOwnerAccount);
   receipt = await tx.wait(1);
   console.log("✅ Ownership transferred");
