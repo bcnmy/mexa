@@ -24,11 +24,11 @@ async function main() {
   let hyphenOwnerAccount = "0x256144a60f34288F7b03D345F8Cb256C502e0f2C";
   let adminFeePercentage = 10; // This is value as per 10,000 basis point, so its actual value is .1
 
-  // const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
-  // const executorMngr = await ExecutorMngr.deploy(owner);
-  // await executorMngr.deployed();
-  // executorManagerAddress = executorMngr.address;
-  // console.log("✅ Executor Manager deployed at : ", executorMngr.address);
+  const ExecutorMngr = await ethers.getContractFactory("ExecutorManager");
+  const executorMngr = await ExecutorMngr.deploy(owner);
+  await executorMngr.deployed();
+  executorManagerAddress = executorMngr.address;
+  console.log("✅ Executor Manager deployed at : ", executorMngr.address);
 
   console.log("Sending transaction to deploy LPManager");
   const LiquidityPoolMngr = await ethers.getContractFactory("LiquidityPoolManager");
@@ -37,11 +37,11 @@ async function main() {
   console.log("✅ LiquidityPool Manager deployed at : ", liquidityPoolMngr.address);
 
 
-  let lpProxy = await hre.ethers.getContractAt("contracts/6/insta-swaps/LiquidityPoolManager.sol:LiquidityPoolManager", "0xC6661f9b1B1c413639a78075ba743cFA26F8c985");
+  let lpProxy = await hre.ethers.getContractAt("contracts/6/insta-swaps/LiquidityPoolManager.sol:LiquidityPoolManager", "0x2bE6ff2A8E466Fb8d65A1C959BC5E05D6d228Ae0");
 
   let tx, receipt;
   
-  tx = await lpProxy.addSupportedToken(usdtAddress, "100000000000000000000","1000000000000000000000");
+  tx = await lpProxy.addSupportedToken(usdtAddress, "10000000000000000000","1000000000000000000000");
   receipt = await tx.wait(1);
   console.log("✅ USDT support added");
 
@@ -53,17 +53,17 @@ async function main() {
   receipt = await tx.wait(1);
   console.log("✅ DAI support added");
 
-  tx = await lpProxy.addSupportedToken(ethAddress, "10000000000000000","1000000000000000000");
+  tx = await lpProxy.addSupportedToken(ethAddress, "10000000000000000","10000000000000000");
   receipt = await tx.wait(1);
   console.log("✅ ETH support added");
 
-  // await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
-  // console.log("✅ DAI overhead added");
-  await lpProxy.setTokenTransferOverhead(usdcAddress, 53083); //53083
+  await lpProxy.setTokenTransferOverhead(daiAddress, 40007); //40007
+  console.log("✅ DAI overhead added");
+  await lpProxy.setTokenTransferOverhead(usdcAddress, 64302); //53083
   console.log("✅ USDC overhead added");
-  await lpProxy.setTokenTransferOverhead(usdtAddress, 61373); //61373
+  await lpProxy.setTokenTransferOverhead(usdtAddress, 61345); //61373
   console.log("✅ USDT overhead added");
-  await lpProxy.setTokenTransferOverhead(ethAddress, 40789); //40789
+  await lpProxy.setTokenTransferOverhead(ethAddress, 40850); //40789
   console.log("✅ WETH overhead added");
 
   tx = await lpProxy.transferOwnership(hyphenOwnerAccount);
