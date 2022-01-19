@@ -21,6 +21,7 @@ task("accounts", "Prints the list of accounts", async () => {
 //1 foot in 1 foot out lmao
 const fs = require('fs');
 const infuraKey = fs.readFileSync(".infura").toString().trim();
+const etherscanKey = fs.readFileSync(".etherscan").toString().trim();
 const alchemyKey = fs.readFileSync(".alchemy").toString().trim();
 const blockvigilKey = fs.readFileSync(".blockvigil").toString().trim();
 const palmInfuraKey = fs.readFileSync(".palminfura").toString().trim();
@@ -120,7 +121,13 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId: 1287
     },
+    moonbeamMainnet: {
+      url:"https://moonbeam.api.onfinality.io/public",
+      accounts:walletUtils.makeKeyList(),
+      chainId: 1284
+    },
     arbitrumTest: {
+      //use rinkeby v5
       url:"https://kovan4.arbitrum.io/rpc",
       accounts:walletUtils.makeKeyList(),
       chainId: 212984383488152
@@ -149,6 +156,11 @@ module.exports = {
       url:`https://palm-mainnet.infura.io/v3/${palmInfuraKey}`,
       accounts:walletUtils.makeKeyList(),
       chainId: 11297108109
+    },
+    fantomTestnet: {
+      url:`https://rpc.testnet.fantom.network`,
+      accounts:walletUtils.makeKeyList(),
+      chainId: 4002
     },
     optimisticTest: {
       url:"https://kovan.optimism.io",
@@ -198,6 +210,6 @@ module.exports = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: "B2GZS7B1U65IQHHSYU3KX7PSXQRXA59EYP"
+    apiKey: etherscanKey
   }
 };

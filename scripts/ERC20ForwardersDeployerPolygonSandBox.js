@@ -19,10 +19,10 @@ async function main() {
     let tx, receipt;
     let totalGasUsed = 0;
 
-    var gasPrices = await estimateGasPrice();
+    //var gasPrices = await estimateGasPrice();
     //var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000};
   
-    const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
+    const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarderSandBox");
     //todo
     //fetch gas price and change in in the options
     //pass options for all transactions
@@ -33,7 +33,7 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
      
-    tx = await forwarder.registerDomainSeparator("Biconomy Forwarder", "1");
+    tx = await forwarder.registerDomainSeparator("Biconomy Forwarder for The Sandbox :: used to ley you pay gas fee in SAND", "1");
     receipt = await tx.wait(confirmations = 1);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
@@ -45,16 +45,18 @@ async function main() {
     console.log("✅ Fee Manager deployed at : ", centralisedFeeManager.address);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
-  
+    
     // Allow tokens
+    let centralisedFeeManager = await hre.ethers.getContractAt("CentralisedFeeManager", "0x48F720Fba67101F8550498266a3Db85135c95342");
     tx = await centralisedFeeManager.setTokenAllowed(sandAddress, true);
     receipt = await tx.wait(confirmations = 1);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
+    
     // Deploy logic contract
-    const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20Forwarder");
-    const erc20Forwarder = await ERC20Forwarder.deploy(owner);
+    const ERC20ForwarderSandBox = await hre.ethers.getContractFactory("ERC20ForwarderSandBox");
+    const erc20Forwarder = await ERC20ForwarderSandBox.deploy(owner);
     await erc20Forwarder.deployed();
     receipt = await erc20Forwarder.deployTransaction.wait(confirmations = 1);
     console.log("✅ ERC20 Forwarder (logic contract) deployed at : ", erc20Forwarder.address);
@@ -70,7 +72,7 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    let forwarderProxy = await hre.ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder", erc20ForwarderProxy.address);
+    let forwarderProxy = await hre.ethers.getContractAt("contracts/6/forwarder/ERC20ForwarderSandBox.sol:ERC20ForwarderSandBox", erc20ForwarderProxy.address);
   
     tx = await forwarderProxy.initialize(feeReceiver, centralisedFeeManager.address, forwarder.address);
     receipt = await tx.wait(confirmations = 1);
@@ -78,12 +80,13 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
   
+    //let oracleAggregator = await hre.ethers.getContractAt("OracleAggregator", "0x150F707ce56cC3A3883e2652D0D654573f701785");
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
-    oracleAggregator = await OracleAggregator.deploy(owner, options);
+    let oracleAggregator = await OracleAggregator.deploy(owner);
     await oracleAggregator.deployed();
     receipt = await oracleAggregator.deployTransaction.wait(confirmations = 1);
     console.log("✅ Oracle Aggregator deployed at : ", oracleAggregator.address);
-    //console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
     let priceFeedSand = await hre.ethers.getContractAt("AggregatorInterface", sandMaticPriceFeedAddress);
@@ -111,8 +114,8 @@ async function main() {
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
     console.log(`Total gas used in deployment is : ${totalGasUsed}`);
-    let ethSpent = totalGasUsed * gasPrices.fastGasPriceInWei;
-    console.log(`Total Matic(in wei) spent in deployment is : ${ethSpent}`);
+    //let ethSpent = totalGasUsed * gasPrices.fastGasPriceInWei;
+    //console.log(`Total Matic(in wei) spent in deployment is : ${ethSpent}`);
     
   } catch(error) {
     console.log("❌ DEPLOYMENT FAILED ❌")

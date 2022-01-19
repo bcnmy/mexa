@@ -21,7 +21,7 @@ async function main() {
     const usdtAddress = "0x8e1084f3599ba90991C3b2f9e25D920738C1496D"; //with faucet
     const usdtDecimals = 6;
     
-    const owner = "0x9AAFe3E7E4Fe0E15281831f7D2f33eFfE18Fc7d5";
+    const owner = "0x2b241cBe6B455e08Ade78a7ccC42DE2403d7b566";
     //prod config admin addresses
     const newOwner = "0xbb3982c15D92a8733e82Db8EBF881D979cFe9017";
     const ERC20ForwarderProxyAdmin = "0xccb9bA42d45ee6a7E3176B2f865Fb53266B6384D";
@@ -34,7 +34,7 @@ async function main() {
     var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000};
   
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
-    const forwarder = await Forwarder.deploy(owner, options);
+    const forwarder = await Forwarder.deploy(owner);
     await forwarder.deployed();
     receipt = await forwarder.deployTransaction.wait(confirmations = 2);
   
@@ -49,7 +49,7 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
     const CentralisedFeeManager = await hre.ethers.getContractFactory("CentralisedFeeManager");
-    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner, 10000, options);
+    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner, 10000);
     await centralisedFeeManager.deployed();
     receipt = await centralisedFeeManager.deployTransaction.wait(confirmations = 2);
     console.log("✅ Fee Manager deployed at : ", centralisedFeeManager.address);
@@ -82,7 +82,7 @@ async function main() {
 
     // Deploy logic contract
     const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20Forwarder");
-    const erc20Forwarder = await ERC20Forwarder.deploy(owner, options);
+    const erc20Forwarder = await ERC20Forwarder.deploy(owner);
     await erc20Forwarder.deployed();
     receipt = await erc20Forwarder.deployTransaction.wait(confirmations = 2);
     console.log("✅ ERC20 Forwarder (logic contract) deployed at : ", erc20Forwarder.address);
@@ -92,7 +92,7 @@ async function main() {
     // Deploy proxy contract
     // TODO reminder to change ercFeeProxy to erc20ForwarderProxy / erc20Forwarder(direct)
     const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
-    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, ERC20ForwarderProxyAdmin, owner, options);
+    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, ERC20ForwarderProxyAdmin, owner);
     await erc20ForwarderProxy.deployed();
     receipt = await erc20ForwarderProxy.deployTransaction.wait(confirmations = 2);
   
@@ -109,7 +109,7 @@ async function main() {
   
   
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
-    oracleAggregator = await OracleAggregator.deploy(owner, options);
+    oracleAggregator = await OracleAggregator.deploy(owner);
     await oracleAggregator.deployed();
     receipt = await oracleAggregator.deployTransaction.wait(confirmations = 2);
     console.log("✅ Oracle Aggregator deployed at : ", oracleAggregator.address);

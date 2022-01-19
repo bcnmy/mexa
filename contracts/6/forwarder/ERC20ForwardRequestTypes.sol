@@ -30,6 +30,12 @@ ensure that you try to order your storage variables and struct members such that
         bytes data;
     }
 
+    struct ForwardRequest {
+        string info;
+        string action;
+        ERC20ForwardRequest request;
+    }
+
      struct PermitRequest {
         address holder; 
         address spender;  
