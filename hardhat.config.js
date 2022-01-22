@@ -3,9 +3,7 @@ require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
 require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
-require("@eth-optimism/plugins/hardhat/compiler")
 //require('solidity-coverage');
-require('@eth-optimism/hardhat-ovm')
 const walletUtils = require("./walletUtils");
 
 // This is a sample Buidler task. To learn how to create your own go to
@@ -39,6 +37,13 @@ module.exports = {
   },
   solidity: {
     compilers: [
+      {
+        version: "0.8.4",
+        settings:{
+          evmVersion: "berlin",
+          optimizer: { enabled: true, runs: 200 }
+        }
+      },
       {
         version: "0.5.13",
         settings:{
@@ -104,6 +109,11 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId:5,
       gas: 6400000
+    },
+    gnosisChainMain: {
+      url:`https://rpc.gnosischain.com/`,
+      accounts:walletUtils.makeKeyList(),
+      chainId:100,
     },
     mainnet:{
       url:`https://mainnet.infura.io/v3/${infuraKey}`,

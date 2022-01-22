@@ -1,4 +1,3 @@
-const {estimateGasPrice} = require("./gas-price/get-gas-price");
 /**
  * Check the owner value before running the script.
  */
@@ -12,15 +11,9 @@ async function main() {
     const accounts = await hre.ethers.getSigners();
     let tx, receipt;
     let totalGasUsed = 0;
-
-    var gasPrices = await estimateGasPrice();
-    var options = { gasPrice: gasPrices.fastGasPriceInWei};
-
-     //for optimism
-     //var options = { gasLimit: 20000000, gasPrice: 15000000 };
     
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
-    const forwarder = await Forwarder.deploy(owner,options);
+    const forwarder = await Forwarder.deploy();
     await forwarder.deployed();
     receipt = await forwarder.deployTransaction.wait(confirmations = 2);
 
@@ -28,16 +21,16 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
-    tx = await forwarder.registerDomainSeparator("Biconomy Forwarder","1");
+    tx = await forwarder.registerDomainSeparator("Powered by Biconomy","1");
     receipt = await tx.wait(confirmations = 2);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
-    tx = await forwarder.transferOwnership(newOwner);
+    /*tx = await forwarder.transferOwnership(newOwner);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Biconomy Forwarder ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
     console.log(`Total gas used in deployment is : ${totalGasUsed}`);

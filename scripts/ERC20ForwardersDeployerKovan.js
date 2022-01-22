@@ -1,4 +1,3 @@
-const {estimateGasPrice} = require("./gas-price/get-gas-price");
 /**
  * Check the owner and ERC20ForwarderProxyAdmin values before running the script.
  */
@@ -30,11 +29,8 @@ async function main() {
     let tx, receipt;
     let totalGasUsed = 0;
 
-    var gasPrices = await estimateGasPrice();
-    var options = { gasPrice: gasPrices.fastGasPriceInWei, gasLimit: 10000000};
-  
     const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarder");
-    const forwarder = await Forwarder.deploy(owner);
+    const forwarder = await Forwarder.deploy();
     await forwarder.deployed();
     receipt = await forwarder.deployTransaction.wait(confirmations = 2);
   
@@ -48,8 +44,8 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    const CentralisedFeeManager = await hre.ethers.getContractFactory("CentralisedFeeManager");
-    const centralisedFeeManager = await CentralisedFeeManager.deploy(owner, 10000);
+    const CentralisedFeeManager = await hre.ethers.getContractFactory("FeeManager");
+    const centralisedFeeManager = await CentralisedFeeManager.deploy(10000);
     await centralisedFeeManager.deployed();
     receipt = await centralisedFeeManager.deployTransaction.wait(confirmations = 2);
     console.log("✅ Fee Manager deployed at : ", centralisedFeeManager.address);
@@ -74,15 +70,15 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    tx = await centralisedFeeManager.transferOwnership(newOwner);
+    /*tx = await centralisedFeeManager.transferOwnership(newOwner);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Fee Manager ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
 
     // Deploy logic contract
-    const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20Forwarder");
-    const erc20Forwarder = await ERC20Forwarder.deploy(owner);
+    const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20ForwarderImplementation");
+    const erc20Forwarder = await ERC20Forwarder.deploy();
     await erc20Forwarder.deployed();
     receipt = await erc20Forwarder.deployTransaction.wait(confirmations = 2);
     console.log("✅ ERC20 Forwarder (logic contract) deployed at : ", erc20Forwarder.address);
@@ -92,7 +88,7 @@ async function main() {
     // Deploy proxy contract
     // TODO reminder to change ercFeeProxy to erc20ForwarderProxy / erc20Forwarder(direct)
     const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
-    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, ERC20ForwarderProxyAdmin, owner);
+    const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, ERC20ForwarderProxyAdmin);
     await erc20ForwarderProxy.deployed();
     receipt = await erc20ForwarderProxy.deployTransaction.wait(confirmations = 2);
   
@@ -100,7 +96,7 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    let forwarderProxy = await hre.ethers.getContractAt("contracts/6/forwarder/ERC20Forwarder.sol:ERC20Forwarder", erc20ForwarderProxy.address);
+    let forwarderProxy = await hre.ethers.getContractAt("contracts/forward-v2/forwarder/ERC20ForwarderImplementation.sol:ERC20ForwarderImplementation", erc20ForwarderProxy.address);
   
     tx = await forwarderProxy.initialize(feeReceiver, centralisedFeeManager.address, forwarder.address);
     receipt = await tx.wait(confirmations = 2);
@@ -109,7 +105,7 @@ async function main() {
   
   
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
-    oracleAggregator = await OracleAggregator.deploy(owner);
+    oracleAggregator = await OracleAggregator.deploy();
     await oracleAggregator.deployed();
     receipt = await oracleAggregator.deployTransaction.wait(confirmations = 2);
     console.log("✅ Oracle Aggregator deployed at : ", oracleAggregator.address);
@@ -177,7 +173,7 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    tx = await forwarderProxy.transferOwnership(newOwner);
+    /*tx = await forwarderProxy.transferOwnership(newOwner);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Forwarder Proxy ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
@@ -199,7 +195,7 @@ async function main() {
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Biconomy Forwarder ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
 
     console.log("👏 🏁🏁 DEPLOYMENT FINISHED");
     console.log(`Total gas used in deployment is : ${totalGasUsed}`);
