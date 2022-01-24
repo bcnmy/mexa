@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IFeeManager.sol";
 import "./BiconomyForwarder.sol";
+import "./OracleAggregator.sol";
 import "../interfaces/IERC20Permit.sol";
 
 /**
@@ -300,10 +301,13 @@ import "../interfaces/IERC20Permit.sol";
      * @param req : the request being forwarded
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
-    //@review tokenGasPrice on chain verification using oracle 
+    //@review tokenGasPrice on chain verification using oracle. can add threshold 
     function _transferHandler(ERC20ForwardRequest calldata req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
-        require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");        
+        require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
+        OracleAggregator oa = OracleAggregator(oracleAggregator);
+        uint256 tokenGasPriceNow = tx.gasprice * (10 ** oa.getTokenOracleDecimals(req.token)) / (oa.getTokenPrice(req.token));
+        require(req.tokenGasPrice >= tokenGasPriceNow, "Transfer Handler: Pre flight checks on token gas price has failed");        
         charge = req.tokenGasPrice * executionGas * (_feeManager.getFeeMultiplier(req.from,req.token)) / 10000;
         if (!safeTransferRequired[req.token]){
             

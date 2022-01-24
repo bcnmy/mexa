@@ -5,7 +5,7 @@ import "../interfaces/AggregatorV3Interface.sol";
 
 //@review againsnt chainlink reference PriceConverter https://docs.chain.link/docs/get-the-latest-price/ 
 //@review decimals for individual feeds
-contract SandPriceFeed {
+contract DAIPriceFeed {
 
     AggregatorV3Interface internal priceFeed1;
     AggregatorV3Interface internal priceFeed2;
@@ -13,7 +13,7 @@ contract SandPriceFeed {
 
     constructor() {
         priceFeed1 = AggregatorV3Interface(0xAB594600376Ec9fD91F8e885dADF0CE036862dE0);     
-        priceFeed2 = AggregatorV3Interface(0x3D49406EDd4D52Fb7FFd25485f32E073b529C924);  
+        priceFeed2 = AggregatorV3Interface(0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D);  
     }
 
     function getThePrice() public view returns (int) {   
@@ -31,7 +31,7 @@ contract SandPriceFeed {
        ) = priceFeed1.latestRoundData();  
      
      /**
-      * Returns the latest price of SAND-USD
+      * Returns the latest price of DAI-USD
      */
     
       (             
@@ -43,8 +43,8 @@ contract SandPriceFeed {
        ) = priceFeed2.latestRoundData();  
      
     
-    int sandMatic = price2*(10**18)/price1;
-    return sandMatic;
+    int daiMatic = price2*(10**18)/price1;
+    return daiMatic;
     }
      
 }

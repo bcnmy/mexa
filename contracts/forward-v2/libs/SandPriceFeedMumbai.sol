@@ -5,15 +5,15 @@ import "../interfaces/AggregatorV3Interface.sol";
 
 //@review againsnt chainlink reference PriceConverter https://docs.chain.link/docs/get-the-latest-price/ 
 //@review decimals for individual feeds
-contract SandPriceFeed {
+contract SandPriceFeedMumbai {
 
     AggregatorV3Interface internal priceFeed1;
     AggregatorV3Interface internal priceFeed2;
 
 
     constructor() {
-        priceFeed1 = AggregatorV3Interface(0xAB594600376Ec9fD91F8e885dADF0CE036862dE0);     
-        priceFeed2 = AggregatorV3Interface(0x3D49406EDd4D52Fb7FFd25485f32E073b529C924);  
+        priceFeed1 = AggregatorV3Interface(0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada);     
+        priceFeed2 = AggregatorV3Interface(0x9dd18534b8f456557d11B9DDB14dA89b2e52e308);  
     }
 
     function getThePrice() public view returns (int) {   

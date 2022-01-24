@@ -4,21 +4,28 @@
 async function main() {
   try {
 
-    const daiEthPriceFeedAddress = "0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541";
-    const daiAddress = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa"; // uniswap kovan DAI
-    const daiDecimals = 18;
+    const daiMaticPriceFeedAddress = "0x0FCAa9c899EC5A91eBc3D5Dd869De833b06fB046"; //DAI USD
+    const daiAddress = ""; // Custom Mumbai DAI TBD
+    const daiDecimals = 18; //Review
 
+    //on Mumbai this will change
     const DaiTransferHandlerGas = 46314;
     const USDCTransferHandlerGas = 56321;
     const USDTransferHandlerGas = 56734;
+    const SANDTransferHandlerGas = 47444;
     
-    const usdcEthPriceFeedAddress = "0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838";
-    const usdcAddress = "0x6043fD7126e4229d6FcaC388c9E1C8d333CCb8fA"; //make faucet available 
-    const usdcDecimals = 18;
+    const usdcMaticPriceFeedAddress = "0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0"; //USDC USD
+    const usdcAddress = ""; // Custom Mumbai USDC TBD
+    const usdcDecimals = 18; //Review
 
-    const usdtEthPriceFeedAddress = "0x0bF499444525a23E7Bb61997539725cA2e928138";
-    const usdtAddress = "0x8e1084f3599ba90991C3b2f9e25D920738C1496D"; //with faucet
-    const usdtDecimals = 6;
+    const usdtMaticPriceFeedAddress = "0x92C09849638959196E976289418e5973CC96d645"; // USDT USD
+    const usdtAddress = ""; // Custom Mumbai USDT TBD
+    const usdtDecimals = 18; //Review
+
+    //const sandUSDPriceFeedAddress = "0x9dd18534b8f456557d11B9DDB14dA89b2e52e308"; // SAND USD
+    const sandMaticPriceFeedAddress = "0x1ee3d325502f8E453dd7382208e4c6b7C2D1b151" //SAND MATIC
+    const sandAddress = "0xE03489D4E90b22c59c5e23d45DFd59Fc0dB8a025"; 
+    const sandDecimals = 18; //Review
     
     const owner = "0x2b241cBe6B455e08Ade78a7ccC42DE2403d7b566";
     //prod config admin addresses
@@ -54,7 +61,7 @@ async function main() {
 
   
     // Allow tokens
-    tx = await centralisedFeeManager.setTokenAllowed(daiAddress, true);
+    /*tx = await centralisedFeeManager.setTokenAllowed(daiAddress, true);
     receipt = await tx.wait(confirmations = 2);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
@@ -66,6 +73,11 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
     tx = await centralisedFeeManager.setTokenAllowed(usdtAddress, true);
+    receipt = await tx.wait(confirmations = 2);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
+
+    tx = await centralisedFeeManager.setTokenAllowed(sandAddress, true);
     receipt = await tx.wait(confirmations = 2);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
@@ -112,9 +124,9 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    let priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface", daiEthPriceFeedAddress);
+    /*let priceFeedDai = await hre.ethers.getContractAt("AggregatorInterface", daiMaticPriceFeedAddress);
     let priceFeedTxDai = await priceFeedDai.populateTransaction.latestAnswer();
-    tx = await oracleAggregator.setTokenOracle(daiAddress, daiEthPriceFeedAddress, daiDecimals, priceFeedTxDai.data, true);
+    tx = await oracleAggregator.setTokenOracle(daiAddress, daiMaticPriceFeedAddress, daiDecimals, priceFeedTxDai.data, true);
     receipt = await tx.wait(confirmations = 2);
 
     console.log('✅ DAI support added');
@@ -122,9 +134,9 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
    
-    let priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcEthPriceFeedAddress);
+    let priceFeedUsdc = await hre.ethers.getContractAt("AggregatorInterface", usdcMaticPriceFeedAddress);
     let priceFeedTxUsdc = await priceFeedUsdc.populateTransaction.latestAnswer();
-    tx = await oracleAggregator.setTokenOracle(usdcAddress, usdcEthPriceFeedAddress, usdcDecimals, priceFeedTxUsdc.data, true);
+    tx = await oracleAggregator.setTokenOracle(usdcAddress, usdcMaticPriceFeedAddress, usdcDecimals, priceFeedTxUsdc.data, true);
     receipt = await tx.wait(confirmations = 2);
   
     console.log('✅ USDC support added');
@@ -132,24 +144,35 @@ async function main() {
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
 
-    let priceFeedUsdt = await hre.ethers.getContractAt("AggregatorInterface", usdtEthPriceFeedAddress);
+    let priceFeedUsdt = await hre.ethers.getContractAt("AggregatorInterface", usdtMaticPriceFeedAddress);
     let priceFeedTxUsdt = await priceFeedUsdt.populateTransaction.latestAnswer();
-    tx = await oracleAggregator.setTokenOracle(usdtAddress, usdtEthPriceFeedAddress, usdtDecimals, priceFeedTxUsdt.data, true);
+    tx = await oracleAggregator.setTokenOracle(usdtAddress, usdtMaticPriceFeedAddress, usdtDecimals, priceFeedTxUsdt.data, true);
     receipt = await tx.wait(confirmations = 2);
   
     console.log('✅ USDT support added');
     console.log(`✅ USDT address : ${usdtAddress}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
+
+    let priceFeedSand = await hre.ethers.getContractAt("AggregatorInterface", sandMaticPriceFeedAddress);
+    let priceFeedTxSand = await priceFeedSand.populateTransaction.getThePrice();
+    tx = await oracleAggregator.setTokenOracle(sandAddress, sandMaticPriceFeedAddress, sandDecimals, priceFeedTxSand.data, true);
+    receipt = await tx.wait(confirmations = 1);
+  
+    console.log('✅ SAND support added');
+    console.log(`✅ SAND address : ${sandAddress}`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
-    receipt = await tx.wait(confirmations = 2);  
+    receipt = await tx.wait(confirmations = 1);  
     console.log(`✅ Oracle aggregator added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
     //set transfer handler gas
-    tx = await forwarderProxy.setTransferHandlerGas(daiAddress, DaiTransferHandlerGas); //values to be tuned further
+    /*tx = await forwarderProxy.setTransferHandlerGas(daiAddress, DaiTransferHandlerGas); //values to be tuned further
     receipt = await tx.wait(confirmations = 2); 
     console.log(`✅ DAI transfer handler gas ${DaiTransferHandlerGas} added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
@@ -170,6 +193,13 @@ async function main() {
     tx = await forwarderProxy.setSafeTransferRequired(usdtAddress,true);
     receipt = await tx.wait(confirmations = 2);
     console.log(`✅ USDT is marked for safe transfer`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
+
+    //set transfer handler gas
+    tx = await forwarderProxy.setTransferHandlerGas(sandAddress, SANDTransferHandlerGas); //values to be tuned further
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ SAND transfer handler gas ${SANDTransferHandlerGas} added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
