@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IFeeManager.sol";
-import "./BiconomyForwarderV2.sol";
+import "./BiconomyForwarderV2Beta.sol";
 import "./OracleAggregator.sol";
 import "../interfaces/IERC20Permit.sol";
 
@@ -21,7 +21,7 @@ import "../interfaces/IERC20Permit.sol";
  *
  */
           
- contract ERC20ForwarderImplementationV2 is Initializable, OwnableUpgradeable, ForwardRequestTypesV2 {
+ contract ERC20ForwarderImplementationV2Beta is Initializable, OwnableUpgradeable, ForwardRequestTypesV2 {
      
     uint8 internal _initializedVersion;
     mapping(address=>uint256) public transferHandlerGas;
@@ -170,7 +170,7 @@ import "../interfaces/IERC20Permit.sol";
     function getNonce(address from, uint256 batchId)
     external view
     returns(uint256 nonce){
-        nonce = BiconomyForwarderV2(forwarder).getNonce(from,batchId);
+        nonce = BiconomyForwarderV2Beta(forwarder).getNonce(from,batchId);
     }
 
      /**
@@ -194,7 +194,7 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executeEIP712(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas + baseGas + transferHandlerGas - postGas);
@@ -214,7 +214,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return success : false if call fails. true otherwise
      * @return ret : any return data from the call
      */
-    function executeEIP712Custom(
+    function executeEIP712(
         CustomForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig
@@ -222,10 +222,10 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executeEIP712Custom(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executeEIP712(req,domainSeparator,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.request.token];
-            uint256 charge = _transferHandlerCustom(req,initialGas + baseGas + transferHandlerGas - postGas);
+            uint256 charge = _transferHandler(req,initialGas + baseGas + transferHandlerGas - postGas);
             emit FeeCharged(req.request.from,charge,req.request.token);
     }
 
@@ -253,7 +253,7 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executeEIP712(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executeEIP712(req,domainSeparator,sig);
             //DAI permit
             IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
             uint256 postGas = gasleft();
@@ -277,7 +277,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return success : false if call fails. true otherwise
      * @return ret : any return data from the call
      */
-    function permitAndExecuteEIP712Custom(
+    function permitAndExecuteEIP712(
         CustomForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
@@ -286,12 +286,12 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executeEIP712Custom(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executeEIP712(req,domainSeparator,sig);
             //DAI permit
             IERC20Permit(req.request.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.nonce, permitOptions.expiry, permitOptions.allowed, permitOptions.v, permitOptions.r, permitOptions.s);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.request.token];
-            uint256 charge = _transferHandlerCustom(req,initialGas + baseGas + transferHandlerGas - postGas);
+            uint256 charge = _transferHandler(req,initialGas + baseGas + transferHandlerGas - postGas);
             emit FeeCharged(req.request.from,charge,req.request.token);
     }
 
@@ -319,7 +319,7 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executeEIP712(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executeEIP712(req,domainSeparator,sig);
             //USDC or any EIP2612 permit
             IERC20Permit(req.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
             uint256 postGas = gasleft();
@@ -343,7 +343,7 @@ import "../interfaces/IERC20Permit.sol";
      * @return success : false if call fails. true otherwise
      * @return ret : any return data from the call
      */
-    function permitEIP2612AndExecuteEIP712Custom(
+    function permitEIP2612AndExecuteEIP712(
         CustomForwardRequest calldata req,
         bytes32 domainSeparator,
         bytes calldata sig,
@@ -352,12 +352,12 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executeEIP712Custom(req,domainSeparator,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executeEIP712(req,domainSeparator,sig);
             //USDC or any EIP2612 permit
             IERC20Permit(req.request.token).permit(permitOptions.holder, permitOptions.spender, permitOptions.value, permitOptions.expiry, permitOptions.v, permitOptions.r, permitOptions.s);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.request.token];
-            uint256 charge = _transferHandlerCustom(req,initialGas + baseGas + transferHandlerGas - postGas);
+            uint256 charge = _transferHandler(req,initialGas + baseGas + transferHandlerGas - postGas);
             emit FeeCharged(req.request.from,charge,req.request.token);
     }
 
@@ -380,7 +380,7 @@ import "../interfaces/IERC20Permit.sol";
         external 
         returns (bool success, bytes memory ret){
             uint256 initialGas = gasleft();
-            (success,ret) = BiconomyForwarderV2(forwarder).executePersonalSign(req,sig);
+            (success,ret) = BiconomyForwarderV2Beta(forwarder).executePersonalSign(req,sig);
             uint256 postGas = gasleft();
             uint256 transferHandlerGas = transferHandlerGas[req.token];
             uint256 charge = _transferHandler(req,initialGas + baseGas + transferHandlerGas - postGas);
@@ -431,7 +431,7 @@ import "../interfaces/IERC20Permit.sol";
      * @param executionGas : amount of gas used to execute the forwarded request call
      */
     //@review tokenGasPrice on chain verification using oracle. can add threshold 
-    function _transferHandlerCustom(CustomForwardRequest calldata req,uint256 executionGas) internal returns(uint256 charge){
+    function _transferHandler(CustomForwardRequest calldata req,uint256 executionGas) internal returns(uint256 charge){
         IFeeManager _feeManager = IFeeManager(feeManager);
         require(_feeManager.getTokenAllowed(req.request.token),"TOKEN NOT ALLOWED BY FEE MANAGER");   
         OracleAggregator oa = OracleAggregator(oracleAggregator);

@@ -45,8 +45,8 @@ ensure that you try to order your storage variables and struct members such that
     //@review
     //should be SandBox Forward Request?
     struct CustomForwardRequest {
-        string info;
         string warning; //optional
+        string info;
         string action;
         ERC20ForwardRequest request;
     }
