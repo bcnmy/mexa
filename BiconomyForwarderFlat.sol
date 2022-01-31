@@ -1,10 +1,6 @@
-// Sources flattened with hardhat v2.8.3 https://hardhat.org
-
-// File @openzeppelin/contracts/utils/cryptography/ECDSA.sol@v4.3.2
-
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 
 /**
  * @dev Elliptic Curve Digital Signature Algorithm (ECDSA) operations.
@@ -288,7 +284,7 @@ ensure that you try to order your storage variables and struct members such that
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev Provides information about the current execution context, including the
@@ -315,7 +311,7 @@ abstract contract Context {
 
 
 
-pragma solidity ^0.8.0;
+
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -407,7 +403,7 @@ pragma solidity 0.8.4;
  */
 
  //@review if experimental abiCoder is necessary for structs we need in calldata
- contract BiconomyForwarder is ForwardRequestTypes, Ownable{
+ contract BiconomyForwarder is ForwardRequestTypes, Ownable {
     using ECDSA for bytes32;
 
     mapping(bytes32 => bool) public domains;
@@ -416,7 +412,7 @@ pragma solidity 0.8.4;
 
     string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)";
 
-    //@review
+    //@review and rename
     bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ERC20ForwardRequest(address from,address to,address token,uint256 txGas,uint256 tokenGasPrice,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
 
     //@review

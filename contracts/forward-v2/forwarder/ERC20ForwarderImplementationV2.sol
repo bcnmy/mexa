@@ -27,11 +27,11 @@ import "../interfaces/IERC20Permit.sol";
     mapping(address=>uint256) public transferHandlerGas;
     mapping(address=>bool) public safeTransferRequired;
     //TODO
-    //different fee receiver con fig can be added by Owner / fee manager owner?
+    //different fee receiver config can be added by Owner / fee manager owner?
     address public feeReceiver;
     address public oracleAggregator;
     //TODO
-    //@review owner can add multiple fee managers for dapps?
+    //@review owner could add multiple fee managers for dapps
     address public feeManager;
     address public forwarder;
     //transaction base gas

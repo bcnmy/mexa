@@ -172,6 +172,11 @@ module.exports = {
       accounts:walletUtils.makeKeyList(),
       chainId: 4002
     },
+    fantomMainnet: {
+      url:`https://rpc.testnet.fantom.network`,
+      accounts:walletUtils.makeKeyList(),
+      chainId: 250
+    },
     optimisticTest: {
       url:"https://kovan.optimism.io",
       accounts:walletUtils.makeKeyList(),

@@ -20,7 +20,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *
  */
 
- //@review if experimental abiCoder is necessary for structs we need in calldata
  contract BiconomyForwarderV2 is ForwardRequestTypesV2, Ownable {
     using ECDSA for bytes32;
 
@@ -31,7 +30,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     string public constant EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)";
 
     //@review
-    //Could add more type hash and rename above one if multiple executeEIP712 is planned to be supported
     bytes32 public constant REQUEST_TYPEHASH = keccak256(bytes("ForwardRequest(address from,address to,uint256 txGas,uint256 batchId,uint256 batchNonce,uint256 deadline,bytes data)"));
 
     //@review and rename
@@ -94,7 +92,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     }
 
     //TODO
-    //@review
+    //@review if new read method is needed for Custom
     /**
      * @dev an external function which exposes the internal _verifySigEIP712 method
      * @param req : request being verified
@@ -165,25 +163,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         emit MetaTransactionExecuted(req.request.from, msg.sender, req.request.data);
     }
 
-    /*
-    function executeEIP712(
-        ForwardRequest calldata req,
-        bytes32 domainSeparator,
-        bytes calldata sig
-    )
-    external 
-    returns (bool success, bytes memory ret) {
-        _verifySigEIP712(req,domainSeparator,sig);
-        _updateNonce(req);
-        // solhint-disable-next-line avoid-low-level-calls 
-         (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
-         // Validate that the relayer has sent enough gas for the call.
-        // See https://ronan.eth.link/blog/ethereum-gas-dangers/
-        assert(gasleft() > req.txGas / 63);
-        _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
-        emit MetaTransactionExecuted(req.from, msg.sender, req.data);
-    }*/
-
     /**
      * @dev an external function which exposes the internal _verifySigPersonSign method
      * @param req : request being verified
@@ -218,20 +197,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         emit MetaTransactionExecuted(req.from, msg.sender, req.data);
     }
 
-    /*
-    function executePersonalSign(ForwardRequest calldata req,bytes calldata sig)
-    external 
-    returns(bool success, bytes memory ret){
-        _verifySigPersonalSign(req, sig);
-        _updateNonce(req);
-        (success,ret) = req.to.call{gas : req.txGas}(abi.encodePacked(req.data, req.from));
-        // Validate that the relayer has sent enough gas for the call.
-        // See https://ronan.eth.link/blog/ethereum-gas-dangers/
-        assert(gasleft() > req.txGas / 63);
-        _verifyCallResult(success,ret,"Forwarded call to destination did not succeed");
-        emit MetaTransactionExecuted(req.from, msg.sender, req.data);
-    }*/
-
     /**
      * @dev Increments the nonce of given user/batch pair
      * @dev Updates the highestBatchId of the given user if the request's batchId > current highest
@@ -251,17 +216,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     function _updateNonceCustom(CustomForwardRequest calldata req) internal {
         nonces[req.request.from][req.request.batchId]++;
     }
-
-
-    /**
-     * @dev Increments the nonce of given user/batch pair
-     * @dev Updates the highestBatchId of the given user if the request's batchId > current highest
-     * @dev only intended to be called post call execution
-     * @param req : regular forward request that was executed for EIP2771 meta transaction
-     */
-    /*function _updateNonce(ForwardRequest calldata req) internal {
-        nonces[req.from][req.batchId]++;
-    }*/
 
     /**
      * @dev verifies the domain separator used has been registered via registerDomainSeparator()
@@ -333,31 +287,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         require(digest.recover(sig) == req.request.from, "signature mismatch");
     }
 
-    /* 
-    function _verifySigEIP712(
-        ForwardRequest calldata req,
-        bytes32 domainSeparator,
-        bytes memory sig)
-    internal
-    view
-    {   
-        uint256 id;
-        //solhint-disable-next-line no-inline-assembly 
-        assembly {
-            id := chainid()
-        }
-        require(req.deadline == 0 || block.timestamp + 20 <= req.deadline, "request expired");
-        require(domains[domainSeparator], "unregistered domain separator");
-        require(chainId == id, "potential replay attack on the fork");
-        bytes32 digest =
-            keccak256(abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                hashForwardRequest(req)
-            ));
-        require(digest.recover(sig) == req.from, "signature mismatch");
-    }*/
-    
 
     function hashERC20ForwardRequest(ERC20ForwardRequest calldata request) internal view returns (bytes32) {
         return keccak256(abi.encode(
@@ -373,19 +302,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
             keccak256(request.data)
         ));
     }
-
-    /*function hashForwardRequest(ForwardRequest calldata request) internal view returns (bytes32) {
-        return keccak256(abi.encode(
-            REQUEST_TYPEHASH,
-            request.from,
-            request.to,
-            request.txGas,
-            request.batchId,
-            nonces[request.from][request.batchId],
-            request.deadline,
-            keccak256(request.data)
-        ));
-    }*/
 
     function hashCustomForwardRequest(CustomForwardRequest calldata req) internal view returns (bytes32) {
         return keccak256(abi.encode(
@@ -435,26 +351,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         )));
         require(digest.recover(sig) == req.from, "signature mismatch");
     }
-
-    /*
-    function _verifySigPersonalSign(
-        ForwardRequest calldata req,
-        bytes memory sig)
-    internal
-    view
-    {
-        require(req.deadline == 0 || block.timestamp + 20 <= req.deadline, "request expired");
-        bytes32 digest = prefixed(keccak256(abi.encodePacked(
-            req.from,
-            req.to,
-            req.txGas,
-            req.batchId,
-            nonces[req.from][req.batchId],
-            req.deadline,
-            keccak256(req.data)
-        )));
-        require(digest.recover(sig) == req.from, "signature mismatch");
-    }*/
 
     /**
      * @dev verifies the call result and bubbles up revert reason for failed calls
