@@ -149,9 +149,9 @@ module.exports = {
       chainId: 1287
     },
     arbitrumTest: {
-      url:"https://kovan4.arbitrum.io/rpc",
+      url:"https://rinkeby.arbitrum.io/rpc",
       accounts:walletUtils.makeKeyList(),
-      chainId: 212984383488152
+      chainId: 421611
     },
     optimisticTest: {
       url:"https://kovan.optimism.io",
