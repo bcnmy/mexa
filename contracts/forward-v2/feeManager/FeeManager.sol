@@ -39,6 +39,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         bp = _bp;
     }
 
+    event TokenEnabledOrDisabled(address indexed tokenAddress,address indexed actor, bool indexed newStatus);
+
     /**
      * @dev uses if statements to query the hierarchy (default --> token --> tokenUser) from bottom to top 
      * @dev goes up one level if current level's value = 0 and it is not exempt
@@ -95,7 +97,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
     }
 
     function setTokenAllowed(address token, bool allowed) external onlyOwner{
+        require(token != address(0), "supported token can not be zero address");
         allowedTokens[token] = allowed;
+        emit TokenEnabledOrDisabled(token,msg.sender,allowed);
     }
 
     function getPriceFeedAddress(address token) external view returns (address priceFeed){

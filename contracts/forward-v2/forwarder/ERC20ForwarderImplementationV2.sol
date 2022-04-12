@@ -97,6 +97,7 @@ import "../interfaces/IERC20Permit.sol";
             "ERC20Forwarder: new fee receiver can not be a zero address"
         );
         feeReceiver = _feeReceiver;
+        emit FeeReceiverChanged(_feeReceiver,msg.sender);
     }
 
     /**
@@ -108,6 +109,7 @@ import "../interfaces/IERC20Permit.sol";
             "ERC20Forwarder: new fee manager can not be a zero address"
         );
         feeManager = _feeManager;
+        emit FeeManagerChanged(_feeManager,msg.sender);
     }
 
     function setBaseGas(uint128 gas) external onlyOwner{
@@ -121,6 +123,16 @@ import "../interfaces/IERC20Permit.sol";
      * deployed.
      */
     event TrustedForwarderChanged(address indexed newForwarderAddress, address indexed actor);
+
+    /**
+     * Designed to enable the community to track change in storage variable feeManager which is used
+     * as a token fee manager contract where different supported fee tokens are added and fee multiplier is managed.
+     */
+    event FeeManagerChanged(address indexed newFeeManager, address indexed actor);
+
+    /** Designed to enable biconomy dao to track erc20 tokens fee receiver address
+     */
+    event FeeReceiverChanged(address indexed newFeeReceiver, address indexed actor);
 
     /**
      * Designed to enable the community to track change in storage variable oracleAggregator which is used
