@@ -1,6 +1,8 @@
 /**
  * Check the owner and ERC20ForwarderProxyAdmin values before running the script.
  */
+
+// NOTE: This script has addresses for polygon mainnet!
 async function main() {
   try {
 
@@ -23,20 +25,22 @@ async function main() {
     const usdtDecimals = 18; //Review
 
     //const sandUSDPriceFeedAddress = "0x9dd18534b8f456557d11B9DDB14dA89b2e52e308"; // SAND USD
-    const sandMaticPriceFeedAddress = "0x1ee3d325502f8E453dd7382208e4c6b7C2D1b151" //SAND MATIC
-    const sandAddress = "0xE03489D4E90b22c59c5e23d45DFd59Fc0dB8a025"; 
+    const sandMaticPriceFeedAddress = "0xe968F783700112d99085111DeB5409Cbc921E4e5" //SAND MATIC
+    const sandAddress = "0xBbba073C31bF03b8ACf7c28EF0738DeCF3695683"; 
     const sandDecimals = 18; //Review
     
     const owner = "0x2b241cBe6B455e08Ade78a7ccC42DE2403d7b566";
     //prod config admin addresses
-    const newOwner = "0xbb3982c15D92a8733e82Db8EBF881D979cFe9017";
-    const ERC20ForwarderProxyAdmin = "0xccb9bA42d45ee6a7E3176B2f865Fb53266B6384D";
-    const feeReceiver = "0xabcd3f544CF8c7AcF59AB0dA6e89e170d610bA91";
+    const newOwner = "0x129443cA2a9Dec2020808a2868b38dDA457eaCC7";
+    const ERC20ForwarderProxyAdmin = "0x6B1c73C2b065486f5Af0097A934820a130e2DF11";
+    const feeReceiver = "0x7306aC7A32eb690232De81a9FFB44Bb346026faB";
+
+    const forwarderAddress = "0xf0511f123164602042ab2bCF02111fA5D3Fe97CD";
 
     let tx, receipt;
     let totalGasUsed = 0;
 
-    const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarderV2");
+    /*const Forwarder = await hre.ethers.getContractFactory("BiconomyForwarderV2");
     const forwarder = await Forwarder.deploy();
     await forwarder.deployed();
     receipt = await forwarder.deployTransaction.wait(confirmations = 2);
@@ -49,7 +53,7 @@ async function main() {
     tx = await forwarder.registerDomainSeparator("Biconomy Forwarder for The Sandbox :: This forwarder is used to let you pay gas fee in SAND rather than MATIC", "1");
     receipt = await tx.wait(confirmations = 2);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
   
     const CentralisedFeeManager = await hre.ethers.getContractFactory("FeeManager");
     const centralisedFeeManager = await CentralisedFeeManager.deploy(10000);
@@ -78,21 +82,15 @@ async function main() {
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
 
     tx = await centralisedFeeManager.setTokenAllowed(sandAddress, true);
-    receipt = await tx.wait(confirmations = 2);
+    receipt = await tx.wait();
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    /*tx = await centralisedFeeManager.transferOwnership(newOwner);
-    receipt = await tx.wait(confirmations = 1);
-    console.log(`✅ Fee Manager ownership transferred to ${newOwner}`);
-    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
-
     // Deploy logic contract
     const ERC20Forwarder = await hre.ethers.getContractFactory("ERC20ForwarderImplementationV2");
     const erc20Forwarder = await ERC20Forwarder.deploy();
     await erc20Forwarder.deployed();
-    receipt = await erc20Forwarder.deployTransaction.wait(confirmations = 2);
+    receipt = await erc20Forwarder.deployTransaction.wait();
     console.log("✅ ERC20 Forwarder (logic contract) deployed at : ", erc20Forwarder.address);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
@@ -102,7 +100,7 @@ async function main() {
     const ERC20ForwarderProxy = await hre.ethers.getContractFactory("ERC20ForwarderProxy");
     const erc20ForwarderProxy = await ERC20ForwarderProxy.deploy(erc20Forwarder.address, ERC20ForwarderProxyAdmin);
     await erc20ForwarderProxy.deployed();
-    receipt = await erc20ForwarderProxy.deployTransaction.wait(confirmations = 2);
+    receipt = await erc20ForwarderProxy.deployTransaction.wait();
   
     console.log("✅ ERC20 Forwarder proxy deployed at : ", erc20ForwarderProxy.address);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
@@ -110,8 +108,8 @@ async function main() {
   
     let forwarderProxy = await hre.ethers.getContractAt("contracts/forward-v2/forwarder/ERC20ForwarderImplementationV2.sol:ERC20ForwarderImplementationV2", erc20ForwarderProxy.address);
   
-    tx = await forwarderProxy.initialize(feeReceiver, centralisedFeeManager.address, forwarder.address);
-    receipt = await tx.wait(confirmations = 2);
+    tx = await forwarderProxy.initialize(feeReceiver, centralisedFeeManager.address, forwarderAddress);
+    receipt = await tx.wait();
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
@@ -119,7 +117,7 @@ async function main() {
     let OracleAggregator = await hre.ethers.getContractFactory("OracleAggregator");
     oracleAggregator = await OracleAggregator.deploy();
     await oracleAggregator.deployed();
-    receipt = await oracleAggregator.deployTransaction.wait(confirmations = 2);
+    receipt = await oracleAggregator.deployTransaction.wait();
     console.log("✅ Oracle Aggregator deployed at : ", oracleAggregator.address);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
@@ -157,7 +155,7 @@ async function main() {
     let priceFeedSand = await hre.ethers.getContractAt("AggregatorInterface", sandMaticPriceFeedAddress);
     let priceFeedTxSand = await priceFeedSand.populateTransaction.getThePrice();
     tx = await oracleAggregator.setTokenOracle(sandAddress, sandMaticPriceFeedAddress, sandDecimals, priceFeedTxSand.data, true);
-    receipt = await tx.wait(confirmations = 1);
+    receipt = await tx.wait();
   
     console.log('✅ SAND support added');
     console.log(`✅ SAND address : ${sandAddress}`);
@@ -166,7 +164,7 @@ async function main() {
 
   
     tx = await forwarderProxy.setOracleAggregator(oracleAggregator.address);
-    receipt = await tx.wait(confirmations = 1);  
+    receipt = await tx.wait();  
     console.log(`✅ Oracle aggregator added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
@@ -198,12 +196,18 @@ async function main() {
 
     //set transfer handler gas
     tx = await forwarderProxy.setTransferHandlerGas(sandAddress, SANDTransferHandlerGas); //values to be tuned further
-    receipt = await tx.wait(confirmations = 1);
+    receipt = await tx.wait();
     console.log(`✅ SAND transfer handler gas ${SANDTransferHandlerGas} added`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
     totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+
+    /*tx = await centralisedFeeManager.transferOwnership(newOwner);
+    receipt = await tx.wait(confirmations = 1);
+    console.log(`✅ Fee Manager ownership transferred to ${newOwner}`);
+    console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
   
-    /*tx = await forwarderProxy.transferOwnership(newOwner);
+    tx = await forwarderProxy.transferOwnership(newOwner);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Forwarder Proxy ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
@@ -219,9 +223,9 @@ async function main() {
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Oracle Aggregator ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);
-    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();
+    totalGasUsed = totalGasUsed + receipt.gasUsed.toNumber();*/
 
-    tx = await forwarder.transferOwnership(newOwner);
+    /*tx = await forwarder.transferOwnership(newOwner);
     receipt = await tx.wait(confirmations = 1);
     console.log(`✅ Biconomy Forwarder ownership transferred to ${newOwner}`);
     console.log(`Gas used : ${receipt.gasUsed.toNumber()}`);

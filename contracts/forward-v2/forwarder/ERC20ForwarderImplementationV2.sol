@@ -24,6 +24,10 @@ import "../interfaces/IERC20Permit.sol";
  contract ERC20ForwarderImplementationV2 is Initializable, OwnableUpgradeable, ForwardRequestTypesV2 {
      
     uint8 internal _initializedVersion;
+    //threshold for token price fluctualtions
+    uint16 public TOKEN_GAS_PRICE_THRESHOLD_PERCENTAGE = 90;
+    //transaction base gas
+    uint128 public baseGas=21000;
     mapping(address=>uint256) public transferHandlerGas;
     mapping(address=>bool) public safeTransferRequired;
     //TODO
@@ -34,8 +38,6 @@ import "../interfaces/IERC20Permit.sol";
     //@review owner could add multiple fee managers for dapps
     address public feeManager;
     address public forwarder;
-    //transaction base gas
-    uint128 public baseGas=21000;
 
      /**
      * @dev sets contract variables
@@ -117,6 +119,11 @@ import "../interfaces/IERC20Permit.sol";
         emit BaseGasChanged(baseGas,msg.sender);
     }
 
+    function setTokenGasPriceThreshold(uint16 newPct) external onlyOwner{
+        TOKEN_GAS_PRICE_THRESHOLD_PERCENTAGE = newPct;
+        emit TokenGasPriceThresholdChanged(TOKEN_GAS_PRICE_THRESHOLD_PERCENTAGE,msg.sender);
+    }
+
     /**
      * Designed to enable the community to track change in storage variable forwarder which is used
      * as a trusted forwarder contract where signature verifiction and replay attack prevention schemes are
@@ -143,7 +150,9 @@ import "../interfaces/IERC20Permit.sol";
     /* Designed to enable the community to track change in storage variable baseGas which is used for charge calcuations 
        Unlikely to change */
     event BaseGasChanged(uint128 newBaseGas, address indexed actor);
-
+    
+    event TokenGasPriceThresholdChanged(uint16 newPct, address indexed actor);
+ 
     /* Designed to enable the community to track change in storage variable transfer handler gas for particular ERC20 token which is used for charge calculations
        Only likely to change to offset the charged fee */ 
     event TransferHandlerGasChanged(address indexed tokenAddress, address indexed actor, uint256 indexed newGas);
@@ -419,7 +428,7 @@ import "../interfaces/IERC20Permit.sol";
         require(_feeManager.getTokenAllowed(req.token),"TOKEN NOT ALLOWED BY FEE MANAGER");
         OracleAggregator oa = OracleAggregator(oracleAggregator);
         uint256 tokenGasPriceNow = tx.gasprice * (10 ** oa.getTokenOracleDecimals(req.token)) / (oa.getTokenPrice(req.token));
-        require(req.tokenGasPrice >= tokenGasPriceNow, "Transfer Handler: Pre flight checks on token gas price has failed");        
+        require(req.tokenGasPrice > TOKEN_GAS_PRICE_THRESHOLD_PERCENTAGE * tokenGasPriceNow / 100, "Transfer Handler: Pre flight checks on token gas price has failed");        
         charge = req.tokenGasPrice * executionGas * (_feeManager.getFeeMultiplier(req.from,req.token)) / 10000;
         if (!safeTransferRequired[req.token]){
             
@@ -448,7 +457,7 @@ import "../interfaces/IERC20Permit.sol";
         require(_feeManager.getTokenAllowed(req.request.token),"TOKEN NOT ALLOWED BY FEE MANAGER");   
         OracleAggregator oa = OracleAggregator(oracleAggregator);
         uint256 tokenGasPriceNow = tx.gasprice * (10 ** oa.getTokenOracleDecimals(req.request.token)) / (oa.getTokenPrice(req.request.token));
-        require(req.request.tokenGasPrice >= tokenGasPriceNow, "Transfer Handler: Pre flight checks on token gas price has failed");             
+        require(req.request.tokenGasPrice >= TOKEN_GAS_PRICE_THRESHOLD_PERCENTAGE * tokenGasPriceNow / 100, "Transfer Handler: Pre flight checks on token gas price has failed");             
         charge = req.request.tokenGasPrice * executionGas * (_feeManager.getFeeMultiplier(req.request.from,req.request.token)) / 10000;
         if (!safeTransferRequired[req.request.token]){
             
