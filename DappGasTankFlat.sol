@@ -1,8 +1,18 @@
+// Sources flattened with hardhat v2.22.2 https://hardhat.org
+
+// SPDX-License-Identifier: MIT
+
+// File contracts/7/gas-manager/gas-tank/DappGasTank.sol
+
+/**
+ *Submitted for verification at Etherscan.io on 2021-10-16
+*/
+
 // Sources flattened with hardhat v2.6.4 https://hardhat.org
 
 // File @openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol@v4.3.2
 
-// SPDX-License-Identifier: MIT
+// Original license: SPDX_License_Identifier: MIT
 
 pragma solidity ^0.8.0;
 

@@ -4,7 +4,6 @@ require("hardhat-gas-reporter");
 require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 //require('solidity-coverage');
-require('@eth-optimism/hardhat-ovm')
 const walletUtils = require("./walletUtils");
 
 // This is a sample Buidler task. To learn how to create your own go to
@@ -157,7 +156,6 @@ module.exports = {
       url:"https://kovan.optimism.io",
       accounts:walletUtils.makeKeyList(),
       gasPrice: 15000000, //required
-      ovm: true, // required
       chainId: 69
     },
     maticMainnet: {
@@ -194,6 +192,11 @@ module.exports = {
       url:`https://bsc-dataseed.binance.org/`,
       accounts:walletUtils.makeKeyList(),
       chainId:56,
+    },
+    amoy: {
+      url: `https://rpc-amoy.polygon.technology`,
+      accounts: walletUtils.makeKeyList(),
+      chainId: 80002
     }
 
   },
